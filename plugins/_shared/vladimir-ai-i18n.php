@@ -162,6 +162,15 @@ function vladimir_ai_i18n_table() {
             'fr' => 'Module ultra-léger de date et heure : affichage de la date, de l\'heure et de l\'année via les shortcodes [wpdts-date], [wpdts-time], [wp-dt] selon le fuseau horaire du site. Remplace les extensions lourdes sans surcharger le serveur.',
             'pl' => 'Ultralekki moduł daty i czasu: wyświetlanie daty, czasu i roku za pomocą shortcode [wpdts-date], [wpdts-time], [wp-dt] zgodnie ze strefą czasową witryny. Zamiennik ciężkich wtyczek bez obciążania serwera.',
         ),
+        'wp-board-directory' => array(
+            'ru' => 'Единая сверхбыстрая доска объявлений и каталог фирм: профили компаний и частных лиц, оценки с защитой от накрутки, до 15 WebP-фото, Cloudflare Turnstile и 1-Click миграция.',
+            'cs' => 'Jednotná ultrarychlá inzertní deska a katalog firem: profily firem a soukromých osob, hodnocení s ochranou proti podvodům, až 15 WebP fotek, Cloudflare Turnstile a 1-Click migrace.',
+            'de' => 'Einheitliches, ultraschnelles Kleinanzeigen- und Firmenverzeichnis: Firmen- und Privatprofile, manipulationssichere Bewertungen, bis zu 15 WebP-Fotos, Cloudflare Turnstile und 1-Klick-Migration.',
+            'it' => 'Bacheca annunci e catalogo aziende unificato e ultraveloce: profili aziendali e privati, recensioni antimanipolazione, fino a 15 foto WebP, Cloudflare Turnstile e migrazione 1-Click.',
+            'es' => 'Tablón de anuncios y directorio de empresas unificado y ultrarrápido: perfiles de empresas y particulares, valoraciones antifraude, hasta 15 fotos WebP, Cloudflare Turnstile y migración en 1 clic.',
+            'fr' => 'Tableau de petites annonces et annuaire d\'entreprises unifié et ultra-rapide : profils d\'entreprises et de particuliers, avis anti-fraude, jusqu\'à 15 photos WebP, Cloudflare Turnstile et migration 1-Click.',
+            'pl' => 'Zunifikowana, ultraszybka tablica ogłoszeń i katalog firm: profile firm i osób prywatnych, oceny z ochroną przed manipulacją, do 15 zdjęć WebP, Cloudflare Turnstile i migracja 1-Click.',
+        ),
     );
 }
 }

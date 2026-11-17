@@ -1,0 +1,192 @@
+/**
+ * WP Board & Directory - Frontend Styles
+ * Lightweight, Mobile-First, Flatsome Compatible
+ */
+
+:root {
+    --vb-primary: #5c2d91;
+    --vb-accent: #ff9800;
+    --vb-success: #28a745;
+    --vb-border: #e2e8f0;
+    --vb-bg-card: #ffffff;
+    --vb-text: #1a202c;
+    --vb-text-muted: #718096;
+    --vb-radius: 8px;
+}
+
+/* 1. Categories Grid */
+.vb-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+.vb-category-card {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--vb-bg-card);
+    border: 1px solid var(--vb-border);
+    border-radius: var(--vb-radius);
+    text-decoration: none;
+    color: var(--vb-text);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.vb-category-card:hover {
+    border-color: var(--vb-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+}
+.vb-cat-icon { font-size: 1.25rem; margin-right: 8px; }
+.vb-cat-title { font-weight: 600; font-size: 0.9rem; flex-grow: 1; }
+.vb-cat-count {
+    background: #edf2f7;
+    color: var(--vb-text-muted);
+    font-size: 0.75rem;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+/* 2. Listings Grid */
+.vb-listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+@media (max-width: 600px) {
+    .vb-listings-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+}
+.vb-card {
+    background: var(--vb-bg-card);
+    border: 1px solid var(--vb-border);
+    border-radius: var(--vb-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s ease;
+    position: relative;
+}
+.vb-card:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+.vb-card-img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #edf2f7;
+    overflow: hidden;
+}
+.vb-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+.vb-card:hover .vb-card-img {
+    transform: scale(1.03);
+}
+.vb-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 4px;
+    color: #fff;
+    z-index: 2;
+}
+.vb-badge-company { background: #2b6cb0; }
+
+.vb-card-body {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.vb-card-category {
+    font-size: 0.75rem;
+    color: var(--vb-text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.vb-card-title {
+    font-size: 0.95rem;
+    line-height: 1.3;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.vb-card-title a {
+    color: var(--vb-text);
+    text-decoration: none;
+}
+.vb-card-title a:hover { color: var(--vb-primary); }
+
+.vb-card-price {
+    font-size: 1.1rem;
+    color: var(--vb-primary);
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+.vb-price-free { font-size: 0.85rem; color: var(--vb-success); }
+
+.vb-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--vb-text-muted);
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Rating / Voting */
+.vb-rating-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.vb-btn-vote {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: transform 0.1s ease;
+}
+.vb-btn-vote:hover { transform: scale(1.2); }
+.vb-vote-score { font-weight: bold; font-size: 0.8rem; }
+
+/* Action Buttons */
+.vb-card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+.vb-btn-action {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+.vb-btn-phone { background: #edf2f7; color: #2d3748; }
+.vb-btn-wa { background: #25d366; color: #fff; }
+.vb-btn-action:hover { opacity: 0.85; }
