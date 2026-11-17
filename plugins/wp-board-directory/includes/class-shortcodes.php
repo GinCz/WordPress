@@ -19,6 +19,36 @@ class VB_Shortcodes {
 
         // 301 Redirect for legacy /all-listings/ to /company/
         add_action( 'template_redirect', [ __CLASS__, 'handle_legacy_redirects' ] );
+
+        // Hook into ACADP categories template to balance rows & dividers
+        add_filter( 'acadp_get_template', [ __CLASS__, 'filter_acadp_template' ], 10, 3 );
+        add_filter( 'acadp_load_template', [ __CLASS__, 'filter_acadp_load_template' ], 10, 2 );
+    }
+
+    /**
+     * Filter ACADP deprecated template loader
+     */
+    public static function filter_acadp_template( $template_file, $name, $widget = '' ) {
+        if ( strpos( $name, 'acadp-public-categories-text-list-display.php' ) !== false ) {
+            $custom = VB_BOARD_DIR . 'templates/acadp-categories-list.php';
+            if ( file_exists( $custom ) ) {
+                return $custom;
+            }
+        }
+        return $template_file;
+    }
+
+    /**
+     * Filter ACADP standard template loader
+     */
+    public static function filter_acadp_load_template( $template_file, $options = [] ) {
+        if ( strpos( $template_file, 'layout-list.php' ) !== false && strpos( $template_file, 'categories' ) !== false ) {
+            $custom = VB_BOARD_DIR . 'templates/acadp-categories-list.php';
+            if ( file_exists( $custom ) ) {
+                return $custom;
+            }
+        }
+        return $template_file;
     }
 
     /**
@@ -172,28 +202,30 @@ class VB_Shortcodes {
                             <?php endif; ?>
 
                             <div class="vb-company-fields">
-                                <?php if ( $address ) : ?>
-                                    <div class="vb-c-field">
-                                        <span class="vb-c-icon">🌍</span>
-                                        <span class="vb-c-text" title="<?php echo esc_attr( $address ); ?>"><?php echo esc_html( $address ); ?></span>
-                                    </div>
-                                <?php endif; ?>
+                                <div class="vb-c-field">
+                                    <span class="vb-c-icon">🌍</span>
+                                    <span class="vb-c-text" title="<?php echo esc_attr( $address ?: '—' ); ?>"><?php echo esc_html( $address ?: '—' ); ?></span>
+                                </div>
 
-                                <?php if ( $phone ) : ?>
-                                    <div class="vb-c-field">
-                                        <span class="vb-c-icon">📞</span>
+                                <div class="vb-c-field">
+                                    <span class="vb-c-icon">📞</span>
+                                    <?php if ( $phone ) : ?>
                                         <a href="tel:<?php echo esc_attr( preg_replace( '/\s+/', '', $phone ) ); ?>" class="vb-c-link"><?php echo esc_html( $phone ); ?></a>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php else : ?>
+                                        <span class="vb-c-text">—</span>
+                                    <?php endif; ?>
+                                </div>
 
-                                <?php if ( $website ) : ?>
-                                    <div class="vb-c-field">
-                                        <span class="vb-c-icon">🌐</span>
+                                <div class="vb-c-field">
+                                    <span class="vb-c-icon">🌐</span>
+                                    <?php if ( $website ) : ?>
                                         <a href="<?php echo esc_url( $website ); ?>" target="_blank" rel="noopener noreferrer" class="vb-c-link">
                                             <?php echo esc_html( preg_replace( '#^https?://(www\.)?#', '', rtrim( $website, '/' ) ) ); ?>
                                         </a>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php else : ?>
+                                        <span class="vb-c-text">—</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
 
                             <div class="vb-company-footer">
