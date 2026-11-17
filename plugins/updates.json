@@ -117,6 +117,15 @@
             "requires": "6.0",
             "requires_php": "7.4",
             "tested": "6.8"
+        },
+        "wp-date-time-micro": {
+            "version": "2026-11__1.00",
+            "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-date-time-micro.zip",
+            "url": "https://github.com/GinCz/plugins/tree/main/wp-date-time-micro",
+            "name": "WP Date & Time Micro (VladiMIR+AI✅)",
+            "requires": "6.0",
+            "requires_php": "7.4",
+            "tested": "6.8"
         }
     }
 }

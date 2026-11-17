@@ -14,16 +14,16 @@
 | № | Домен | Каталог сайта | База данных | Статус оптимизации |
 |---|---|---|---|---|
 | 1 | **doska-cz.ru** | `/var/www/doski/data/www/doska-cz.ru` | `doska-cz` | ✅ **Выполнено на 100% (Эталон)** |
-| 2 | **doska-de.ru** | `/var/www/doski/data/www/doska-de.ru` | `doska_de` | ⏳ Ожидает тиражирования |
-| 3 | **doska-esp.ru** | `/var/www/doski/data/www/doska-esp.ru` | `doska-esp` | ⏳ Ожидает тиражирования |
-| 4 | **doska-fr.ru** | `/var/www/doski/data/www/doska-fr.ru` | `doska-fr` | ⏳ Ожидает тиражирования |
-| 5 | **doska-gr.ru** | `/var/www/doski/data/www/doska-gr.ru` | `doska-gr` | ⏳ Ожидает тиражирования |
-| 6 | **doska-hun.ru** | `/var/www/doski/data/www/doska-hun.ru` | `doska-hun` | ⏳ Ожидает тиражирования |
-| 7 | **doska-isl.ru** | `/var/www/doski/data/www/doska-isl.ru` | `doska-isl` | ⏳ Ожидает тиражирования |
-| 8 | **doska-it.ru** | `/var/www/doski/data/www/doska-it.ru` | `doska-it` | ⏳ Ожидает тиражирования |
-| 9 | **doska-mld.ru** | `/var/www/doski/data/www/doska-mld.ru` | `doska-mld` | ⏳ Ожидает тиражирования |
-| 10 | **doska-pl.ru** | `/var/www/doski/data/www/doska-pl.ru` | `doska-pl` | ⏳ Ожидает тиражирования |
-| 11 | **doska-ua.ru** | `/var/www/doski/data/www/doska-ua.ru` | `doska-ua` | ⏳ Ожидает тиражирования |
+| 2 | **doska-de.ru** | `/var/www/doski/data/www/doska-de.ru` | `doska_de` | ✅ **Выполнено на 100%** |
+| 3 | **doska-esp.ru** | `/var/www/doski/data/www/doska-esp.ru` | `doska-esp` | ✅ **Выполнено на 100%** |
+| 4 | **doska-fr.ru** | `/var/www/doski/data/www/doska-fr.ru` | `doska-fr` | ✅ **Выполнено на 100%** |
+| 5 | **doska-gr.ru** | `/var/www/doski/data/www/doska-gr.ru` | `doska-gr` | ✅ **Выполнено на 100%** |
+| 6 | **doska-hun.ru** | `/var/www/doski/data/www/doska-hun.ru` | `doska-hun` | ✅ **Выполнено на 100%** |
+| 7 | **doska-isl.ru** | `/var/www/doski/data/www/doska-isl.ru` | `doska-isl` | ✅ **Выполнено на 100%** |
+| 8 | **doska-it.ru** | `/var/www/doski/data/www/doska-it.ru` | `doska-it` | ✅ **Выполнено на 100%** |
+| 9 | **doska-mld.ru** | `/var/www/doski/data/www/doska-mld.ru` | `doska-mld` | ✅ **Выполнено на 100%** |
+| 10 | **doska-pl.ru** | `/var/www/doski/data/www/doska-pl.ru` | `doska-pl` | ✅ **Выполнено на 100%** |
+| 11 | **doska-ua.ru** | `/var/www/doski/data/www/doska-ua.ru` | `doska-ua` | ✅ **Выполнено на 100%** |
 
 ---
 

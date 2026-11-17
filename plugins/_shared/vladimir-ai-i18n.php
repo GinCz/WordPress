@@ -153,6 +153,15 @@ function vladimir_ai_i18n_table() {
             'fr' => 'Suppression groupée rapide d\'articles, produits WooCommerce et pages par date, statut et taxonomies via AJAX. Sans publicité, bannières ni surcharge du serveur.',
             'pl' => 'Szybkie masowe usuwanie wpisów, produktów WooCommerce i stron według daty, statusu i kategorii przez AJAX. Bez reklam, banerów i limitów serwera.',
         ),
+        'wp-date-time-micro' => array(
+            'ru' => 'Ультралегкий модуль даты и времени: вывод даты, времени и года через шорткоды [wpdts-date], [wpdts-time], [wp-dt] с учетом часового пояса сайта. Замена тяжелых плагинов без нагрузки на сервер.',
+            'cs' => 'Ultralehký modul data a času: zobrazení data, času a roku pomocí zkrácených kódů [wpdts-date], [wpdts-time], [wp-dt] podle časového pásma webu. Náhrada těžkých pluginů bez zátěže serveru.',
+            'de' => 'Ultraschlankes Datums- und Uhrzeitmodul: Ausgabe von Datum, Uhrzeit und Jahr über Shortcodes [wpdts-date], [wpdts-time], [wp-dt] passend zur Zeitzone der Website. Ersatz für schwere Plugins ohne Serverlast.',
+            'it' => 'Modulo ultraleggero di data e ora: visualizzazione di data, ora e anno tramite shortcode [wpdts-date], [wpdts-time], [wp-dt] in base al fuso orario del sito. Sostituisce plugin pesanti senza carico sul server.',
+            'es' => 'Módulo ultraligero de fecha y hora: muestra fecha, hora y año mediante shortcodes [wpdts-date], [wpdts-time], [wp-dt] según la zona horaria del sitio. Reemplazo de plugins pesados sin sobrecargar el servidor.',
+            'fr' => 'Module ultra-léger de date et heure : affichage de la date, de l\'heure et de l\'année via les shortcodes [wpdts-date], [wpdts-time], [wp-dt] selon le fuseau horaire du site. Remplace les extensions lourdes sans surcharger le serveur.',
+            'pl' => 'Ultralekki moduł daty i czasu: wyświetlanie daty, czasu i roku za pomocą shortcode [wpdts-date], [wpdts-time], [wp-dt] zgodnie ze strefą czasową witryny. Zamiennik ciężkich wtyczek bez obciążania serwera.',
+        ),
     );
 }
 }
