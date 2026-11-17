@@ -54,6 +54,8 @@ class VB_DB {
             currency VARCHAR(5) NOT NULL DEFAULT 'CZK',
             is_featured TINYINT(1) NOT NULL DEFAULT 0,
             is_urgent TINYINT(1) NOT NULL DEFAULT 0,
+            likes_count INT(11) NOT NULL DEFAULT 0,
+            dislikes_count INT(11) NOT NULL DEFAULT 0,
             rating_score INT(11) NOT NULL DEFAULT 0,
             rating_count INT(11) NOT NULL DEFAULT 0,
             views_count INT(11) NOT NULL DEFAULT 0,

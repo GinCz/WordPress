@@ -298,6 +298,12 @@ class VB_Importer {
             }
         }
 
+        // 5. Refresh term counts
+        $all_vb_terms = get_terms( [ 'taxonomy' => 'vb_category', 'hide_empty' => false, 'fields' => 'ids' ] );
+        if ( ! empty( $all_vb_terms ) && ! is_wp_error( $all_vb_terms ) ) {
+            wp_update_term_count_now( $all_vb_terms, 'vb_category' );
+        }
+
         return [
             'imported_cats' => $imported_cats,
             'imported_ads'  => $imported_ads,

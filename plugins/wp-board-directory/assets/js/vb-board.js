@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // 1. Voting & Ratings Handler (AJAX)
+    // 1. Voting & Ratings Handler (Likes & Dislikes)
     document.addEventListener('click', function(e) {
         var btn = e.target.closest('.vb-btn-vote');
         if (!btn) return;
@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var targetType = btn.getAttribute('data-target') || 'listing';
         var targetId   = btn.getAttribute('data-id');
         var voteVal    = btn.getAttribute('data-vote');
-        var scoreSpan  = document.getElementById('vb-score-' + targetId);
+        var likesSpan    = document.getElementById('vb-likes-' + targetId);
+        var dislikesSpan = document.getElementById('vb-dislikes-' + targetId);
 
         if (!targetId || !voteVal) return;
 
@@ -39,8 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(data) {
             btn.disabled = false;
             if (data.success) {
-                if (scoreSpan && data.data && typeof data.data.score !== 'undefined') {
-                    scoreSpan.textContent = data.data.score.score;
+                if (likesSpan && typeof data.data.likes !== 'undefined') {
+                    likesSpan.textContent = data.data.likes;
+                }
+                if (dislikesSpan && typeof data.data.dislikes !== 'undefined') {
+                    dislikesSpan.textContent = data.data.dislikes;
                 }
                 alert(data.data.message || 'Спасибо за оценку!');
             } else {

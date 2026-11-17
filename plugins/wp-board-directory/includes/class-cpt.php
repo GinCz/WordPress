@@ -70,13 +70,14 @@ class VB_CPT {
         ];
 
         register_taxonomy( 'vb_category', [ 'vb_listing' ], [
-            'hierarchical'      => true,
-            'labels'            => $cat_labels,
-            'show_ui'           => true,
-            'show_admin_column' => true,
-            'query_var'         => true,
-            'rewrite'           => [ 'slug' => 'board-cat', 'with_front' => false ],
-            'show_in_rest'      => true,
+            'hierarchical'          => true,
+            'labels'                => $cat_labels,
+            'show_ui'               => true,
+            'show_admin_column'     => true,
+            'query_var'             => true,
+            'rewrite'               => [ 'slug' => 'board-cat', 'with_front' => false ],
+            'show_in_rest'          => true,
+            'update_count_callback' => '_update_post_term_count',
         ] );
 
         // 2. Locations
