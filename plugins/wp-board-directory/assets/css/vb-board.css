@@ -261,26 +261,30 @@
     box-shadow: 0 8px 18px rgba(0,0,0,0.1) !important;
 }
 .vb-company-logo-wrap {
-    height: 220px !important;
-    min-height: 220px !important;
-    max-height: 220px !important;
+    height: 280px !important;
+    min-height: 280px !important;
+    max-height: 280px !important;
     background: #f8fafc !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 12px !important;
+    padding: 0 !important;
     border-bottom: 1px solid #edf2f7 !important;
     position: relative !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
 }
 .vb-company-logo {
-    max-height: 200px !important;
-    max-width: 95% !important;
-    width: auto !important;
-    height: auto !important;
-    object-fit: contain !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 280px !important;
+    max-width: 100% !important;
+    object-fit: cover !important;
     display: block !important;
+    transition: transform 0.3s ease !important;
+}
+.vb-company-card:hover .vb-company-logo {
+    transform: scale(1.04) !important;
 }
 .vb-company-body {
     padding: 14px 16px !important;
@@ -455,7 +459,7 @@
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
-    min-height: 430px !important;
+    min-height: 490px !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: var(--vb-radius) !important;
@@ -470,9 +474,9 @@
     box-shadow: 0 8px 18px rgba(0,0,0,0.1) !important;
 }
 .acadp-grid-view .thumbnail .acadp-responsive-container {
-    height: 200px !important;
-    min-height: 200px !important;
-    max-height: 200px !important;
+    height: 260px !important;
+    min-height: 260px !important;
+    max-height: 260px !important;
     padding-bottom: 0 !important;
     background: #f8fafc !important;
     position: relative !important;
@@ -486,6 +490,7 @@
     position: static !important;
     width: 100% !important;
     height: 100% !important;
+    max-height: 260px !important;
     object-fit: cover !important;
     display: block !important;
     transition: transform 0.3s ease !important;
@@ -1081,4 +1086,124 @@
     border-radius: 6px !important;
     text-decoration: none !important;
     font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   7. DASHBOARD BULK ACTIONS & MANAGEMENT CONTROLS
+   ========================================================================== */
+.vb-alert-dash {
+    margin-bottom: 20px !important;
+}
+.vb-bulk-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 16px !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+}
+.vb-bulk-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    flex-wrap: wrap !important;
+}
+.vb-bulk-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.vb-bulk-select-all-label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    margin: 0 !important;
+}
+.vb-bulk-select-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+.vb-bulk-select {
+    padding: 7px 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    font-size: 0.86rem !important;
+    color: #1e293b !important;
+    outline: none !important;
+    cursor: pointer !important;
+}
+.vb-btn-bulk-apply {
+    padding: 7px 15px !important;
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease !important;
+}
+.vb-btn-bulk-apply:hover {
+    background: #2563eb !important;
+}
+.vb-btn-bulk-danger {
+    padding: 7px 15px !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease !important;
+}
+.vb-btn-bulk-danger:hover {
+    background: #dc2626 !important;
+}
+.vb-col-chk {
+    width: 38px !important;
+    text-align: center !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+.vb-col-chk input[type="checkbox"],
+.vb-bulk-select-all-label input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    accent-color: var(--vb-primary) !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+}
+.vb-btn-delete {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+}
+.vb-btn-delete:hover {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+}
+.vb-expiry-tag {
+    display: inline-block !important;
+    font-size: 0.76rem !important;
+    color: #059669 !important;
+    background: #ecfdf5 !important;
+    padding: 1px 6px !important;
+    border-radius: 4px !important;
+    margin-top: 3px !important;
+    border: 1px solid #a7f3d0 !important;
+    white-space: nowrap !important;
 }

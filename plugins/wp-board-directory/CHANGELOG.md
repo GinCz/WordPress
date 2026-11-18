@@ -1,5 +1,19 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.04] - 2026-11-18
+### Added
+- Dashboard Bulk Actions (`/kabinet/?tab=ads` & `/kabinet/?tab=companies`):
+  - Row checkboxes and "Select All" toggle for multi-selection.
+  - Bulk action toolbar with direct "🗑️ Удалить выбранные" and renewal options: «⏳ Продлить на 1 месяц», «⏳ Продлить на 3 месяца», «⏳ Продлить на 6 месяцев», «⏳ Продлить на 1 год».
+  - Automatic recalculation of expiration dates (`expiry_date`) and refreshing of publish timestamps.
+- Single Row Actions:
+  - Added explicit red «Удалить» button with JS confirmation dialog in the "Действия" column for each ad and company.
+  - Expiration date badge (`до ДД.ММ.ГГГГ`) in the date column.
+- Visual & Design Refinements:
+  - Company Directory Cards (`/company/`): increased image height from 220px to 280px with full width (`padding: 0`) and `object-fit: cover`.
+  - Homepage Classifieds Cards (`/`): increased image height by 30% (from 200px to 260px) and card minimum height to 490px, eliminating horizontal cropping.
+  - Included expired companies in user dashboard so owners can easily renew them with 1 click.
+
 ## [2026-11__1.03] - 2026-11-18
 ### Added
 - Company Directory Filter Bar: instant filtering by Category (from classifieds category tree), by Region/City (Czech kraje), and keyword search.

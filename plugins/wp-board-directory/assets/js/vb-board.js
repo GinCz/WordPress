@@ -89,4 +89,43 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         };
     };
+
+    // 3. Dashboard Bulk Checkbox Selection (Select All / Deselect All)
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('vb-select-all-checkbox')) {
+            var targetClass = e.target.getAttribute('data-target');
+            var isChecked   = e.target.checked;
+            if (targetClass) {
+                var checkboxes = document.querySelectorAll('.' + targetClass);
+                checkboxes.forEach(function(chk) {
+                    chk.checked = isChecked;
+                });
+                var allToggles = document.querySelectorAll('.vb-select-all-checkbox[data-target="' + targetClass + '"]');
+                allToggles.forEach(function(toggle) {
+                    toggle.checked = isChecked;
+                });
+            }
+        }
+    });
+
+    // 4. Dashboard Bulk Form Validation & Action Confirmation
+    window.vbValidateBulk = function(form) {
+        var checkboxes = form.querySelectorAll('input[name="item_ids[]"]:checked');
+        if (checkboxes.length === 0) {
+            alert('Пожалуйста, отметьте галочками хотя бы один элемент.');
+            return false;
+        }
+        var op = form.bulk_op ? form.bulk_op.value : '';
+        if (!op) {
+            alert('Пожалуйста, выберите действие из списка.');
+            return false;
+        }
+        if (op === 'delete') {
+            return confirm('Вы действительно хотите удалить выбранные элементы (' + checkboxes.length + ' шт.)?');
+        }
+        if (op.indexOf('renew') === 0) {
+            return confirm('Продлить выбранные публикации (' + checkboxes.length + ' шт.)?');
+        }
+        return true;
+    };
 });

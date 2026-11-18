@@ -24,6 +24,9 @@ class VB_Shortcodes {
         // Handle profile save POST
         add_action( 'init', [ __CLASS__, 'handle_profile_save' ] );
 
+        // Handle dashboard actions (bulk delete, bulk renewals, single delete)
+        add_action( 'init', [ __CLASS__, 'handle_dashboard_actions' ] );
+
         // 301 Redirect for legacy /all-listings/ to /company/
         add_action( 'template_redirect', [ __CLASS__, 'handle_legacy_redirects' ] );
 
@@ -80,6 +83,127 @@ class VB_Shortcodes {
         $redirect = add_query_arg( [ 'saved' => '1', 'tab' => 'profile' ], $referer );
         wp_safe_redirect( $redirect );
         exit;
+    }
+
+    /**
+     * Handle Dashboard Actions: Single Delete, Bulk Delete, Bulk Renewals
+     */
+    public static function handle_dashboard_actions() {
+        if ( ! is_user_logged_in() ) {
+            return;
+        }
+
+        $current_user_id = get_current_user_id();
+
+        // 1. Single Delete Action (GET)
+        if ( isset( $_GET['vb_action'] ) && 'delete_item' === $_GET['vb_action'] && ! empty( $_GET['item_id'] ) ) {
+            $item_id = absint( $_GET['item_id'] );
+            $tab     = sanitize_key( $_GET['tab'] ?? 'ads' );
+
+            if ( ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'vb_delete_item_' . $item_id ) ) {
+                wp_die( 'Ошибка безопасности (неверный nonce).' );
+            }
+
+            $post = get_post( $item_id );
+            if ( ! $post || ( (int) $post->post_author !== $current_user_id && ! current_user_can( 'manage_options' ) ) ) {
+                wp_die( 'У вас нет прав на удаление этой записи.' );
+            }
+
+            wp_trash_post( $item_id );
+
+            $redirect_url = remove_query_arg( [ 'vb_action', 'item_id', '_wpnonce' ] );
+            $redirect_url = add_query_arg( [ 'tab' => $tab, 'deleted' => 1 ], $redirect_url );
+            wp_safe_redirect( $redirect_url );
+            exit;
+        }
+
+        // 2. Bulk Actions (POST)
+        if ( 'POST' === $_SERVER['REQUEST_METHOD'] && ! empty( $_POST['vb_action'] ) && 'dash_bulk_action' === $_POST['vb_action'] ) {
+            if ( ! check_admin_referer( 'vb_dash_bulk_action', 'vb_dash_nonce' ) ) {
+                wp_die( 'Ошибка безопасности (неверный nonce).' );
+            }
+
+            $tab      = sanitize_key( $_POST['tab'] ?? 'ads' );
+            $bulk_op  = sanitize_key( $_POST['bulk_op'] ?? '' );
+            $item_ids = array_map( 'absint', (array) ( $_POST['item_ids'] ?? [] ) );
+
+            $base_redirect = wp_get_referer() ?: home_url( '/kabinet/' );
+
+            if ( empty( $item_ids ) || empty( $bulk_op ) ) {
+                wp_safe_redirect( add_query_arg( [ 'tab' => $tab ], $base_redirect ) );
+                exit;
+            }
+
+            $count = 0;
+
+            if ( 'delete' === $bulk_op ) {
+                foreach ( $item_ids as $id ) {
+                    $post = get_post( $id );
+                    if ( $post && ( (int) $post->post_author === $current_user_id || current_user_can( 'manage_options' ) ) ) {
+                        wp_trash_post( $id );
+                        $count++;
+                    }
+                }
+                $redirect = add_query_arg( [ 'tab' => $tab, 'deleted' => $count ], $base_redirect );
+                wp_safe_redirect( $redirect );
+                exit;
+            }
+
+            // Renewal intervals
+            $renew_intervals = [
+                'renew_1m' => [ '+1 month', '1 месяц' ],
+                'renew_3m' => [ '+3 months', '3 месяца' ],
+                'renew_6m' => [ '+6 months', '6 месяцев' ],
+                'renew_1y' => [ '+1 year', '1 год' ],
+            ];
+
+            if ( isset( $renew_intervals[ $bulk_op ] ) ) {
+                list( $interval_str, $interval_label ) = $renew_intervals[ $bulk_op ];
+                $now_ts = current_time( 'timestamp' );
+
+                foreach ( $item_ids as $id ) {
+                    $post = get_post( $id );
+                    if ( ! $post || ( (int) $post->post_author !== $current_user_id && ! current_user_can( 'manage_options' ) ) ) {
+                        continue;
+                    }
+
+                    // Check existing expiry date
+                    $curr_expiry = get_post_meta( $id, 'expiry_date', true ) ?: get_post_meta( $id, '_expiry_date', true ) ?: get_post_meta( $id, '_vb_expiry_date', true );
+                    $base_ts = $now_ts;
+                    if ( $curr_expiry ) {
+                        $curr_ts = strtotime( $curr_expiry );
+                        if ( $curr_ts && $curr_ts > $now_ts ) {
+                            $base_ts = $curr_ts;
+                        }
+                    }
+
+                    $new_expiry_ts  = strtotime( $interval_str, $base_ts );
+                    $new_expiry_str = date( 'Y-m-d H:i:s', $new_expiry_ts );
+
+                    update_post_meta( $id, 'expiry_date', $new_expiry_str );
+                    update_post_meta( $id, '_expiry_date', $new_expiry_str );
+                    update_post_meta( $id, '_vb_expiry_date', $new_expiry_str );
+
+                    // Refresh post date and ensure published status
+                    wp_update_post( [
+                        'ID'            => $id,
+                        'post_status'   => 'publish',
+                        'post_date'     => current_time( 'mysql' ),
+                        'post_date_gmt' => current_time( 'mysql', 1 ),
+                    ] );
+
+                    $count++;
+                }
+
+                $redirect = add_query_arg( [
+                    'tab'      => $tab,
+                    'renewed'  => $count,
+                    'interval' => rawurlencode( $interval_label ),
+                ], $base_redirect );
+                wp_safe_redirect( $redirect );
+                exit;
+            }
+        }
     }
 
     /**
@@ -571,7 +695,7 @@ class VB_Shortcodes {
         // Fetch user companies
         $user_companies = get_posts( [
             'post_type'      => [ 'at_biz_dir', 'vb_listing' ],
-            'post_status'    => [ 'publish', 'draft', 'pending' ],
+            'post_status'    => [ 'publish', 'draft', 'pending', 'expired' ],
             'author'         => $user_id,
             'posts_per_page' => -1,
             'meta_query'     => [
@@ -588,7 +712,10 @@ class VB_Shortcodes {
             ],
         ] );
 
-        $is_saved = ! empty( $_GET['saved'] );
+        $is_saved   = ! empty( $_GET['saved'] );
+        $deleted_n  = isset( $_GET['deleted'] ) ? absint( $_GET['deleted'] ) : 0;
+        $renewed_n  = isset( $_GET['renewed'] ) ? absint( $_GET['renewed'] ) : 0;
+        $renew_text = ! empty( $_GET['interval'] ) ? sanitize_text_field( rawurldecode( $_GET['interval'] ) ) : '';
 
         ob_start();
         ?>
@@ -640,6 +767,17 @@ class VB_Shortcodes {
 
             <!-- Tab Content -->
             <div class="vb-dash-content">
+                <?php if ( $deleted_n > 0 ) : ?>
+                    <div class="vb-alert-success vb-alert-dash">
+                        🗑️ Успешно удалено: <?php echo $deleted_n; ?> элемент(ов).
+                    </div>
+                <?php endif; ?>
+                <?php if ( $renewed_n > 0 ) : ?>
+                    <div class="vb-alert-success vb-alert-dash">
+                        ⏳ Успешно продлено: <?php echo $renewed_n; ?> публикаций (Срок продлен на <?php echo esc_html( $renew_text ); ?>)!
+                    </div>
+                <?php endif; ?>
+
                 <?php if ( $active_tab === 'profile' ) : ?>
                     <!-- TAB 1: PROFILE EDITING -->
                     <div class="vb-tab-pane vb-pane-profile">
@@ -708,46 +846,90 @@ class VB_Shortcodes {
                                 <a href="<?php echo esc_url( home_url( '/new/' ) ); ?>" class="vb-btn-add-new">+ Подать первое объявление</a>
                             </div>
                         <?php else : ?>
-                            <div class="vb-dash-table-wrap">
-                                <table class="vb-dash-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Фото</th>
-                                            <th>Заголовок</th>
-                                            <th>Рубрика</th>
-                                            <th>Дата</th>
-                                            <th>Статус</th>
-                                            <th>Действия</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ( $user_ads as $ad ) : 
-                                            $thumb = get_the_post_thumbnail_url( $ad->ID, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
-                                            $cats = wp_get_post_terms( $ad->ID, 'acadp_categories', [ 'fields' => 'names' ] );
-                                            $cat_str = ! empty( $cats ) ? $cats[0] : '—';
-                                            $status_label = ( $ad->post_status === 'publish' ) ? '<span class="vb-badge-pub">Опубликовано</span>' : '<span class="vb-badge-draft">' . esc_html( $ad->post_status ) . '</span>';
-                                        ?>
+                            <form method="POST" action="" class="vb-dash-bulk-form" onsubmit="return vbValidateBulk(this);">
+                                <?php wp_nonce_field( 'vb_dash_bulk_action', 'vb_dash_nonce' ); ?>
+                                <input type="hidden" name="vb_action" value="dash_bulk_action">
+                                <input type="hidden" name="tab" value="ads">
+
+                                <div class="vb-bulk-bar">
+                                    <div class="vb-bulk-left">
+                                        <label class="vb-bulk-select-all-label">
+                                            <input type="checkbox" class="vb-select-all-checkbox" data-target="vb-item-chk-ads">
+                                            <span>Выбрать все</span>
+                                        </label>
+                                        <div class="vb-bulk-select-wrap">
+                                            <select name="bulk_op" class="vb-bulk-select" required>
+                                                <option value="">Выберите действие...</option>
+                                                <option value="delete">🗑️ Удалить выбранные</option>
+                                                <optgroup label="⏳ Продлить публикацию:">
+                                                    <option value="renew_1m">⏳ Продлить на 1 месяц</option>
+                                                    <option value="renew_3m">⏳ Продлить на 3 месяца</option>
+                                                    <option value="renew_6m">⏳ Продлить на 6 месяцев</option>
+                                                    <option value="renew_1y">⏳ Продлить на 1 год</option>
+                                                </optgroup>
+                                            </select>
+                                            <button type="submit" class="vb-btn-bulk-apply">Применить</button>
+                                        </div>
+                                    </div>
+                                    <div class="vb-bulk-right">
+                                        <button type="submit" class="vb-btn-bulk-danger" onclick="this.form.bulk_op.value='delete';">🗑️ Удалить выбранные</button>
+                                    </div>
+                                </div>
+
+                                <div class="vb-dash-table-wrap">
+                                    <table class="vb-dash-table">
+                                        <thead>
                                             <tr>
-                                                <td class="vb-col-thumb">
-                                                    <img src="<?php echo esc_url( $thumb ); ?>" alt="" class="vb-table-thumb">
-                                                </td>
-                                                <td class="vb-col-title">
-                                                    <a href="<?php echo esc_url( get_permalink( $ad->ID ) ); ?>" class="vb-table-title-link">
-                                                        <strong><?php echo esc_html( $ad->post_title ); ?></strong>
-                                                    </a>
-                                                </td>
-                                                <td class="vb-col-cat"><?php echo esc_html( $cat_str ); ?></td>
-                                                <td class="vb-col-date"><?php echo esc_html( get_the_date( 'd.m.Y', $ad->ID ) ); ?></td>
-                                                <td class="vb-col-status"><?php echo $status_label; ?></td>
-                                                <td class="vb-col-actions">
-                                                    <a href="<?php echo esc_url( get_permalink( $ad->ID ) ); ?>" class="vb-btn-action vb-btn-view" target="_blank">Просмотр</a>
-                                                    <a href="<?php echo esc_url( home_url( '/new/?listing_id=' . $ad->ID ) ); ?>" class="vb-btn-action vb-btn-edit">Изменить</a>
-                                                </td>
+                                                <th class="vb-col-chk">
+                                                    <input type="checkbox" class="vb-select-all-checkbox" data-target="vb-item-chk-ads">
+                                                </th>
+                                                <th>Фото</th>
+                                                <th>Заголовок</th>
+                                                <th>Рубрика</th>
+                                                <th>Дата / Срок</th>
+                                                <th>Статус</th>
+                                                <th>Действия</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ( $user_ads as $ad ) : 
+                                                $thumb = get_the_post_thumbnail_url( $ad->ID, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                                                $cats = wp_get_post_terms( $ad->ID, 'acadp_categories', [ 'fields' => 'names' ] );
+                                                $cat_str = ! empty( $cats ) ? $cats[0] : '—';
+                                                $expiry = get_post_meta( $ad->ID, 'expiry_date', true ) ?: get_post_meta( $ad->ID, '_expiry_date', true );
+                                                $status_label = ( $ad->post_status === 'publish' ) ? '<span class="vb-badge-pub">Опубликовано</span>' : '<span class="vb-badge-draft">' . esc_html( $ad->post_status ) . '</span>';
+                                            ?>
+                                                <tr>
+                                                    <td class="vb-col-chk">
+                                                        <input type="checkbox" name="item_ids[]" value="<?php echo esc_attr( $ad->ID ); ?>" class="vb-item-chk-ads">
+                                                    </td>
+                                                    <td class="vb-col-thumb">
+                                                        <img src="<?php echo esc_url( $thumb ); ?>" alt="" class="vb-table-thumb">
+                                                    </td>
+                                                    <td class="vb-col-title">
+                                                        <a href="<?php echo esc_url( get_permalink( $ad->ID ) ); ?>" class="vb-table-title-link">
+                                                            <strong><?php echo esc_html( $ad->post_title ); ?></strong>
+                                                        </a>
+                                                    </td>
+                                                    <td class="vb-col-cat"><?php echo esc_html( $cat_str ); ?></td>
+                                                    <td class="vb-col-date">
+                                                        <div><?php echo esc_html( get_the_date( 'd.m.Y', $ad->ID ) ); ?></div>
+                                                        <?php if ( $expiry ) : ?>
+                                                            <small class="vb-expiry-tag">до <?php echo esc_html( date( 'd.m.Y', strtotime( $expiry ) ) ); ?></small>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="vb-col-status"><?php echo $status_label; ?></td>
+                                                    <td class="vb-col-actions">
+                                                        <a href="<?php echo esc_url( get_permalink( $ad->ID ) ); ?>" class="vb-btn-action vb-btn-view" target="_blank">Просмотр</a>
+                                                        <a href="<?php echo esc_url( home_url( '/new/?listing_id=' . $ad->ID ) ); ?>" class="vb-btn-action vb-btn-edit">Изменить</a>
+                                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'tab' => 'ads', 'vb_action' => 'delete_item', 'item_id' => $ad->ID ] ), 'vb_delete_item_' . $ad->ID ) ); ?>" class="vb-btn-action vb-btn-delete" onclick="return confirm('Вы уверены, что хотите удалить это объявление?');">Удалить</a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </form>
                         <?php endif; ?>
                     </div>
 
@@ -765,50 +947,99 @@ class VB_Shortcodes {
                                 <a href="<?php echo esc_url( home_url( '/add-listing/' ) ); ?>" class="vb-btn-add-new">+ Зарегистрировать компанию</a>
                             </div>
                         <?php else : ?>
-                            <div class="vb-dash-table-wrap">
-                                <table class="vb-dash-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Логотип</th>
-                                            <th>Название</th>
-                                            <th>Адрес / Телефон</th>
-                                            <th>Оценки</th>
-                                            <th>Действия</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ( $user_companies as $cmp ) : 
-                                            $logo = get_the_post_thumbnail_url( $cmp->ID, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-logo.svg';
-                                            $cmp_addr = get_post_meta( $cmp->ID, '_vb_address', true ) ?: get_post_meta( $cmp->ID, '_address', true );
-                                            $cmp_phone = get_post_meta( $cmp->ID, '_vb_phone', true ) ?: get_post_meta( $cmp->ID, '_phone', true );
-                                            $stats = VB_Ratings::get_vote_stats( 'company', $cmp->ID );
-                                        ?>
+                            <form method="POST" action="" class="vb-dash-bulk-form" onsubmit="return vbValidateBulk(this);">
+                                <?php wp_nonce_field( 'vb_dash_bulk_action', 'vb_dash_nonce' ); ?>
+                                <input type="hidden" name="vb_action" value="dash_bulk_action">
+                                <input type="hidden" name="tab" value="companies">
+
+                                <div class="vb-bulk-bar">
+                                    <div class="vb-bulk-left">
+                                        <label class="vb-bulk-select-all-label">
+                                            <input type="checkbox" class="vb-select-all-checkbox" data-target="vb-item-chk-companies">
+                                            <span>Выбрать все</span>
+                                        </label>
+                                        <div class="vb-bulk-select-wrap">
+                                            <select name="bulk_op" class="vb-bulk-select" required>
+                                                <option value="">Выберите действие...</option>
+                                                <option value="delete">🗑️ Удалить выбранные</option>
+                                                <optgroup label="⏳ Продлить регистрацию:">
+                                                    <option value="renew_1m">⏳ Продлить на 1 месяц</option>
+                                                    <option value="renew_3m">⏳ Продлить на 3 месяца</option>
+                                                    <option value="renew_6m">⏳ Продлить на 6 месяцев</option>
+                                                    <option value="renew_1y">⏳ Продлить на 1 год</option>
+                                                </optgroup>
+                                            </select>
+                                            <button type="submit" class="vb-btn-bulk-apply">Применить</button>
+                                        </div>
+                                    </div>
+                                    <div class="vb-bulk-right">
+                                        <button type="submit" class="vb-btn-bulk-danger" onclick="this.form.bulk_op.value='delete';">🗑️ Удалить выбранные</button>
+                                    </div>
+                                </div>
+
+                                <div class="vb-dash-table-wrap">
+                                    <table class="vb-dash-table">
+                                        <thead>
                                             <tr>
-                                                <td class="vb-col-thumb">
-                                                    <img src="<?php echo esc_url( $logo ); ?>" alt="" class="vb-table-thumb">
-                                                </td>
-                                                <td class="vb-col-title">
-                                                    <a href="<?php echo esc_url( get_permalink( $cmp->ID ) ); ?>" class="vb-table-title-link">
-                                                        <strong><?php echo esc_html( $cmp->post_title ); ?></strong>
-                                                    </a>
-                                                </td>
-                                                <td class="vb-col-info">
-                                                    <div>📍 <?php echo esc_html( $cmp_addr ?: '—' ); ?></div>
-                                                    <div>📞 <?php echo esc_html( $cmp_phone ?: '—' ); ?></div>
-                                                </td>
-                                                <td class="vb-col-ratings">
-                                                    <span class="vb-rate-up">👍 <?php echo (int) $stats['likes']; ?></span>
-                                                    <span class="vb-rate-down">👎 <?php echo (int) $stats['dislikes']; ?></span>
-                                                </td>
-                                                <td class="vb-col-actions">
-                                                    <a href="<?php echo esc_url( get_permalink( $cmp->ID ) ); ?>" class="vb-btn-action vb-btn-view" target="_blank">Просмотр</a>
-                                                    <a href="<?php echo esc_url( home_url( '/add-listing/?listing_id=' . $cmp->ID ) ); ?>" class="vb-btn-action vb-btn-edit">Изменить</a>
-                                                </td>
+                                                <th class="vb-col-chk">
+                                                    <input type="checkbox" class="vb-select-all-checkbox" data-target="vb-item-chk-companies">
+                                                </th>
+                                                <th>Логотип</th>
+                                                <th>Название</th>
+                                                <th>Адрес / Телефон / Срок</th>
+                                                <th>Оценки</th>
+                                                <th>Статус</th>
+                                                <th>Действия</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ( $user_companies as $cmp ) : 
+                                                $logo = get_the_post_thumbnail_url( $cmp->ID, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-logo.svg';
+                                                $cmp_addr = get_post_meta( $cmp->ID, '_vb_address', true ) ?: get_post_meta( $cmp->ID, '_address', true );
+                                                $cmp_phone = get_post_meta( $cmp->ID, '_vb_phone', true ) ?: get_post_meta( $cmp->ID, '_phone', true );
+                                                $cmp_expiry = get_post_meta( $cmp->ID, 'expiry_date', true ) ?: get_post_meta( $cmp->ID, '_expiry_date', true ) ?: get_post_meta( $cmp->ID, '_vb_expiry_date', true );
+                                                $stats = VB_Ratings::get_vote_stats( 'company', $cmp->ID );
+                                                $cmp_status_label = ( $cmp->post_status === 'publish' ) 
+                                                    ? '<span class="vb-badge-pub">Активна</span>' 
+                                                    : ( ( $cmp->post_status === 'expired' ) 
+                                                        ? '<span class="vb-badge-draft" style="background:#fee2e2;color:#b91c1c;">Истекла</span>' 
+                                                        : '<span class="vb-badge-draft">' . esc_html( $cmp->post_status ) . '</span>' );
+                                            ?>
+                                                <tr>
+                                                    <td class="vb-col-chk">
+                                                        <input type="checkbox" name="item_ids[]" value="<?php echo esc_attr( $cmp->ID ); ?>" class="vb-item-chk-companies">
+                                                    </td>
+                                                    <td class="vb-col-thumb">
+                                                        <img src="<?php echo esc_url( $logo ); ?>" alt="" class="vb-table-thumb">
+                                                    </td>
+                                                    <td class="vb-col-title">
+                                                        <a href="<?php echo esc_url( get_permalink( $cmp->ID ) ); ?>" class="vb-table-title-link">
+                                                            <strong><?php echo esc_html( $cmp->post_title ); ?></strong>
+                                                        </a>
+                                                    </td>
+                                                    <td class="vb-col-info">
+                                                        <div>📍 <?php echo esc_html( $cmp_addr ?: '—' ); ?></div>
+                                                        <div>📞 <?php echo esc_html( $cmp_phone ?: '—' ); ?></div>
+                                                        <?php if ( $cmp_expiry ) : ?>
+                                                            <small class="vb-expiry-tag">до <?php echo esc_html( date( 'd.m.Y', strtotime( $cmp_expiry ) ) ); ?></small>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="vb-col-ratings">
+                                                        <span class="vb-rate-up">👍 <?php echo (int) $stats['likes']; ?></span>
+                                                        <span class="vb-rate-down">👎 <?php echo (int) $stats['dislikes']; ?></span>
+                                                    </td>
+                                                    <td class="vb-col-status"><?php echo $cmp_status_label; ?></td>
+                                                    <td class="vb-col-actions">
+                                                        <a href="<?php echo esc_url( get_permalink( $cmp->ID ) ); ?>" class="vb-btn-action vb-btn-view" target="_blank">Просмотр</a>
+                                                        <a href="<?php echo esc_url( home_url( '/add-listing/?listing_id=' . $cmp->ID ) ); ?>" class="vb-btn-action vb-btn-edit">Изменить</a>
+                                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'tab' => 'companies', 'vb_action' => 'delete_item', 'item_id' => $cmp->ID ] ), 'vb_delete_item_' . $cmp->ID ) ); ?>" class="vb-btn-action vb-btn-delete" onclick="return confirm('Вы уверены, что хотите удалить эту компанию?');">Удалить</a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </form>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
