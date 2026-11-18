@@ -124,7 +124,7 @@ class VB_Shortcodes {
                 wp_die( 'У вас нет прав на удаление этой записи.' );
             }
 
-            wp_trash_post( $item_id );
+            wp_delete_post( $item_id, true );
 
             $redirect_url = remove_query_arg( [ 'vb_action', 'item_id', '_wpnonce' ] );
             $redirect_url = add_query_arg( [ 'tab' => $tab, 'deleted' => 1 ], $redirect_url );
@@ -155,7 +155,7 @@ class VB_Shortcodes {
                 foreach ( $item_ids as $id ) {
                     $post = get_post( $id );
                     if ( $post && ( (int) $post->post_author === $current_user_id || current_user_can( 'manage_options' ) ) ) {
-                        wp_trash_post( $id );
+                        wp_delete_post( $id, true );
                         $count++;
                     }
                 }
@@ -1085,8 +1085,13 @@ class VB_Shortcodes {
                                         <tbody>
                                             <?php foreach ( $user_ads as $ad ) : 
                                                 $thumb = get_the_post_thumbnail_url( $ad->ID, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
-                                                $cats = wp_get_post_terms( $ad->ID, 'acadp_categories', [ 'fields' => 'names' ] );
-                                                $cat_str = ! empty( $cats ) ? $cats[0] : '—';
+                                                $cats = wp_get_post_terms( $ad->ID, 'vb_category', [ 'fields' => 'names' ] );
+                                                if ( is_wp_error( $cats ) || empty( $cats ) ) {
+                                                    if ( taxonomy_exists( 'acadp_categories' ) ) {
+                                                        $cats = wp_get_post_terms( $ad->ID, 'acadp_categories', [ 'fields' => 'names' ] );
+                                                    }
+                                                }
+                                                $cat_str = ( ! is_wp_error( $cats ) && ! empty( $cats ) ) ? $cats[0] : '—';
                                                 $expiry = get_post_meta( $ad->ID, 'expiry_date', true ) ?: get_post_meta( $ad->ID, '_expiry_date', true );
                                                 $status_label = ( $ad->post_status === 'publish' ) ? '<span class="vb-badge-pub">Опубликовано</span>' : '<span class="vb-badge-draft">' . esc_html( $ad->post_status ) . '</span>';
                                             ?>

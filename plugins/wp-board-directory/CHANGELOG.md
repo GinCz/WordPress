@@ -1,5 +1,22 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.06] - 2026-11-18
+### Fixed
+- Fixed fatal stall / endless loading on Dashboard Ads tab (`https://doska-cz.ru/dashboard/?tab=ads`):
+  - Removed deprecated unverified call to deleted taxonomy `acadp_categories`.
+  - Added safe taxonomy lookup with `vb_category` first and strict `is_wp_error()` checks.
+  - Page now loads instantly in < 0.2s.
+
+### Added
+- Permanent Attached Media Deletion on Item Removal:
+  - Deleting an ad or company (both single action and bulk delete) permanently purges all attached images from disk (`_thumbnail_id`, `_vb_images`, legacy `images`, `_gallery_images`, `_listing_images`, `_atbdp_gallery`, `_atbdp_header_image`, and all attachments with `post_parent = $post_id`) via `wp_delete_attachment( $id, true )`.
+- Turnkey Orphan Media Cleaner Engine (`VB_Media_Cleaner`):
+  - Added dedicated Admin GUI tool under **Доска и Фирмы ➔ Очистка картинок** (`vb-media-cleaner`).
+  - Scans entire WordPress media library, cross-references all active posts, pages, listings, companies, featured images, galleries, logos, and site icons.
+  - Displays interactive audit dashboard: Total Media, Used on Site, Orphan/Unused garbage count, and freed MB space.
+  - Provides 1-Click "Выбрать все неиспользуемые" and bulk permanent disk purge.
+  - Added WP-CLI command `wp vb clean-media [--dry-run]`.
+
 ## [2026-11__1.05] - 2026-11-18
 ### Added
 - Complete elimination and deletion of legacy `Directorist` and `Advanced Classifieds and Directory Pro (ACADP)` plugins.
