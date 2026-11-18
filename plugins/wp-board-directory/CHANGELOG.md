@@ -1,5 +1,15 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.09] - 2026-11-18
+### Fixed
+- Fixed 502 Bad Gateway ("upstream sent too big header") on bulk admin actions with high post selection counts:
+  - Tuned FastCGI buffers (`fastcgi_buffer_size 128k; fastcgi_buffers 8 128k;`).
+  - Cleaned duplicate `DISALLOW_FILE_EDIT` warning in `wp-config.php`.
+
+### Added
+- Deep Admin Search:
+  - Searching by email (`s=example@gmail.com`), phone number, or address in `edit.php?post_type=vb_listing` now automatically searches through custom meta fields (`_vb_email`, `_vb_phone`, `_vb_address`) and author profile accounts.
+
 ## [2026-11__1.08] - 2026-11-18
 ### Added
 - Admin List Table Enhancements (`edit.php?post_type=vb_listing`):

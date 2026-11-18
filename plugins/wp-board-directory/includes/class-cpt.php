@@ -24,6 +24,9 @@ class VB_CPT {
 
         // Pre get posts for frontend city filter and admin sorting/filtering
         add_action( 'pre_get_posts', [ __CLASS__, 'handle_pre_get_posts' ] );
+
+        // Enhanced admin search across custom fields (email, phone, address)
+        add_filter( 'posts_search', [ __CLASS__, 'enhance_admin_search' ], 10, 2 );
     }
 
     public static function register_post_types() {
@@ -360,6 +363,41 @@ class VB_CPT {
                 $query->set( 'order', 'ASC' );
             }
         }
+    }
+
+    /**
+     * Enhanced search across custom fields (_vb_email, _vb_phone, _vb_address) and author email
+     */
+    public static function enhance_admin_search( $search, $query ) {
+        global $wpdb;
+
+        if ( ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) && 'vb_listing' === $query->get( 'post_type' ) && $query->is_search() ) {
+            $search_term = trim( (string) $query->get( 's' ) );
+            if ( ! empty( $search_term ) ) {
+                $term_like = '%' . $wpdb->esc_like( $search_term ) . '%';
+
+                // Find matching post IDs from postmeta
+                $meta_ids = $wpdb->get_col( $wpdb->prepare(
+                    "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_email', '_vb_phone', '_vb_address', 'email', 'phone', '_email', '_phone') AND meta_value LIKE %s",
+                    $term_like
+                ) );
+
+                // Find matching post IDs from author users
+                $user_ids = $wpdb->get_col( $wpdb->prepare(
+                    "SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->users} u ON p.post_author = u.ID WHERE p.post_type = 'vb_listing' AND (u.user_email LIKE %s OR u.display_name LIKE %s)",
+                    $term_like,
+                    $term_like
+                ) );
+
+                $matched_ids = array_unique( array_merge( (array) $meta_ids, (array) $user_ids ) );
+                if ( ! empty( $matched_ids ) ) {
+                    $id_list = implode( ',', array_map( 'absint', $matched_ids ) );
+                    $search = " AND (({$wpdb->posts}.post_title LIKE '{$term_like}') OR ({$wpdb->posts}.post_content LIKE '{$term_like}') OR ({$wpdb->posts}.ID IN ({$id_list}))) ";
+                }
+            }
+        }
+
+        return $search;
     }
 
     /**
