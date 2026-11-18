@@ -13,19 +13,34 @@ class VB_Shortcodes {
 
     public static function init() {
         add_shortcode( 'vb_categories', [ __CLASS__, 'render_categories' ] );
-        add_shortcode( 'vb_listings', [ __CLASS__, 'render_listings' ] );
-        add_shortcode( 'vb_companies', [ __CLASS__, 'render_companies' ] );
-        add_shortcode( 'vb_dashboard', [ __CLASS__, 'render_dashboard' ] );
+        add_shortcode( 'acadp_categories', [ __CLASS__, 'render_categories' ] );
 
-        // Backward compatibility: alias old dashboard shortcodes to our unified dashboard
+        add_shortcode( 'vb_listings', [ __CLASS__, 'render_listings' ] );
+        add_shortcode( 'acadp_listings', [ __CLASS__, 'render_listings' ] );
+
+        add_shortcode( 'vb_companies', [ __CLASS__, 'render_companies' ] );
+        add_shortcode( 'directorist_all_listings', [ __CLASS__, 'render_companies' ] );
+
+        add_shortcode( 'vb_dashboard', [ __CLASS__, 'render_dashboard' ] );
         add_shortcode( 'acadp_user_dashboard', [ __CLASS__, 'render_dashboard' ] );
         add_shortcode( 'directorist_user_dashboard', [ __CLASS__, 'render_dashboard' ] );
+
+        add_shortcode( 'vb_submit', [ __CLASS__, 'render_submit_form' ] );
+        add_shortcode( 'acadp_listing_form', [ __CLASS__, 'render_submit_form' ] );
+        add_shortcode( 'directorist_add_listing', [ __CLASS__, 'render_submit_form' ] );
 
         // Handle profile save POST
         add_action( 'init', [ __CLASS__, 'handle_profile_save' ] );
 
         // Handle dashboard actions (bulk delete, bulk renewals, single delete)
         add_action( 'init', [ __CLASS__, 'handle_dashboard_actions' ] );
+
+        // Handle listing submission (admin-post)
+        add_action( 'admin_post_vb_handle_submit_listing', [ __CLASS__, 'handle_listing_submission' ] );
+        add_action( 'admin_post_nopriv_vb_handle_submit_listing', [ __CLASS__, 'handle_listing_submission' ] );
+
+        // Template routing (Single ad, single company, category archive)
+        add_filter( 'template_include', [ __CLASS__, 'route_templates' ] );
 
         // 301 Redirect for legacy /all-listings/ to /company/
         add_action( 'template_redirect', [ __CLASS__, 'handle_legacy_redirects' ] );
@@ -218,6 +233,166 @@ class VB_Shortcodes {
     }
 
     /**
+     * Route single listing and category templates
+     */
+    public static function route_templates( $template ) {
+        if ( is_singular( 'vb_listing' ) ) {
+            $custom = VB_BOARD_PATH . 'templates/single-listing.php';
+            if ( file_exists( $custom ) ) {
+                return $custom;
+            }
+        }
+
+        if ( is_tax( 'vb_category' ) || is_tax( 'vb_location' ) ) {
+            $custom = VB_BOARD_PATH . 'templates/taxonomy-category.php';
+            if ( file_exists( $custom ) ) {
+                return $custom;
+            }
+        }
+
+        return $template;
+    }
+
+    /**
+     * Render Frontend Submission Form
+     */
+    public static function render_submit_form( $atts = [] ) {
+        ob_start();
+        include VB_BOARD_PATH . 'templates/submit-form.php';
+        return ob_get_clean();
+    }
+
+    /**
+     * Handle Frontend Ad / Company Submission POST
+     */
+    public static function handle_listing_submission() {
+        if ( ! check_admin_referer( 'vb_submit_listing_action', 'vb_submit_nonce' ) ) {
+            wp_die( 'Ошибка безопасности (неверный nonce).' );
+        }
+
+        // Verify Cloudflare Turnstile if available
+        if ( function_exists( 'cfturnstile_check' ) && ! cfturnstile_check() ) {
+            $referer = wp_get_referer() ?: home_url( '/new/' );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Пожалуйста, подтвердите проверку Turnstile.' ) ], $referer ) );
+            exit;
+        }
+
+        $title        = sanitize_text_field( $_POST['title'] ?? '' );
+        $category_id  = absint( $_POST['category_id'] ?? 0 );
+        $location_val = sanitize_text_field( $_POST['location_id'] ?? '' );
+        $price        = floatval( $_POST['price'] ?? 0 );
+        $phone        = sanitize_text_field( $_POST['phone'] ?? '' );
+        $whatsapp     = sanitize_text_field( $_POST['whatsapp'] ?? '' );
+        $telegram     = sanitize_text_field( $_POST['telegram'] ?? '' );
+        $email        = sanitize_email( $_POST['email'] ?? '' );
+        $address      = sanitize_text_field( $_POST['address'] ?? '' );
+        $description  = wp_kses_post( $_POST['description'] ?? '' );
+        $type         = ( isset( $_POST['listing_type'] ) && 'company' === $_POST['listing_type'] ) ? 'company' : 'classified';
+
+        if ( empty( $title ) || empty( $description ) ) {
+            $referer = wp_get_referer() ?: home_url( '/new/' );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Заполните обязательные поля.' ) ], $referer ) );
+            exit;
+        }
+
+        $author_id = get_current_user_id() ?: 1;
+
+        // Create vb_listing post
+        $post_id = wp_insert_post( [
+            'post_title'   => $title,
+            'post_content' => $description,
+            'post_status'  => 'publish',
+            'post_type'    => 'vb_listing',
+            'post_author'  => $author_id,
+        ] );
+
+        if ( is_wp_error( $post_id ) ) {
+            $referer = wp_get_referer() ?: home_url( '/new/' );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( $post_id->get_error_message() ) ], $referer ) );
+            exit;
+        }
+
+        // Set metadata
+        update_post_meta( $post_id, '_vb_type', $type );
+        update_post_meta( $post_id, '_vb_price', $price );
+        update_post_meta( $post_id, '_vb_phone', $phone );
+        update_post_meta( $post_id, '_vb_whatsapp', $whatsapp );
+        update_post_meta( $post_id, '_vb_telegram', $telegram );
+        update_post_meta( $post_id, '_vb_email', $email );
+        update_post_meta( $post_id, '_vb_address', $address );
+
+        // Expiry date (default 6 months)
+        $expiry_str = date( 'Y-m-d H:i:s', strtotime( '+6 months', current_time( 'timestamp' ) ) );
+        update_post_meta( $post_id, 'expiry_date', $expiry_str );
+        update_post_meta( $post_id, '_expiry_date', $expiry_str );
+        update_post_meta( $post_id, '_vb_expiry_date', $expiry_str );
+
+        // Assign category
+        if ( $category_id ) {
+            wp_set_post_terms( $post_id, [ $category_id ], 'vb_category' );
+        }
+
+        // Assign location
+        if ( $location_val ) {
+            $loc_term = get_term_by( 'slug', $location_val, 'vb_location' );
+            if ( $loc_term ) {
+                wp_set_post_terms( $post_id, [ $loc_term->term_id ], 'vb_location' );
+            }
+        }
+
+        // Handle WebP compressed base64 photos
+        if ( ! empty( $_POST['vb_photos_webp'] ) && is_array( $_POST['vb_photos_webp'] ) ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+
+            $attached_ids = [];
+            $upload_dir   = wp_upload_dir();
+
+            foreach ( array_slice( $_POST['vb_photos_webp'], 0, 15 ) as $i => $data_uri ) {
+                if ( ! preg_match( '/^data:image\/(\w+);base64,/', $data_uri, $type_matches ) ) {
+                    continue;
+                }
+                $data = substr( $data_uri, strpos( $data_uri, ',' ) + 1 );
+                $decoded = base64_decode( $data );
+                if ( false === $decoded ) {
+                    continue;
+                }
+
+                $filename = 'ad_' . $post_id . '_' . time() . '_' . $i . '.webp';
+                $filepath = $upload_dir['path'] . '/' . $filename;
+
+                if ( file_put_contents( $filepath, $decoded ) ) {
+                    $attachment = [
+                        'post_mime_type' => 'image/webp',
+                        'post_title'     => sanitize_file_name( $filename ),
+                        'post_content'   => '',
+                        'post_status'    => 'inherit',
+                    ];
+                    $attach_id = wp_insert_attachment( $attachment, $filepath, $post_id );
+                    if ( $attach_id && ! is_wp_error( $attach_id ) ) {
+                        $attach_data = wp_generate_attachment_metadata( $attach_id, $filepath );
+                        wp_update_attachment_metadata( $attach_id, $attach_data );
+                        $attached_ids[] = $attach_id;
+
+                        if ( empty( $attached_ids[1] ) && $i === 0 ) {
+                            set_post_thumbnail( $post_id, $attach_id );
+                        }
+                    }
+                }
+            }
+
+            if ( ! empty( $attached_ids ) ) {
+                update_post_meta( $post_id, '_vb_images', $attached_ids );
+            }
+        }
+
+        // Redirect to newly published listing
+        wp_safe_redirect( get_permalink( $post_id ) );
+        exit;
+    }
+
+    /**
      * Filter ACADP deprecated template loader
      */
     public static function filter_acadp_template( $template_file, $name, $widget = '' ) {
@@ -247,11 +422,11 @@ class VB_Shortcodes {
      * Hierarchical 3-Column Categories Grid (Exact layout with full keywords, H2 and H3)
      */
     public static function render_categories( $atts ) {
-        $tax = taxonomy_exists( 'vb_category' ) ? 'vb_category' : 'acadp_categories';
+        $tax = 'vb_category';
 
         $col_slugs = [
             0 => [ 'avto', 'rabota-i-biznes', 'sredstva-svyazi' ],
-            1 => [ 'razvlecheniya', 'dlya-doma', 'hozyajstvo' ],
+            1 => [ 'dlya-doma', 'razvlecheniya', 'hozyajstvo' ],
             2 => [ 'nedvizhimost', 'raznoe', 'elektronika' ],
         ];
 
@@ -569,25 +744,41 @@ class VB_Shortcodes {
      */
     public static function render_listings( $atts ) {
         $atts = shortcode_atts( [
-            'per_page' => 24,
-            'type'     => 'classified',
-            'orderby'  => 'date',
-            'order'    => 'DESC',
+            'per_page'          => 30,
+            'listings_per_page' => 30,
+            'type'              => 'classified',
+            'orderby'           => 'date',
+            'order'             => 'DESC',
+            'category'          => '',
         ], $atts, 'vb_listings' );
 
-        $query = new WP_Query( [
+        $per_page = ! empty( $atts['listings_per_page'] ) ? (int) $atts['listings_per_page'] : (int) $atts['per_page'];
+
+        $query_args = [
             'post_type'      => 'vb_listing',
             'post_status'    => 'publish',
-            'posts_per_page' => (int) $atts['per_page'],
+            'posts_per_page' => $per_page,
             'meta_query'     => [
                 [
                     'key'   => '_vb_type',
                     'value' => $atts['type'],
                 ],
             ],
-            'orderby'        => $atts['orderby'],
+            'orderby'        => $atts['orderby'] === 'rand' ? 'rand' : $atts['orderby'],
             'order'          => $atts['order'],
-        ] );
+        ];
+
+        if ( ! empty( $atts['category'] ) ) {
+            $query_args['tax_query'] = [
+                [
+                    'taxonomy' => 'vb_category',
+                    'field'    => is_numeric( $atts['category'] ) ? 'term_id' : 'slug',
+                    'terms'    => $atts['category'],
+                ],
+            ];
+        }
+
+        $query = new WP_Query( $query_args );
 
         if ( ! $query->have_posts() ) {
             return '<p class="vb-empty-state">Объявления не найдены.</p>';
@@ -600,7 +791,7 @@ class VB_Shortcodes {
                 $id       = get_the_ID();
                 $price    = get_post_meta( $id, '_vb_price', true );
                 $thumb    = get_the_post_thumbnail_url( $id, 'medium' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
-                $cats     = wp_get_post_terms( $id, 'acadp_categories', [ 'fields' => 'names' ] );
+                $cats     = wp_get_post_terms( $id, 'vb_category', [ 'fields' => 'names' ] );
                 $cat_name = ! empty( $cats ) ? $cats[0] : '';
                 $stats    = VB_Ratings::get_vote_stats( 'listing', $id );
             ?>

@@ -40,13 +40,13 @@ class VB_CPT {
             'show_ui'            => true,
             'show_in_menu'       => true,
             'query_var'          => true,
-            'rewrite'            => [ 'slug' => 'item', 'with_front' => false ],
+            'rewrite'            => [ 'slug' => 'inzerat', 'with_front' => false ],
             'capability_type'    => 'post',
-            'has_archive'        => 'all-items',
+            'has_archive'        => 'inzeraty',
             'hierarchical'       => false,
             'menu_position'      => 5,
             'menu_icon'          => 'dashicons-grid-view',
-            'supports'           => [ 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' ],
+            'supports'           => [ 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments', 'custom-fields' ],
             'show_in_rest'       => true,
         ];
 
@@ -75,7 +75,7 @@ class VB_CPT {
             'show_ui'               => true,
             'show_admin_column'     => true,
             'query_var'             => true,
-            'rewrite'               => [ 'slug' => 'board-cat', 'with_front' => false ],
+            'rewrite'               => [ 'slug' => 'kategorie', 'with_front' => false, 'hierarchical' => true ],
             'show_in_rest'          => true,
             'update_count_callback' => '_update_post_term_count',
         ] );
@@ -101,7 +101,7 @@ class VB_CPT {
             'show_ui'           => true,
             'show_admin_column' => true,
             'query_var'         => true,
-            'rewrite'           => [ 'slug' => 'location', 'with_front' => false ],
+            'rewrite'           => [ 'slug' => 'mesto', 'with_front' => false, 'hierarchical' => true ],
             'show_in_rest'      => true,
         ] );
     }

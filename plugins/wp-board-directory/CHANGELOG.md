@@ -1,5 +1,27 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.05] - 2026-11-18
+### Added
+- Complete elimination and deletion of legacy `Directorist` and `Advanced Classifieds and Directory Pro (ACADP)` plugins.
+- Modern Single Listing Template (`templates/single-listing.php`):
+  - High-res photo gallery with thumbnail strip.
+  - Price in Czech Koruna (Kč) and approx. EUR (€).
+  - Quick contact bar: Click-to-Call (`tel:`), direct WhatsApp (`wa.me`), Telegram, and website links.
+  - Safe deal recommendations and dual anti-fraud ratings (`👍 Рекомендую / 👎 Сомнительно`).
+  - Related listings from the same category.
+- Taxonomy Category Archive Template (`templates/taxonomy-category.php`):
+  - Breadcrumb navigation, subcategory pills/chips, Czech city/region filter.
+  - Responsive 3-column equal-height cards grid with 260px cover images.
+- Turnkey Frontend Submission Engine (`templates/submit-form.php`):
+  - Client-side WebP compression up to 15 photos (max 1024px) with zero server overhead.
+  - Category and Czech region selectors.
+  - Cloudflare Turnstile bot protection integration.
+- Full Czech URL Slugs (`CZ Standard`):
+  - Listings: `/inzerat/<slug>/` (archive: `/inzeraty/`)
+  - Categories: `/kategorie/<slug>/`
+  - Locations: `/mesto/<slug>/`
+- Aliased legacy shortcodes (`acadp_categories`, `acadp_listings`, `acadp_listing_form`, `directorist_add_listing`) to native `wp-board-directory` handlers.
+
 ## [2026-11__1.04] - 2026-11-18
 ### Added
 - Dashboard Bulk Actions (`/kabinet/?tab=ads` & `/kabinet/?tab=companies`):
