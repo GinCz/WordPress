@@ -557,7 +557,7 @@ class VB_Shortcodes {
         $loc_slug   = sanitize_text_field( $_GET['vb_loc'] ?? '' );
 
         $args = [
-            'post_type'      => [ 'vb_listing', 'at_biz_dir' ],
+            'post_type'      => 'vb_listing',
             'post_status'    => 'publish',
             'posts_per_page' => (int) $atts['per_page'],
             'orderby'        => $atts['orderby'],

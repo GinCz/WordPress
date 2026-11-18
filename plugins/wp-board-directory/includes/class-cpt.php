@@ -243,12 +243,13 @@ class VB_CPT {
         // 2. Filter by Location
         $selected_loc = sanitize_text_field( $_GET['vb_location_filter'] ?? '' );
         wp_dropdown_categories( [
-            'show_option_all' => '— Все города —',
+            'show_option_all' => '— Все города и регионы —',
             'taxonomy'        => 'vb_location',
             'name'            => 'vb_location_filter',
             'orderby'         => 'name',
             'selected'        => $selected_loc,
             'hierarchical'    => true,
+            'depth'           => 3,
             'show_count'      => true,
             'hide_empty'      => false,
             'value_field'     => 'slug',
@@ -420,6 +421,33 @@ class VB_CPT {
             .column-vb_price { width: 95px; }
             .column-vb_expiry { width: 85px; }
         </style>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('posts-filter');
+            if (!form) return;
+            form.addEventListener('submit', function() {
+                // Disable useless/default GET parameters so they do not clutter the URL
+                var checks = [
+                    { name: 'filter_action', condition: function() { return true; } },
+                    { name: 'action', condition: function(v) { return v === '-1' || !v; } },
+                    { name: 'action2', condition: function(v) { return v === '-1' || !v; } },
+                    { name: 'm', condition: function(v) { return v === '0' || !v; } },
+                    { name: 's', condition: function(v) { return !v.trim(); } },
+                    { name: 'vb_category_filter', condition: function(v) { return v === '0' || !v; } },
+                    { name: 'vb_location_filter', condition: function(v) { return v === '0' || !v; } },
+                    { name: 'vb_type_filter', condition: function(v) { return !v; } }
+                ];
+                checks.forEach(function(item) {
+                    var els = form.querySelectorAll('[name="' + item.name + '"]');
+                    els.forEach(function(el) {
+                        if (item.condition(el.value)) {
+                            el.disabled = true;
+                        }
+                    });
+                });
+            });
+        });
+        </script>
         <?php
     }
 }

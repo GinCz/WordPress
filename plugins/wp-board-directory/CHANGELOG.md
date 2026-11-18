@@ -1,5 +1,18 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.10] - 2026-11-18
+### Added
+- Complete Czech Republic Regions:
+  - Integrated all 14 administrative regions (kraje) of the Czech Republic under parent taxonomy `Чехия` (`vb_location`): Prague, Central Bohemian, South Moravian (Brno), South Bohemian (České Budějovice), Plzeň, Karlovy Vary, Ústí nad Labem, Liberec, Hradec Králové, Pardubice, Vysočina (Jihlava), Olomouc, Moravian-Silesian (Ostrava), Zlín.
+  - Added anti-spam trap regions (`Россия` / `Москва`, `Украина` / `Киев`) allowing spammers to self-segment for immediate 1-click administrative purging.
+  - Dynamic hierarchical dropdowns with optgroups in frontend submission form (`templates/submit-form.php`) and category archive filter toolbar (`templates/taxonomy-category.php`).
+- Clean Admin Filter URLs:
+  - Added client-side form sanitizer to `#posts-filter` that disables empty parameters and default `-1`/`0` values before submission, completely eliminating URL clutter (such as `filter_action=Фильтр` and empty queries).
+
+### Fixed
+- Fixed `/company/` catalog query to strictly query `vb_listing`, eliminating duplicate cards caused by residual legacy Directorist posts.
+- Restored missing published companies from trash and permanently purged orphaned legacy `at_biz_dir` posts.
+
 ## [2026-11__1.09] - 2026-11-18
 ### Fixed
 - Fixed 502 Bad Gateway ("upstream sent too big header") on bulk admin actions with high post selection counts:
