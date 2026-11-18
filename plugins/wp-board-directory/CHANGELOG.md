@@ -1,5 +1,26 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.12] - 2026-11-19
+### Added
+- Separated Admin Menus & Dedicated Views:
+  - Reorganized Admin Submenus under «Доска и Фирмы»:
+    1. «📢 Все объявления» (`edit.php?post_type=vb_listing&vb_type_filter=classified`)
+    2. «🏢 Все компании» (`edit.php?post_type=vb_listing&vb_type_filter=company`)
+    3. «➕ Добавить объявление» (`post-new.php?post_type=vb_listing&vb_type=classified`)
+    4. «➕ Добавить компанию» (`post-new.php?post_type=vb_listing&vb_type=company`)
+    5. «📁 Рубрики» (`edit-tags.php?taxonomy=vb_category&post_type=vb_listing`)
+    6. «📍 Города / Локации» (`edit-tags.php?taxonomy=vb_location&post_type=vb_listing`)
+    7. «🧹 Очистка картинок» (`vb-media-cleaner`)
+    8. «📦 Миграция (1-Click)» (`vb-migration`)
+- Independent List Views & Filtering:
+  - Classified Ads and Business Directory Companies are now cleanly separated in admin list tables.
+  - Sticky type retention across post status tabs (`Все`, `Опубликованные`, `Черновики`, `Корзина`) and pagination.
+  - Dynamic page heading («📢 Все объявления» vs «🏢 Каталог компаний») and context-aware «Добавить» action button.
+- Comprehensive Listing & Company Admin Meta Box:
+  - Added native «⚙️ Параметры записи (Доска & Каталог)» with visual type toggle (Объявление / Компания).
+  - Clean inputs for Phone, Email, WhatsApp, Telegram, Address, Website URL, Price (Kč), and Publication Expiry Date.
+  - Context-aware title placeholder ("Введите заголовок объявления..." vs "Введите название компании...").
+
 ## [2026-11__1.11] - 2026-11-18
 ### Fixed
 - Fixed font clipping in Category Filter Toolbar (`templates/taxonomy-category.php`):

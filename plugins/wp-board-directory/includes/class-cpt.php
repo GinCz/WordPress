@@ -27,6 +27,19 @@ class VB_CPT {
 
         // Enhanced admin search across custom fields (email, phone, address)
         add_filter( 'posts_search', [ __CLASS__, 'enhance_admin_search' ], 10, 2 );
+
+        // Admin Submenu Reordering & Highlighting
+        add_action( 'admin_menu', [ __CLASS__, 'customize_admin_submenus' ], 99 );
+        add_filter( 'parent_file', [ __CLASS__, 'fix_admin_parent_file' ] );
+        add_filter( 'submenu_file', [ __CLASS__, 'fix_admin_submenu_file' ], 10, 2 );
+        add_filter( 'views_edit-vb_listing', [ __CLASS__, 'filter_admin_views' ] );
+
+        // Listing Parameters Meta Box
+        add_action( 'add_meta_boxes', [ __CLASS__, 'add_listing_meta_boxes' ] );
+        add_action( 'save_post_vb_listing', [ __CLASS__, 'save_listing_meta_boxes' ], 10, 2 );
+
+        // Title Placeholder Customization
+        add_filter( 'enter_title_here', [ __CLASS__, 'custom_title_placeholder' ], 10, 2 );
     }
 
     public static function register_post_types() {
@@ -225,7 +238,17 @@ class VB_CPT {
             return;
         }
 
-        // 1. Filter by Category
+        // 1. Filter by Type (Ad vs Company)
+        $selected_type = sanitize_key( $_GET['vb_type_filter'] ?? 'classified' );
+        ?>
+        <select name="vb_type_filter" id="filter-by-vb-type">
+            <option value="classified" <?php selected( $selected_type, 'classified' ); ?>>📢 Только объявления</option>
+            <option value="company" <?php selected( $selected_type, 'company' ); ?>>🏢 Только компании</option>
+            <option value="all" <?php selected( $selected_type, 'all' ); ?>>📋 Все вместе (объявления и фирмы)</option>
+        </select>
+        <?php
+
+        // 2. Filter by Category
         $selected_cat = sanitize_text_field( $_GET['vb_category_filter'] ?? '' );
         wp_dropdown_categories( [
             'show_option_all' => '— Все рубрики —',
@@ -240,7 +263,7 @@ class VB_CPT {
             'value_field'     => 'slug',
         ] );
 
-        // 2. Filter by Location
+        // 3. Filter by Location
         $selected_loc = sanitize_text_field( $_GET['vb_location_filter'] ?? '' );
         wp_dropdown_categories( [
             'show_option_all' => '— Все города и регионы —',
@@ -254,16 +277,6 @@ class VB_CPT {
             'hide_empty'      => false,
             'value_field'     => 'slug',
         ] );
-
-        // 3. Filter by Type (Ad vs Company)
-        $selected_type = sanitize_key( $_GET['vb_type_filter'] ?? '' );
-        ?>
-        <select name="vb_type_filter">
-            <option value="">— Все типы —</option>
-            <option value="classified" <?php selected( $selected_type, 'classified' ); ?>>📢 Только объявления</option>
-            <option value="company" <?php selected( $selected_type, 'company' ); ?>>🏢 Только компании</option>
-        </select>
-        <?php
     }
 
     /**
@@ -317,15 +330,30 @@ class VB_CPT {
                 $query->set( 'tax_query', $tax_query );
             }
 
-            // Filter by Type
-            if ( ! empty( $_GET['vb_type_filter'] ) ) {
-                $type_val = sanitize_key( $_GET['vb_type_filter'] );
+            // Filter by Type (default to classified ads if no filter specified)
+            $type_val = sanitize_key( $_GET['vb_type_filter'] ?? 'classified' );
+            if ( 'all' !== $type_val ) {
                 $meta_query = (array) $query->get( 'meta_query' );
-                $meta_query[] = [
-                    'key'     => '_vb_type',
-                    'value'   => $type_val,
-                    'compare' => '=',
-                ];
+                if ( 'classified' === $type_val ) {
+                    $meta_query[] = [
+                        'relation' => 'OR',
+                        [
+                            'key'     => '_vb_type',
+                            'value'   => 'classified',
+                            'compare' => '=',
+                        ],
+                        [
+                            'key'     => '_vb_type',
+                            'compare' => 'NOT EXISTS',
+                        ],
+                    ];
+                } else {
+                    $meta_query[] = [
+                        'key'     => '_vb_type',
+                        'value'   => $type_val,
+                        'compare' => '=',
+                    ];
+                }
                 $query->set( 'meta_query', $meta_query );
             }
         }
@@ -402,7 +430,7 @@ class VB_CPT {
     }
 
     /**
-     * Custom styling for admin columns
+     * Custom styling for admin columns, dynamic title and filter script
      */
     public static function admin_column_styles() {
         global $post_type;
@@ -423,10 +451,33 @@ class VB_CPT {
         </style>
         <script>
         document.addEventListener('DOMContentLoaded', function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var currentType = urlParams.get('vb_type_filter') || 'classified';
+            var heading = document.querySelector('.wrap > h1.wp-heading-inline');
+            var addNewBtn = document.querySelector('.wrap > a.page-title-action');
+
+            if (heading) {
+                if (currentType === 'company') {
+                    heading.innerHTML = '🏢 Каталог компаний';
+                    if (addNewBtn) {
+                        addNewBtn.innerText = 'Добавить компанию';
+                        addNewBtn.href = 'post-new.php?post_type=vb_listing&vb_type=company';
+                    }
+                } else if (currentType === 'classified') {
+                    heading.innerHTML = '📢 Все объявления';
+                    if (addNewBtn) {
+                        addNewBtn.innerText = 'Добавить объявление';
+                        addNewBtn.href = 'post-new.php?post_type=vb_listing&vb_type=classified';
+                    }
+                } else {
+                    heading.innerHTML = '📋 Все объявления и фирмы';
+                }
+            }
+
             var form = document.getElementById('posts-filter');
             if (!form) return;
             form.addEventListener('submit', function() {
-                // Disable useless/default GET parameters so they do not clutter the URL
+                // Disable useless/default GET parameters so they do not clutter the URL (keep vb_type_filter sticky!)
                 var checks = [
                     { name: 'filter_action', condition: function() { return true; } },
                     { name: 'action', condition: function(v) { return v === '-1' || !v; } },
@@ -434,8 +485,7 @@ class VB_CPT {
                     { name: 'm', condition: function(v) { return v === '0' || !v; } },
                     { name: 's', condition: function(v) { return !v.trim(); } },
                     { name: 'vb_category_filter', condition: function(v) { return v === '0' || !v; } },
-                    { name: 'vb_location_filter', condition: function(v) { return v === '0' || !v; } },
-                    { name: 'vb_type_filter', condition: function(v) { return !v; } }
+                    { name: 'vb_location_filter', condition: function(v) { return v === '0' || !v; } }
                 ];
                 checks.forEach(function(item) {
                     var els = form.querySelectorAll('[name="' + item.name + '"]');
@@ -449,5 +499,320 @@ class VB_CPT {
         });
         </script>
         <?php
+    }
+
+    /**
+     * Customize and reorder Admin Submenu items under 'Доска и Фирмы'
+     */
+    public static function customize_admin_submenus() {
+        global $submenu;
+        $parent = 'edit.php?post_type=vb_listing';
+        if ( ! isset( $submenu[ $parent ] ) ) {
+            return;
+        }
+
+        $new_submenu = [
+            [
+                '📢 Все объявления',
+                'edit_posts',
+                'edit.php?post_type=vb_listing&vb_type_filter=classified',
+                'Все объявления',
+            ],
+            [
+                '🏢 Все компании',
+                'edit_posts',
+                'edit.php?post_type=vb_listing&vb_type_filter=company',
+                'Каталог компаний',
+            ],
+            [
+                '➕ Добавить объявление',
+                'edit_posts',
+                'post-new.php?post_type=vb_listing&vb_type=classified',
+                'Добавить объявление',
+            ],
+            [
+                '➕ Добавить компанию',
+                'edit_posts',
+                'post-new.php?post_type=vb_listing&vb_type=company',
+                'Добавить компанию',
+            ],
+            [
+                '📁 Рубрики',
+                'manage_categories',
+                'edit-tags.php?taxonomy=vb_category&post_type=vb_listing',
+                'Рубрики',
+            ],
+            [
+                '📍 Города / Локации',
+                'manage_categories',
+                'edit-tags.php?taxonomy=vb_location&post_type=vb_listing',
+                'Города / Локации',
+            ],
+            [
+                '🧹 Очистка картинок',
+                'manage_options',
+                'vb-media-cleaner',
+                'Очистка картинок',
+            ],
+            [
+                '📦 Миграция (1-Click)',
+                'manage_options',
+                'vb-migration',
+                'Миграция (1-Click)',
+            ],
+        ];
+
+        $submenu[ $parent ] = $new_submenu;
+    }
+
+    /**
+     * Ensure correct parent menu highlighting in WordPress Admin
+     */
+    public static function fix_admin_parent_file( $parent_file ) {
+        global $current_screen;
+        if ( isset( $current_screen->post_type ) && 'vb_listing' === $current_screen->post_type ) {
+            return 'edit.php?post_type=vb_listing';
+        }
+        return $parent_file;
+    }
+
+    /**
+     * Ensure correct submenu highlighting in WordPress Admin
+     */
+    public static function fix_admin_submenu_file( $submenu_file, $parent_file ) {
+        if ( 'edit.php?post_type=vb_listing' === $parent_file ) {
+            global $pagenow;
+            if ( 'edit.php' === $pagenow ) {
+                $type = $_GET['vb_type_filter'] ?? 'classified';
+                if ( 'company' === $type ) {
+                    return 'edit.php?post_type=vb_listing&vb_type_filter=company';
+                } else {
+                    return 'edit.php?post_type=vb_listing&vb_type_filter=classified';
+                }
+            } elseif ( 'post-new.php' === $pagenow ) {
+                $type = $_GET['vb_type'] ?? 'classified';
+                if ( 'company' === $type ) {
+                    return 'post-new.php?post_type=vb_listing&vb_type=company';
+                } else {
+                    return 'post-new.php?post_type=vb_listing&vb_type=classified';
+                }
+            } elseif ( 'post.php' === $pagenow && isset( $_GET['post'] ) ) {
+                $post_id = absint( $_GET['post'] );
+                $type = get_post_meta( $post_id, '_vb_type', true );
+                if ( 'company' === $type ) {
+                    return 'edit.php?post_type=vb_listing&vb_type_filter=company';
+                } else {
+                    return 'edit.php?post_type=vb_listing&vb_type_filter=classified';
+                }
+            }
+        }
+        return $submenu_file;
+    }
+
+    /**
+     * Retain active vb_type_filter across post status links (Все, Опубликованные, Корзина)
+     */
+    public static function filter_admin_views( $views ) {
+        $current_type = sanitize_key( $_GET['vb_type_filter'] ?? 'classified' );
+        if ( 'all' === $current_type ) {
+            return $views;
+        }
+        foreach ( $views as $key => $view_html ) {
+            $views[ $key ] = preg_replace( '/href=([\'"])(.*?)([\'"])/', 'href=$1$2&amp;vb_type_filter=' . $current_type . '$3', $view_html );
+        }
+        return $views;
+    }
+
+    /**
+     * Context-aware title placeholder for Classified Ads vs Companies
+     */
+    public static function custom_title_placeholder( $placeholder, $post ) {
+        if ( $post && 'vb_listing' === $post->post_type ) {
+            $type = get_post_meta( $post->ID, '_vb_type', true ) ?: ( $_GET['vb_type'] ?? 'classified' );
+            if ( 'company' === $type ) {
+                return 'Введите название компании (например: ООО «Металлист»)...';
+            } else {
+                return 'Введите заголовок объявления...';
+            }
+        }
+        return $placeholder;
+    }
+
+    /**
+     * Register Meta Box for listing / company parameters
+     */
+    public static function add_listing_meta_boxes() {
+        add_meta_box(
+            'vb_listing_meta',
+            '⚙️ Параметры записи (Доска & Каталог)',
+            [ __CLASS__, 'render_listing_meta_box' ],
+            'vb_listing',
+            'normal',
+            'high'
+        );
+    }
+
+    /**
+     * Render Meta Box content
+     */
+    public static function render_listing_meta_box( $post ) {
+        wp_nonce_field( 'vb_listing_meta_save', 'vb_listing_meta_nonce' );
+
+        $current_type = get_post_meta( $post->ID, '_vb_type', true ) ?: ( $_GET['vb_type'] ?? 'classified' );
+        $phone        = get_post_meta( $post->ID, '_vb_phone', true ) ?: get_post_meta( $post->ID, '_phone', true ) ?: get_post_meta( $post->ID, 'phone', true );
+        $email        = get_post_meta( $post->ID, '_vb_email', true ) ?: get_post_meta( $post->ID, '_email', true ) ?: get_post_meta( $post->ID, 'email', true );
+        $price        = get_post_meta( $post->ID, '_vb_price', true ) ?: get_post_meta( $post->ID, 'price', true );
+        $whatsapp     = get_post_meta( $post->ID, '_vb_whatsapp', true );
+        $telegram     = get_post_meta( $post->ID, '_vb_telegram', true );
+        $address      = get_post_meta( $post->ID, '_vb_address', true );
+        $website      = get_post_meta( $post->ID, '_vb_website', true ) ?: get_post_meta( $post->ID, '_website', true );
+        $expiry       = get_post_meta( $post->ID, 'expiry_date', true ) ?: get_post_meta( $post->ID, '_expiry_date', true ) ?: get_post_meta( $post->ID, '_vb_expiry_date', true );
+        if ( ! $expiry ) {
+            $expiry = date( 'Y-m-d', strtotime( '+6 months' ) );
+        } else {
+            $expiry = date( 'Y-m-d', strtotime( $expiry ) );
+        }
+        ?>
+        <style>
+            .vb-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
+            .vb-meta-field { display: flex; flex-direction: column; }
+            .vb-meta-field label { font-weight: 600; margin-bottom: 5px; color: #1e293b; font-size: 13px; }
+            .vb-meta-field input[type="text"], .vb-meta-field input[type="email"], .vb-meta-field input[type="number"], .vb-meta-field input[type="url"], .vb-meta-field input[type="date"] {
+                padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;
+            }
+            .vb-type-toggle { display: flex; gap: 12px; margin-bottom: 12px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+            .vb-type-card { flex: 1; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fff; border: 2px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+            .vb-type-card input { margin: 0; }
+            .vb-type-card.active-type { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+        </style>
+
+        <div class="vb-type-toggle">
+            <label class="vb-type-card <?php echo 'classified' === $current_type ? 'active-type' : ''; ?>">
+                <input type="radio" name="vb_type" value="classified" <?php checked( $current_type, 'classified' ); ?> onchange="vbUpdateTypeUI(this.value)">
+                <span>📢 Объявление (частное)</span>
+            </label>
+            <label class="vb-type-card <?php echo 'company' === $current_type ? 'active-type' : ''; ?>">
+                <input type="radio" name="vb_type" value="company" <?php checked( $current_type, 'company' ); ?> onchange="vbUpdateTypeUI(this.value)">
+                <span>🏢 Компания / Фирма</span>
+            </label>
+        </div>
+
+        <div class="vb-meta-grid">
+            <div class="vb-meta-field" id="vb-field-price">
+                <label for="vb_price">💰 Цена (Kč / валюта):</label>
+                <input type="number" step="any" id="vb_price" name="vb_price" value="<?php echo esc_attr( $price ); ?>" placeholder="0 (или оставьте пустым)">
+            </div>
+
+            <div class="vb-meta-field">
+                <label for="vb_phone">📞 Телефон:</label>
+                <input type="text" id="vb_phone" name="vb_phone" value="<?php echo esc_attr( $phone ); ?>" placeholder="+420 777 123 456">
+            </div>
+
+            <div class="vb-meta-field">
+                <label for="vb_email">✉️ Контактный Email:</label>
+                <input type="email" id="vb_email" name="vb_email" value="<?php echo esc_attr( $email ); ?>" placeholder="info@example.com">
+            </div>
+
+            <div class="vb-meta-field" id="vb-field-website">
+                <label for="vb_website">🌐 Веб-сайт (для компаний):</label>
+                <input type="url" id="vb_website" name="vb_website" value="<?php echo esc_url( $website ); ?>" placeholder="https://company.cz">
+            </div>
+
+            <div class="vb-meta-field">
+                <label for="vb_address">📍 Адрес / Физическая локация:</label>
+                <input type="text" id="vb_address" name="vb_address" value="<?php echo esc_attr( $address ); ?>" placeholder="Praha 1, Václavské náměstí 1">
+            </div>
+
+            <div class="vb-meta-field">
+                <label for="vb_whatsapp">💬 WhatsApp (номер):</label>
+                <input type="text" id="vb_whatsapp" name="vb_whatsapp" value="<?php echo esc_attr( $whatsapp ); ?>" placeholder="+420777123456">
+            </div>
+
+            <div class="vb-meta-field">
+                <label for="vb_telegram">✈️ Telegram (@username или номер):</label>
+                <input type="text" id="vb_telegram" name="vb_telegram" value="<?php echo esc_attr( $telegram ); ?>" placeholder="@username">
+            </div>
+
+            <div class="vb-meta-field">
+                <label for="vb_expiry_date">📅 Дата окончания публикации:</label>
+                <input type="date" id="vb_expiry_date" name="vb_expiry_date" value="<?php echo esc_attr( $expiry ); ?>">
+            </div>
+        </div>
+
+        <script>
+        function vbUpdateTypeUI(val) {
+            document.querySelectorAll('.vb-type-card').forEach(function(card) {
+                card.classList.remove('active-type');
+            });
+            var checked = document.querySelector('input[name="vb_type"]:checked');
+            if (checked && checked.parentElement) {
+                checked.parentElement.classList.add('active-type');
+            }
+        }
+        </script>
+        <?php
+    }
+
+    /**
+     * Save listing / company Meta Box data
+     */
+    public static function save_listing_meta_boxes( $post_id, $post ) {
+        if ( ! isset( $_POST['vb_listing_meta_nonce'] ) || ! wp_verify_nonce( $_POST['vb_listing_meta_nonce'], 'vb_listing_meta_save' ) ) {
+            return;
+        }
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            return;
+        }
+        if ( ! current_user_can( 'edit_post', $post_id ) ) {
+            return;
+        }
+
+        $type = sanitize_key( $_POST['vb_type'] ?? 'classified' );
+        update_post_meta( $post_id, '_vb_type', $type );
+
+        if ( isset( $_POST['vb_phone'] ) ) {
+            $phone = sanitize_text_field( $_POST['vb_phone'] );
+            update_post_meta( $post_id, '_vb_phone', $phone );
+            update_post_meta( $post_id, '_phone', $phone );
+            update_post_meta( $post_id, 'phone', $phone );
+        }
+
+        if ( isset( $_POST['vb_email'] ) ) {
+            $email = sanitize_email( $_POST['vb_email'] );
+            update_post_meta( $post_id, '_vb_email', $email );
+            update_post_meta( $post_id, '_email', $email );
+            update_post_meta( $post_id, 'email', $email );
+        }
+
+        if ( isset( $_POST['vb_whatsapp'] ) ) {
+            update_post_meta( $post_id, '_vb_whatsapp', sanitize_text_field( $_POST['vb_whatsapp'] ) );
+        }
+
+        if ( isset( $_POST['vb_telegram'] ) ) {
+            update_post_meta( $post_id, '_vb_telegram', sanitize_text_field( $_POST['vb_telegram'] ) );
+        }
+
+        if ( isset( $_POST['vb_price'] ) ) {
+            $price = floatval( $_POST['vb_price'] );
+            update_post_meta( $post_id, '_vb_price', $price );
+            update_post_meta( $post_id, 'price', $price );
+        }
+
+        if ( isset( $_POST['vb_address'] ) ) {
+            update_post_meta( $post_id, '_vb_address', sanitize_text_field( $_POST['vb_address'] ) );
+        }
+
+        if ( isset( $_POST['vb_website'] ) ) {
+            $website = esc_url_raw( $_POST['vb_website'] );
+            update_post_meta( $post_id, '_vb_website', $website );
+            update_post_meta( $post_id, '_website', $website );
+        }
+
+        if ( ! empty( $_POST['vb_expiry_date'] ) ) {
+            $exp_str = date( 'Y-m-d 23:59:59', strtotime( $_POST['vb_expiry_date'] ) );
+            update_post_meta( $post_id, 'expiry_date', $exp_str );
+            update_post_meta( $post_id, '_expiry_date', $exp_str );
+            update_post_meta( $post_id, '_vb_expiry_date', $exp_str );
+        }
     }
 }
