@@ -171,6 +171,15 @@ function vladimir_ai_i18n_table() {
             'fr' => 'Tableau de petites annonces et annuaire d\'entreprises unifié et ultra-rapide : profils d\'entreprises et de particuliers, avis anti-fraude, jusqu\'à 15 photos WebP, Cloudflare Turnstile et migration 1-Click.',
             'pl' => 'Zunifikowana, ultraszybka tablica ogłoszeń i katalog firm: profile firm i osób prywatnych, oceny z ochroną przed manipulacją, do 15 zdjęć WebP, Cloudflare Turnstile i migracja 1-Click.',
         ),
+        'wp-media-cleaner' => array(
+            'ru' => 'Универсальная скоростная очистка неиспользуемых картинок для WordPress и WooCommerce: поиск мусорных файлов, галерей товаров, вариаций и автоудаление фото при удалении записей.',
+            'cs' => 'Univerzální rychlé čištění nepoužívaných obrázků pro WordPress a WooCommerce: hledání osiřelých souborů, galerií produktů, variant a automatické mazání fotek při smazání položek.',
+            'de' => 'Universelle, schnelle Bereinigung ungenutzter Bilder für WordPress & WooCommerce: Erkennung verwaister Dateien, Produktgalerien, Variationen und automatisches Löschen beim Entfernen von Einträgen.',
+            'it' => 'Pulizia rapida universale delle immagini inutilizzate per WordPress e WooCommerce: ricerca file orfani, gallerie prodotti, variazioni e cancellazione automatica foto con gli articoli.',
+            'es' => 'Limpieza rápida universal de imágenes no utilizadas para WordPress y WooCommerce: búsqueda de archivos huérfanos, galerías de productos, variaciones y borrado automático al eliminar entradas.',
+            'fr' => 'Nettoyage rapide universel des images inutilisées pour WordPress et WooCommerce : recherche de fichiers orphelins, galeries de produits, variations et suppression automatique des photos.',
+            'pl' => 'Uniwersalne szybkie czyszczenie nieużywanych zdjęć dla WordPress i WooCommerce: wyszukiwanie osieroconych plików, galerii produktów, wariantów i automatyczne usuwanie zdjęć po usunięciu wpisów.',
+        ),
     );
 }
 }

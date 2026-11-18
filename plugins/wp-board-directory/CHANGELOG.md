@@ -1,5 +1,11 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.07] - 2026-11-18
+### Added
+- Integration with standalone `WP Media Cleaner (VladiMIR+AI✅)`:
+  - If `wp-media-cleaner` is active, the menu item «Доска и Фирмы» ➔ «Очистка картинок» seamlessly bridges to the full universal cleaner with WooCommerce support.
+  - Retained native fallback cleaner and automatic media purge on ad/company deletion.
+
 ## [2026-11__1.06] - 2026-11-18
 ### Fixed
 - Fixed fatal stall / endless loading on Dashboard Ads tab (`https://doska-cz.ru/dashboard/?tab=ads`):

@@ -128,10 +128,19 @@
             "tested": "6.8"
         },
         "wp-board-directory": {
-            "version": "2026-11__1.06",
+            "version": "2026-11__1.07",
             "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-board-directory.zip",
             "url": "https://github.com/GinCz/plugins/tree/main/wp-board-directory",
             "name": "WP Board & Directory (VladiMIR+AI✅)",
+            "requires": "6.0",
+            "requires_php": "7.4",
+            "tested": "6.8"
+        },
+        "wp-media-cleaner": {
+            "version": "2026-11__1.00",
+            "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-media-cleaner.zip",
+            "url": "https://github.com/GinCz/plugins/tree/main/wp-media-cleaner",
+            "name": "WP Media Cleaner (VladiMIR+AI✅)",
             "requires": "6.0",
             "requires_php": "7.4",
             "tested": "6.8"

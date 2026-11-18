@@ -238,6 +238,12 @@ class VB_Media_Cleaner {
      * Render Admin Cleaner Page
      */
     public static function render_admin_page() {
+        // If universal standalone WP_Media_Cleaner_App is active, delegate directly to it
+        if ( class_exists( 'WP_Media_Cleaner_App' ) ) {
+            WP_Media_Cleaner_App::instance()->render_admin_page();
+            return;
+        }
+
         global $wpdb;
 
         $total_media = (int) $wpdb->get_var( "SELECT count(*) FROM {$wpdb->posts} WHERE post_type = 'attachment'" );
