@@ -1,5 +1,12 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.02] - 2026-11-18
+### Added
+- Left sidebar «Все страны»: removed top gap, converted to clean unbold links with full-width thin divider lines.
+- Categories grid: increased typography size for parent and subcategories for improved readability on desktop and mobile.
+- Company Directory cards: increased image height to 220px, eliminated empty tagline void, pinned title and fields directly beneath the image.
+- Classifieds Homepage Grid: switched ads to 3-column equal-height cards (`view="grid"`, `columns="3"`) with 200px cover images, clamp titles, prominent prices and meta.
+
 ## [2026-11__1.01] - 2026-11-18
 ### Added
 - Filter for ACADP categories template (`acadp_get_template` and `acadp_load_template`) with balanced 3 columns (`templates/acadp-categories-list.php`).

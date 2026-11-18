@@ -195,10 +195,8 @@ class VB_Shortcodes {
                                 <a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>"><?php the_title(); ?></a>
                             </h3>
 
-                            <?php if ( $tagline ) : ?>
+                            <?php if ( ! empty( $tagline ) && trim( $tagline ) !== '' ) : ?>
                                 <div class="vb-company-tagline"><?php echo esc_html( $tagline ); ?></div>
-                            <?php else : ?>
-                                <div class="vb-company-tagline">&nbsp;</div>
                             <?php endif; ?>
 
                             <div class="vb-company-fields">
