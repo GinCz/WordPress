@@ -1,5 +1,18 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.08] - 2026-11-18
+### Added
+- Admin List Table Enhancements (`edit.php?post_type=vb_listing`):
+  - Thumbnail / photo preview column (`Фото`).
+  - Sortable `Телефон` and `Email` columns with direct click-to-call / mailto links.
+  - Type badge column (`📢 Объявление` vs `🏢 Фирма`).
+  - Price and Expiry status columns.
+  - Dropdown filter bar for Rubrics (`vb_category`), Cities/Regions (`vb_location`), and Types.
+- Frontend Category Filter Toolbar (`templates/taxonomy-category.php`):
+  - Interactive city/region filter (`vb_location`), keyword search, and sorting (price / date).
+- Anti-Spam Limitation:
+  - Enforced hard limit: maximum 10 active listings per account/email in one category.
+
 ## [2026-11__1.07] - 2026-11-18
 ### Added
 - Integration with standalone `WP Media Cleaner (VladiMIR+AI✅)`:

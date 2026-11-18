@@ -70,6 +70,57 @@ if ( $term && $term->term_id ) {
                     </div>
                 <?php endif; ?>
 
+                <!-- Filter Bar: City, Keyword & Sorting -->
+                <?php
+                $curr_city = sanitize_text_field( $_GET['city'] ?? $_GET['mesto'] ?? '' );
+                $curr_sq   = sanitize_text_field( $_GET['s_q'] ?? '' );
+                $curr_sort = sanitize_key( $_GET['sort'] ?? '' );
+                $locations = get_terms( [
+                    'taxonomy'   => 'vb_location',
+                    'hide_empty' => false,
+                    'orderby'    => 'name',
+                    'order'      => 'ASC',
+                ] );
+                ?>
+                <div class="vb-cat-filter-wrap">
+                    <form method="GET" action="" class="vb-cat-filter-form">
+                        <div class="vb-cat-filter-field vb-cat-filter-city">
+                            <span class="vb-filter-icon">📍</span>
+                            <select name="city" class="vb-filter-select" onchange="this.form.submit();">
+                                <option value="">— Все города и регионы —</option>
+                                <?php if ( ! empty( $locations ) && ! is_wp_error( $locations ) ) : ?>
+                                    <?php foreach ( $locations as $loc ) : ?>
+                                        <option value="<?php echo esc_attr( $loc->slug ); ?>" <?php selected( $curr_city, $loc->slug ); ?>>
+                                            <?php echo esc_html( $loc->name ); ?> (<?php echo (int) $loc->count; ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+
+                        <div class="vb-cat-filter-field vb-cat-filter-search">
+                            <span class="vb-filter-icon">🔍</span>
+                            <input type="text" name="s_q" value="<?php echo esc_attr( $curr_sq ); ?>" placeholder="Поиск в этой рубрике..." class="vb-filter-input">
+                        </div>
+
+                        <div class="vb-cat-filter-field vb-cat-filter-sort">
+                            <select name="sort" class="vb-filter-select" onchange="this.form.submit();">
+                                <option value="">Сортировка: Сначала новые</option>
+                                <option value="oldest" <?php selected( $curr_sort, 'oldest' ); ?>>Сначала старые</option>
+                                <option value="price_asc" <?php selected( $curr_sort, 'price_asc' ); ?>>Сначала дешевле</option>
+                                <option value="price_desc" <?php selected( $curr_sort, 'price_desc' ); ?>>Сначала дороже</option>
+                            </select>
+                        </div>
+
+                        <div class="vb-cat-filter-buttons">
+                            <button type="submit" class="vb-btn-filter-apply">Фильтровать</button>
+                            <?php if ( $curr_city || $curr_sq || $curr_sort ) : ?>
+                                <a href="<?php echo esc_url( strtok( $_SERVER['REQUEST_URI'] ?? '', '?' ) ); ?>" class="vb-btn-filter-reset">✕ Сбросить</a>
+                            <?php endif; ?>
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Listings Grid -->
                 <?php if ( have_posts() ) : ?>
                     <div class="vb-listings-grid">

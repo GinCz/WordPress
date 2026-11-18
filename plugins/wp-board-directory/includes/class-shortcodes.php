@@ -297,6 +297,55 @@ class VB_Shortcodes {
 
         $author_id = get_current_user_id() ?: 1;
 
+        // Enforce limit: maximum 10 listings per account/email in one category
+        if ( $category_id > 0 && ! current_user_can( 'manage_options' ) ) {
+            $author_filter = ( $author_id > 1 ) ? [ 'author' => $author_id ] : [];
+            $existing_user_listings = get_posts( array_merge( [
+                'post_type'      => 'vb_listing',
+                'post_status'    => [ 'publish', 'draft', 'pending' ],
+                'posts_per_page' => -1,
+                'fields'         => 'ids',
+                'tax_query'      => [
+                    [
+                        'taxonomy' => 'vb_category',
+                        'field'    => 'term_id',
+                        'terms'    => $category_id,
+                    ],
+                ],
+            ], $author_filter ) );
+
+            $existing_count = count( $existing_user_listings );
+            if ( $author_id === 1 && ! empty( $email ) ) {
+                $email_listings = get_posts( [
+                    'post_type'      => 'vb_listing',
+                    'post_status'    => [ 'publish', 'draft', 'pending' ],
+                    'posts_per_page' => -1,
+                    'fields'         => 'ids',
+                    'meta_query'     => [
+                        [
+                            'key'     => '_vb_email',
+                            'value'   => $email,
+                            'compare' => '=',
+                        ],
+                    ],
+                    'tax_query'      => [
+                        [
+                            'taxonomy' => 'vb_category',
+                            'field'    => 'term_id',
+                            'terms'    => $category_id,
+                        ],
+                    ],
+                ] );
+                $existing_count = max( $existing_count, count( $email_listings ) );
+            }
+
+            if ( $existing_count >= 10 ) {
+                $referer = wp_get_referer() ?: home_url( '/new/' );
+                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Превышен лимит: разрешено максимум 10 объявлений от одного аккаунта в одну рубрику.' ) ], $referer ) );
+                exit;
+            }
+        }
+
         // Create vb_listing post
         $post_id = wp_insert_post( [
             'post_title'   => $title,
