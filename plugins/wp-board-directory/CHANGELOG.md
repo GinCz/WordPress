@@ -1,5 +1,14 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.11] - 2026-11-18
+### Fixed
+- Fixed font clipping in Category Filter Toolbar (`templates/taxonomy-category.php`):
+  - Completely neutralized Flatsome theme's aggressive `select`/`input` overrides (`margin-bottom: 1em; padding-top: 1.1em; height: 3.0084em;`).
+  - Implemented crisp `height: 40px`, centered `line-height: 40px`, `margin: 0 !important`, `padding: 0 4px !important`, and custom SVG chevron arrow, ensuring zero bottom-line font truncation across all browsers.
+- Fully restored and re-linked all company logos and preview images:
+  - Reinstated company image attachments (`post_parent` linked to `vb_listing`) from clean backup archives.
+  - Linked featured thumbnails for all migrated companies.
+
 ## [2026-11__1.10] - 2026-11-18
 ### Added
 - Complete Czech Republic Regions:
