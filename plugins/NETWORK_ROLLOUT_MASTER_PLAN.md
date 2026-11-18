@@ -10,17 +10,17 @@
 
 | № | Домен | Страна / Локация | Путь на DE-222 | Статус |
 |---|---|---|---|---|
-| 1 | `doska-cz.ru` | Чехия (CZ) | `/var/www/doski/data/www/doska-cz.ru/` | ✅ **Эталон внедрен (v1.08)** |
-| 2 | `doska-de.ru` | Германия (DE) | `/var/www/doski/data/www/doska-de.ru/` | ⏳ Очередь внедрения |
-| 3 | `doska-pl.ru` | Польша (PL) | `/var/www/doski/data/www/doska-pl.ru/` | ⏳ Очередь внедрения |
-| 4 | `doska-fr.ru` | Франция (FR) | `/var/www/doski/data/www/doska-fr.ru/` | ⏳ Очередь внедрения |
-| 5 | `doska-esp.ru` | Испания (ES) | `/var/www/doski/data/www/doska-esp.ru/` | ⏳ Очередь внедрения |
-| 6 | `doska-it.ru` | Италия (IT) | `/var/www/doski/data/www/doska-it.ru/` | ⏳ Очередь внедрения |
-| 7 | `doska-gr.ru` | Греция (GR) | `/var/www/doski/data/www/doska-gr.ru/` | ⏳ Очередь внедрения |
-| 8 | `doska-mld.ru` | Молдова (MD) | `/var/www/doski/data/www/doska-mld.ru/` | ⏳ Очередь внедрения |
-| 9 | `doska-hun.ru` | Венгрия (HU) | `/var/www/doski/data/www/doska-hun.ru/` | ⏳ Очередь внедрения |
-| 10 | `doska-ua.ru` | Украина (UA) | `/var/www/doski/data/www/doska-ua.ru/` | ⏳ Очередь внедрения |
-| 11 | `doska-isl.ru` | Израиль (IL) | `/var/www/doski/data/www/doska-isl.ru/` | ⏳ Очередь внедрения |
+| 1 | `doska-cz.ru` | Чехия (CZ) | `/var/www/doski/data/www/doska-cz.ru/` | ✅ **Эталон внедрен (v1.11)** |
+| 2 | `doska-de.ru` | Германия (DE) | `/var/www/doski/data/www/doska-de.ru/` | ✅ **Внедрено (256 объявл., 8 комп.)** |
+| 3 | `doska-pl.ru` | Польша (PL) | `/var/www/doski/data/www/doska-pl.ru/` | ✅ **Внедрено (247 объявл., 5 комп.)** |
+| 4 | `doska-fr.ru` | Франция (FR) | `/var/www/doski/data/www/doska-fr.ru/` | ✅ **Внедрено (247 объявл., 5 комп.)** |
+| 5 | `doska-esp.ru` | Испания (ES) | `/var/www/doski/data/www/doska-esp.ru/` | ✅ **Внедрено (248 объявл., 5 комп.)** |
+| 6 | `doska-it.ru` | Италия (IT) | `/var/www/doski/data/www/doska-it.ru/` | ✅ **Внедрено (247 объявл., 5 комп.)** |
+| 7 | `doska-gr.ru` | Греция (GR) | `/var/www/doski/data/www/doska-gr.ru/` | ✅ **Внедрено (254 объявл., 5 комп.)** |
+| 8 | `doska-mld.ru` | Молдова (MD) | `/var/www/doski/data/www/doska-mld.ru/` | ✅ **Внедрено (237 объявл., 5 комп.)** |
+| 9 | `doska-hun.ru` | Венгрия (HU) | `/var/www/doski/data/www/doska-hun.ru/` | ✅ **Внедрено (242 объявл., 5 комп.)** |
+| 10 | `doska-ua.ru` | Украина (UA) | `/var/www/doski/data/www/doska-ua.ru/` | ✅ **Внедрено (15 объявл., 5 комп.)** |
+| 11 | `doska-isl.ru` | Израиль (IL) | `/var/www/doski/data/www/doska-isl.ru/` | ✅ **Внедрено (172 объявл., 5 комп.)** |
 
 ---
 
