@@ -146,6 +146,41 @@ class VB_Importer {
             }
         }
 
+        // 2b. Migrate ACADP Locations to vb_location
+        $loc_map = [];
+        if ( taxonomy_exists( 'acadp_locations' ) ) {
+            $acadp_loc_terms = get_terms( [
+                'taxonomy'   => 'acadp_locations',
+                'hide_empty' => false,
+                'orderby'    => 'parent',
+                'order'      => 'ASC',
+            ] );
+
+            if ( ! is_wp_error( $acadp_loc_terms ) ) {
+                foreach ( $acadp_loc_terms as $term ) {
+                    $parent_id = 0;
+                    if ( $term->parent && isset( $loc_map[ $term->parent ] ) ) {
+                        $parent_id = $loc_map[ $term->parent ];
+                    }
+
+                    $existing = get_term_by( 'slug', $term->slug, 'vb_location' );
+                    if ( $existing ) {
+                        $new_loc_id = $existing->term_id;
+                    } else {
+                        $inserted = wp_insert_term( $term->name, 'vb_location', [
+                            'slug'   => $term->slug,
+                            'parent' => $parent_id,
+                        ] );
+                        $new_loc_id = is_array( $inserted ) ? $inserted['term_id'] : 0;
+                    }
+
+                    if ( $new_loc_id ) {
+                        $loc_map[ $term->term_id ] = $new_loc_id;
+                    }
+                }
+            }
+        }
+
         // 3. Migrate ACADP Listings
         $acadp_posts = get_posts( [
             'post_type'      => 'acadp_listings',
@@ -202,6 +237,28 @@ class VB_Importer {
                     update_post_meta( $new_post_id, '_vb_images', maybe_unserialize( $old_meta['images'][0] ) );
                 }
 
+                // Safeguard: Re-link attachments post_parent to new post
+                $wpdb->update(
+                    $wpdb->posts,
+                    [ 'post_parent' => $new_post_id ],
+                    [ 'post_parent' => $post->ID, 'post_type' => 'attachment' ]
+                );
+
+                // Map location from at_biz_dir-location
+                $old_dir_locs = wp_get_post_terms( $post->ID, 'at_biz_dir-location', [ 'fields' => 'slugs' ] );
+                if ( ! empty( $old_dir_locs ) && ! is_wp_error( $old_dir_locs ) ) {
+                    $dir_loc_ids = [];
+                    foreach ( $old_dir_locs as $dslug ) {
+                        $vterm = get_term_by( 'slug', $dslug, 'vb_location' );
+                        if ( $vterm ) {
+                            $dir_loc_ids[] = $vterm->term_id;
+                        }
+                    }
+                    if ( ! empty( $dir_loc_ids ) ) {
+                        wp_set_post_terms( $new_post_id, $dir_loc_ids, 'vb_location' );
+                    }
+                }
+
                 // Map category
                 $old_terms = wp_get_post_terms( $post->ID, 'acadp_categories', [ 'fields' => 'ids' ] );
                 $new_cats  = [];
@@ -213,6 +270,21 @@ class VB_Importer {
                     }
                     if ( ! empty( $new_cats ) ) {
                         wp_set_post_terms( $new_post_id, $new_cats, 'vb_category' );
+                    }
+                }
+
+                // Map location if acadp_locations exists
+                $old_loc_terms = wp_get_post_terms( $post->ID, 'acadp_locations', [ 'fields' => 'slugs' ] );
+                if ( ! empty( $old_loc_terms ) && ! is_wp_error( $old_loc_terms ) ) {
+                    $new_loc_ids = [];
+                    foreach ( $old_loc_terms as $lslug ) {
+                        $vterm = get_term_by( 'slug', $lslug, 'vb_location' );
+                        if ( $vterm ) {
+                            $new_loc_ids[] = $vterm->term_id;
+                        }
+                    }
+                    if ( ! empty( $new_loc_ids ) ) {
+                        wp_set_post_terms( $new_post_id, $new_loc_ids, 'vb_location' );
                     }
                 }
 
@@ -276,9 +348,38 @@ class VB_Importer {
                 update_post_meta( $new_post_id, '_vb_email', sanitize_email( $old_meta['_email'][0] ?? '' ) );
                 update_post_meta( $new_post_id, '_vb_website', esc_url_raw( $old_meta['_website'][0] ?? '' ) );
 
-                // Logo
-                if ( ! empty( $old_meta['_listing_prv_img'][0] ) ) {
-                    set_post_thumbnail( $new_post_id, (int) $old_meta['_listing_prv_img'][0] );
+                // Logo & Attachments reparenting
+                $logo_id = (int) ( $old_meta['_listing_prv_img'][0] ?? $old_meta['_thumbnail_id'][0] ?? 0 );
+                if ( ! $logo_id ) {
+                    $atts = get_posts( [ 'post_type' => 'attachment', 'post_parent' => $post->ID, 'posts_per_page' => 1 ] );
+                    if ( ! empty( $atts ) ) {
+                        $logo_id = $atts[0]->ID;
+                    }
+                }
+                if ( $logo_id ) {
+                    set_post_thumbnail( $new_post_id, $logo_id );
+                }
+
+                // Safeguard: Re-link attachments post_parent to new post
+                $wpdb->update(
+                    $wpdb->posts,
+                    [ 'post_parent' => $new_post_id ],
+                    [ 'post_parent' => $post->ID, 'post_type' => 'attachment' ]
+                );
+
+                // Map location from at_biz_dir-location
+                $old_dir_locs = wp_get_post_terms( $post->ID, 'at_biz_dir-location', [ 'fields' => 'slugs' ] );
+                if ( ! empty( $old_dir_locs ) && ! is_wp_error( $old_dir_locs ) ) {
+                    $dir_loc_ids = [];
+                    foreach ( $old_dir_locs as $dslug ) {
+                        $vterm = get_term_by( 'slug', $dslug, 'vb_location' );
+                        if ( $vterm ) {
+                            $dir_loc_ids[] = $vterm->term_id;
+                        }
+                    }
+                    if ( ! empty( $dir_loc_ids ) ) {
+                        wp_set_post_terms( $new_post_id, $dir_loc_ids, 'vb_location' );
+                    }
                 }
 
                 // Sync with Index
