@@ -40,6 +40,14 @@ class VB_CPT {
 
         // Title Placeholder Customization
         add_filter( 'enter_title_here', [ __CLASS__, 'custom_title_placeholder' ], 10, 2 );
+
+        // Custom clean permalinks for Ads vs Companies
+        add_filter( 'post_type_link', [ __CLASS__, 'custom_post_type_link' ], 10, 2 );
+        add_action( 'init', [ __CLASS__, 'add_custom_rewrite_rules' ], 1 );
+        add_action( 'template_redirect', [ __CLASS__, 'handle_legacy_redirects' ], 1 );
+
+        // Automatic Category & Location Slugs Migration on Update
+        add_action( 'init', [ __CLASS__, 'migrate_terms_to_english' ], 20 );
     }
 
     public static function register_post_types() {
@@ -66,9 +74,9 @@ class VB_CPT {
             'show_ui'            => true,
             'show_in_menu'       => true,
             'query_var'          => true,
-            'rewrite'            => [ 'slug' => 'inzerat', 'with_front' => false ],
+            'rewrite'            => [ 'slug' => 'ad', 'with_front' => false ],
             'capability_type'    => 'post',
-            'has_archive'        => 'inzeraty',
+            'has_archive'        => 'ads',
             'hierarchical'       => false,
             'menu_position'      => 5,
             'menu_icon'          => 'dashicons-grid-view',
@@ -101,7 +109,7 @@ class VB_CPT {
             'show_ui'               => true,
             'show_admin_column'     => true,
             'query_var'             => true,
-            'rewrite'               => [ 'slug' => 'kategorie', 'with_front' => false, 'hierarchical' => true ],
+            'rewrite'               => [ 'slug' => 'category', 'with_front' => false, 'hierarchical' => true ],
             'show_in_rest'          => true,
             'update_count_callback' => '_update_post_term_count',
         ] );
@@ -127,7 +135,7 @@ class VB_CPT {
             'show_ui'           => true,
             'show_admin_column' => true,
             'query_var'         => true,
-            'rewrite'           => [ 'slug' => 'mesto', 'with_front' => false, 'hierarchical' => true ],
+            'rewrite'           => [ 'slug' => 'location', 'with_front' => false, 'hierarchical' => true ],
             'show_in_rest'      => true,
         ] );
     }
@@ -238,22 +246,23 @@ class VB_CPT {
             return;
         }
 
-        // 1. Filter by Type (Ad vs Company)
-        $selected_type = sanitize_key( $_GET['vb_type_filter'] ?? 'classified' );
+        // 1. Filter by Type (Clean English parameter: type=ads|companies|all)
+        $raw_type = sanitize_key( $_GET['type'] ?? $_GET['vb_type_filter'] ?? 'ads' );
+        $selected_type = in_array( $raw_type, [ 'companies', 'company' ], true ) ? 'companies' : ( 'all' === $raw_type ? 'all' : 'ads' );
         ?>
-        <select name="vb_type_filter" id="filter-by-vb-type">
-            <option value="classified" <?php selected( $selected_type, 'classified' ); ?>>📢 Только объявления</option>
-            <option value="company" <?php selected( $selected_type, 'company' ); ?>>🏢 Только компании</option>
+        <select name="type" id="filter-by-vb-type">
+            <option value="ads" <?php selected( $selected_type, 'ads' ); ?>>📢 Только объявления</option>
+            <option value="companies" <?php selected( $selected_type, 'companies' ); ?>>🏢 Только компании</option>
             <option value="all" <?php selected( $selected_type, 'all' ); ?>>📋 Все вместе (объявления и фирмы)</option>
         </select>
         <?php
 
-        // 2. Filter by Category
-        $selected_cat = sanitize_text_field( $_GET['vb_category_filter'] ?? '' );
+        // 2. Filter by Category (Clean English parameter: category)
+        $selected_cat = sanitize_text_field( $_GET['category'] ?? $_GET['vb_category_filter'] ?? '' );
         wp_dropdown_categories( [
             'show_option_all' => '— Все рубрики —',
             'taxonomy'        => 'vb_category',
-            'name'            => 'vb_category_filter',
+            'name'            => 'category',
             'orderby'         => 'name',
             'selected'        => $selected_cat,
             'hierarchical'    => true,
@@ -263,12 +272,12 @@ class VB_CPT {
             'value_field'     => 'slug',
         ] );
 
-        // 3. Filter by Location
-        $selected_loc = sanitize_text_field( $_GET['vb_location_filter'] ?? '' );
+        // 3. Filter by Location (Clean English parameter: location)
+        $selected_loc = sanitize_text_field( $_GET['location'] ?? $_GET['vb_location_filter'] ?? '' );
         wp_dropdown_categories( [
             'show_option_all' => '— Все города и регионы —',
             'taxonomy'        => 'vb_location',
-            'name'            => 'vb_location_filter',
+            'name'            => 'location',
             'orderby'         => 'name',
             'selected'        => $selected_loc,
             'hierarchical'    => true,
@@ -307,8 +316,8 @@ class VB_CPT {
             }
 
             // Filter by Category
-            if ( ! empty( $_GET['vb_category_filter'] ) ) {
-                $cat_slug = sanitize_text_field( $_GET['vb_category_filter'] );
+            $cat_slug = sanitize_text_field( $_GET['category'] ?? $_GET['vb_category_filter'] ?? '' );
+            if ( ! empty( $cat_slug ) ) {
                 $tax_query = (array) $query->get( 'tax_query' );
                 $tax_query[] = [
                     'taxonomy' => 'vb_category',
@@ -319,8 +328,8 @@ class VB_CPT {
             }
 
             // Filter by Location
-            if ( ! empty( $_GET['vb_location_filter'] ) ) {
-                $loc_slug = sanitize_text_field( $_GET['vb_location_filter'] );
+            $loc_slug = sanitize_text_field( $_GET['location'] ?? $_GET['vb_location_filter'] ?? '' );
+            if ( ! empty( $loc_slug ) ) {
                 $tax_query = (array) $query->get( 'tax_query' );
                 $tax_query[] = [
                     'taxonomy' => 'vb_location',
@@ -330,8 +339,16 @@ class VB_CPT {
                 $query->set( 'tax_query', $tax_query );
             }
 
-            // Filter by Type (default to classified ads if no filter specified)
-            $type_val = sanitize_key( $_GET['vb_type_filter'] ?? 'classified' );
+            // Filter by Type (default to ads if no filter specified)
+            $raw_type = sanitize_key( $_GET['type'] ?? $_GET['vb_type_filter'] ?? 'ads' );
+            if ( in_array( $raw_type, [ 'companies', 'company' ], true ) ) {
+                $type_val = 'company';
+            } elseif ( 'all' === $raw_type ) {
+                $type_val = 'all';
+            } else {
+                $type_val = 'classified';
+            }
+
             if ( 'all' !== $type_val ) {
                 $meta_query = (array) $query->get( 'meta_query' );
                 if ( 'classified' === $type_val ) {
@@ -360,7 +377,7 @@ class VB_CPT {
 
         // FRONTEND QUERY: Category Archive City & Keyword Filter
         if ( ! is_admin() && $query->is_main_query() && ( is_tax( 'vb_category' ) || is_post_type_archive( 'vb_listing' ) ) ) {
-            $city_slug = sanitize_text_field( $_GET['city'] ?? $_GET['mesto'] ?? '' );
+            $city_slug = sanitize_text_field( $_GET['city'] ?? $_GET['location'] ?? $_GET['mesto'] ?? '' );
             if ( ! empty( $city_slug ) ) {
                 $tax_query = (array) $query->get( 'tax_query' );
                 $tax_query[] = [
@@ -452,22 +469,25 @@ class VB_CPT {
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             var urlParams = new URLSearchParams(window.location.search);
-            var currentType = urlParams.get('vb_type_filter') || 'classified';
+            var rawType = urlParams.get('type') || urlParams.get('vb_type_filter') || 'ads';
+            var isCompany = (rawType === 'companies' || rawType === 'company');
+            var isAll = (rawType === 'all');
+
             var heading = document.querySelector('.wrap > h1.wp-heading-inline');
             var addNewBtn = document.querySelector('.wrap > a.page-title-action');
 
             if (heading) {
-                if (currentType === 'company') {
+                if (isCompany) {
                     heading.innerHTML = '🏢 Каталог компаний';
                     if (addNewBtn) {
                         addNewBtn.innerText = 'Добавить компанию';
-                        addNewBtn.href = 'post-new.php?post_type=vb_listing&vb_type=company';
+                        addNewBtn.href = 'post-new.php?post_type=vb_listing&type=company';
                     }
-                } else if (currentType === 'classified') {
+                } else if (!isAll) {
                     heading.innerHTML = '📢 Все объявления';
                     if (addNewBtn) {
                         addNewBtn.innerText = 'Добавить объявление';
-                        addNewBtn.href = 'post-new.php?post_type=vb_listing&vb_type=classified';
+                        addNewBtn.href = 'post-new.php?post_type=vb_listing&type=ad';
                     }
                 } else {
                     heading.innerHTML = '📋 Все объявления и фирмы';
@@ -477,15 +497,19 @@ class VB_CPT {
             var form = document.getElementById('posts-filter');
             if (!form) return;
             form.addEventListener('submit', function() {
-                // Disable useless/default GET parameters so they do not clutter the URL (keep vb_type_filter sticky!)
+                // Disable useless/default GET parameters so they do not clutter the URL
                 var checks = [
                     { name: 'filter_action', condition: function() { return true; } },
                     { name: 'action', condition: function(v) { return v === '-1' || !v; } },
                     { name: 'action2', condition: function(v) { return v === '-1' || !v; } },
                     { name: 'm', condition: function(v) { return v === '0' || !v; } },
                     { name: 's', condition: function(v) { return !v.trim(); } },
+                    { name: 'category', condition: function(v) { return v === '0' || !v; } },
                     { name: 'vb_category_filter', condition: function(v) { return v === '0' || !v; } },
-                    { name: 'vb_location_filter', condition: function(v) { return v === '0' || !v; } }
+                    { name: 'location', condition: function(v) { return v === '0' || !v; } },
+                    { name: 'vb_location_filter', condition: function(v) { return v === '0' || !v; } },
+                    { name: 'post_status', condition: function(v) { return v === 'all'; } },
+                    { name: 'paged', condition: function(v) { return v === '1'; } }
                 ];
                 checks.forEach(function(item) {
                     var els = form.querySelectorAll('[name="' + item.name + '"]');
@@ -502,7 +526,7 @@ class VB_CPT {
     }
 
     /**
-     * Customize and reorder Admin Submenu items under 'Доска и Фирмы'
+     * Customize and reorder Admin Submenu items under 'Доска и Фирмы' (Clean short English links)
      */
     public static function customize_admin_submenus() {
         global $submenu;
@@ -515,25 +539,25 @@ class VB_CPT {
             [
                 '📢 Все объявления',
                 'edit_posts',
-                'edit.php?post_type=vb_listing&vb_type_filter=classified',
+                'edit.php?post_type=vb_listing&type=ads',
                 'Все объявления',
             ],
             [
                 '🏢 Все компании',
                 'edit_posts',
-                'edit.php?post_type=vb_listing&vb_type_filter=company',
+                'edit.php?post_type=vb_listing&type=companies',
                 'Каталог компаний',
             ],
             [
                 '➕ Добавить объявление',
                 'edit_posts',
-                'post-new.php?post_type=vb_listing&vb_type=classified',
+                'post-new.php?post_type=vb_listing&type=ad',
                 'Добавить объявление',
             ],
             [
                 '➕ Добавить компанию',
                 'edit_posts',
-                'post-new.php?post_type=vb_listing&vb_type=company',
+                'post-new.php?post_type=vb_listing&type=company',
                 'Добавить компанию',
             ],
             [
@@ -582,43 +606,33 @@ class VB_CPT {
     public static function fix_admin_submenu_file( $submenu_file, $parent_file ) {
         if ( 'edit.php?post_type=vb_listing' === $parent_file ) {
             global $pagenow;
+            $raw_type = sanitize_key( $_GET['type'] ?? $_GET['vb_type_filter'] ?? $_GET['vb_type'] ?? '' );
+            $is_company = in_array( $raw_type, [ 'company', 'companies' ], true );
+
             if ( 'edit.php' === $pagenow ) {
-                $type = $_GET['vb_type_filter'] ?? 'classified';
-                if ( 'company' === $type ) {
-                    return 'edit.php?post_type=vb_listing&vb_type_filter=company';
-                } else {
-                    return 'edit.php?post_type=vb_listing&vb_type_filter=classified';
-                }
+                return $is_company ? 'edit.php?post_type=vb_listing&type=companies' : 'edit.php?post_type=vb_listing&type=ads';
             } elseif ( 'post-new.php' === $pagenow ) {
-                $type = $_GET['vb_type'] ?? 'classified';
-                if ( 'company' === $type ) {
-                    return 'post-new.php?post_type=vb_listing&vb_type=company';
-                } else {
-                    return 'post-new.php?post_type=vb_listing&vb_type=classified';
-                }
+                return $is_company ? 'post-new.php?post_type=vb_listing&type=company' : 'post-new.php?post_type=vb_listing&type=ad';
             } elseif ( 'post.php' === $pagenow && isset( $_GET['post'] ) ) {
                 $post_id = absint( $_GET['post'] );
                 $type = get_post_meta( $post_id, '_vb_type', true );
-                if ( 'company' === $type ) {
-                    return 'edit.php?post_type=vb_listing&vb_type_filter=company';
-                } else {
-                    return 'edit.php?post_type=vb_listing&vb_type_filter=classified';
-                }
+                return ( 'company' === $type ) ? 'edit.php?post_type=vb_listing&type=companies' : 'edit.php?post_type=vb_listing&type=ads';
             }
         }
         return $submenu_file;
     }
 
     /**
-     * Retain active vb_type_filter across post status links (Все, Опубликованные, Корзина)
+     * Retain active type filter across post status links (Все, Опубликованные, Корзина)
      */
     public static function filter_admin_views( $views ) {
-        $current_type = sanitize_key( $_GET['vb_type_filter'] ?? 'classified' );
-        if ( 'all' === $current_type ) {
+        $raw_type = sanitize_key( $_GET['type'] ?? $_GET['vb_type_filter'] ?? 'ads' );
+        if ( 'all' === $raw_type ) {
             return $views;
         }
+        $type_param = in_array( $raw_type, [ 'companies', 'company' ], true ) ? 'companies' : 'ads';
         foreach ( $views as $key => $view_html ) {
-            $views[ $key ] = preg_replace( '/href=([\'"])(.*?)([\'"])/', 'href=$1$2&amp;vb_type_filter=' . $current_type . '$3', $view_html );
+            $views[ $key ] = preg_replace( '/href=([\'"])(.*?)([\'"])/', 'href=$1$2&amp;type=' . $type_param . '$3', $view_html );
         }
         return $views;
     }
@@ -814,5 +828,187 @@ class VB_CPT {
             update_post_meta( $post_id, '_expiry_date', $exp_str );
             update_post_meta( $post_id, '_vb_expiry_date', $exp_str );
         }
+    }
+
+    /**
+     * Clean SEO Permalinks: /company/<slug>/ for companies and /ad/<slug>/ for classified ads
+     */
+    public static function custom_post_type_link( $post_link, $post ) {
+        if ( $post && 'vb_listing' === $post->post_type ) {
+            $type = get_post_meta( $post->ID, '_vb_type', true );
+            if ( 'company' === $type ) {
+                return home_url( '/company/' . $post->post_name . '/' );
+            } else {
+                return home_url( '/ad/' . $post->post_name . '/' );
+            }
+        }
+        return $post_link;
+    }
+
+    /**
+     * Custom Rewrite Rules for /company/<slug>/ and /ad/<slug>/
+     */
+    public static function add_custom_rewrite_rules() {
+        add_rewrite_rule( '^company/([^/]+)/?$', 'index.php?vb_listing=$matches[1]', 'top' );
+        add_rewrite_rule( '^ad/([^/]+)/?$', 'index.php?vb_listing=$matches[1]', 'top' );
+    }
+
+    /**
+     * Backward compatibility 301 redirects for legacy Czech/Russian URLs
+     */
+    public static function handle_legacy_redirects() {
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        if ( preg_match( '#^/inzerat/([^/]+)/?#', $uri, $m ) ) {
+            $post = get_page_by_path( $m[1], OBJECT, 'vb_listing' );
+            if ( $post ) {
+                $type = get_post_meta( $post->ID, '_vb_type', true );
+                $prefix = ( 'company' === $type ) ? '/company/' : '/ad/';
+                wp_safe_redirect( home_url( $prefix . $post->post_name . '/' ), 301 );
+                exit;
+            }
+        } elseif ( preg_match( '#^/inzeraty/?#', $uri ) ) {
+            wp_safe_redirect( home_url( '/ads/' ), 301 );
+            exit;
+        } elseif ( preg_match( '#^/kategorie/(.*)$#', $uri, $m ) ) {
+            wp_safe_redirect( home_url( '/category/' . $m[1] ), 301 );
+            exit;
+        } elseif ( preg_match( '#^/mesto/(.*)$#', $uri, $m ) ) {
+            wp_safe_redirect( home_url( '/location/' . $m[1] ), 301 );
+            exit;
+        }
+    }
+
+    /**
+     * Automatic migration of Category & Location slugs to short, clean English
+     */
+    public static function migrate_terms_to_english() {
+        if ( get_option( 'vb_english_slugs_v113' ) === 'yes' ) {
+            return;
+        }
+
+        $cat_map = [
+            'rabota-i-biznes'          => 'business',
+            'biznes-uslugi'            => 'services',
+            'biznes-proekty'           => 'projects',
+            'vakansii-trebuyutsya'     => 'jobs',
+            'ishhu-rabotu'             => 'resumes',
+            'kursy-obrazovanie'        => 'education',
+            'perevody-tekstov'         => 'translations',
+            'perevody-kredity-ipoteki' => 'finance',
+            'reklama-sajty-seo'        => 'marketing',
+            'yuridicheskie-uslugi'     => 'legal',
+
+            'avto'                     => 'auto',
+            'legkovye-avto'            => 'cars',
+            'gruzovye-avto'            => 'trucks',
+            'mototransport'            => 'moto',
+            'velotransport'            => 'bikes',
+            'avtoperevozki'            => 'transport',
+            'avtoremont-i-obsluzhivanie' => 'repair',
+            'arenda-avto'              => 'rental',
+            'aksessuary-dlya-avto'     => 'accessories',
+            'gps-navigatory'           => 'gps',
+
+            'nedvizhimost'             => 'realty',
+            'kvartiry'                 => 'apartments',
+            'doma-dachi'               => 'houses',
+            'zemlya-i-uchastki'        => 'land',
+            'novostrojki'              => 'new-buildings',
+            'arenda-kvartir'           => 'rent-apartments',
+            'arenda-domov'             => 'rent-houses',
+            'oteli-restorany'          => 'hotels',
+            'uslugi-maklerov'          => 'agents',
+            'stroitelstvo'             => 'construction',
+
+            'dlya-doma'                => 'home',
+            'mebel'                    => 'furniture',
+            'remont-mebeli'            => 'furniture-repair',
+            'bytovaya-tehnika'         => 'appliances',
+            'odezhda-obuv'             => 'clothing',
+            'dlya-detej'               => 'kids',
+            'zdorove-lechenie'         => 'health',
+            'produkty-i-napitki'       => 'food-drinks',
+            'televidenie-iptv'         => 'iptv',
+
+            'elektronika'              => 'electronics',
+            'kompyutery-soft'          => 'computers',
+            'kompyutery-soft-igry'     => 'pc-games',
+            'ofisnaya-tehnika'         => 'office-tech',
+            'audio-video-dvd'          => 'audio-video',
+            'foto-i-optika'            => 'photo-optics',
+            'el-instrument'            => 'tools',
+            'remont-elektroniki'       => 'electronics-repair',
+
+            'sredstva-svyazi'          => 'phones',
+            'mobilnye-telefony'        => 'mobile-phones',
+            'remont-tel'               => 'phone-repair',
+            'tarify-sim-karty'         => 'sim-cards',
+            'telefony-i-faksy'         => 'landline',
+            'ip-telefoniya'            => 'voip',
+            'radiosvyaz'               => 'radio',
+
+            'razvlecheniya'            => 'entertainment',
+            'otdyh-i-puteshestviya'    => 'travel',
+            'sport-turizm'             => 'sport',
+            'ohota-rybalka'            => 'hunting-fishing',
+            'kuda-pojti'               => 'events',
+            'znakomstva'               => 'dating',
+            'muzyka-filmy'             => 'movies-music',
+            'anekdoty'                 => 'humor',
+
+            'hozyajstvo'               => 'household',
+            'oborudovanie'             => 'equipment',
+            'stroitelstvo-i-remont'    => 'home-repair',
+            'syre-i-materialy'         => 'materials',
+            'selskoe-hozyajstvo'       => 'agriculture',
+            'hozyajstvennye-raboty'    => 'maintenance',
+            'zhivotnye'                => 'pets',
+
+            'raznoe'                   => 'other',
+            'ezoterika'                => 'esoterics',
+            'otdam-besplatno'          => 'free',
+            'poiski-nahodki-podarki'   => 'lost-found',
+            'peredachki'               => 'parcels',
+            'trebuetsya-pomoshh'       => 'help-needed',
+        ];
+
+        foreach ( $cat_map as $old_slug => $new_slug ) {
+            $term = get_term_by( 'slug', $old_slug, 'vb_category' );
+            if ( $term ) {
+                wp_update_term( $term->term_id, 'vb_category', [ 'slug' => $new_slug ] );
+                clean_term_cache( $term->term_id, 'vb_category' );
+            }
+        }
+
+        $loc_map = [
+            'chehiya'                                      => 'czechia',
+            'germaniya'                                    => 'germany',
+            'polsha'                                       => 'poland',
+            'franciya'                                     => 'france',
+            'ispaniya'                                     => 'spain',
+            'italiya'                                      => 'italy',
+            'greciya'                                      => 'greece',
+            'vengriya'                                     => 'hungary',
+            'moldova'                                      => 'moldova',
+            'ukraina'                                      => 'ukraine',
+            'islandiya'                                    => 'iceland',
+            'rossiya'                                      => 'russia',
+            'praga'                                        => 'prague',
+            'czentralno-cheshskij-kraj-stredocesky-kraj'   => 'central-bohemia',
+            'yuzhno-moravskij-kraj-jihomoravsky-kraj-brno' => 'south-moravia',
+            'moskva'                                       => 'moscow',
+            'kiev'                                         => 'kyiv',
+        ];
+
+        foreach ( $loc_map as $old_slug => $new_slug ) {
+            $term = get_term_by( 'slug', $old_slug, 'vb_location' );
+            if ( $term ) {
+                wp_update_term( $term->term_id, 'vb_location', [ 'slug' => $new_slug ] );
+                clean_term_cache( $term->term_id, 'vb_location' );
+            }
+        }
+
+        flush_rewrite_rules( false );
+        update_option( 'vb_english_slugs_v113', 'yes' );
     }
 }

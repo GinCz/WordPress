@@ -37,7 +37,7 @@ if ( $term && $term->term_id ) {
                 <nav class="vb-single-breadcrumbs">
                     <a href="<?php echo esc_url( home_url( '/' ) ); ?>">Главная</a>
                     <span class="vb-bc-sep">&rsaquo;</span>
-                    <a href="<?php echo esc_url( home_url( '/inzeraty/' ) ); ?>">Все объявления</a>
+                    <a href="<?php echo esc_url( home_url( '/ads/' ) ); ?>">Все объявления</a>
                     <?php if ( $term && $term->parent ) : 
                         $parent_term = get_term( $term->parent, $tax );
                         if ( $parent_term && ! is_wp_error( $parent_term ) ) :

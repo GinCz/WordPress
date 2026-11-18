@@ -1,5 +1,19 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.13] - 2026-11-19
+### Added
+- Ultra-Clean English SEO Permalinks & Slugs:
+  - Frontend ads: `/ad/<slug>/` (archive: `/ads/`).
+  - Frontend companies: `/company/<slug>/` (catalog: `/company/`).
+  - Categories taxonomy: `/category/<slug>/` (e.g., `/category/business/`, `/category/auto/`, `/category/realty/`).
+  - Locations taxonomy: `/location/<slug>/` (e.g., `/location/prague/`, `/location/internet-online/`).
+  - Automated 301 Permanent Redirects from legacy Czech and transliterated URLs (`/inzerat/` -> `/ad/` or `/company/`, `/inzeraty/` -> `/ads/`, `/kategorie/` -> `/category/`, `/mesto/` -> `/location/`).
+- Automated Category & Location Slugs Migration:
+  - All 11 board installations automatically translate taxonomy slugs from Cyrillic transliteration to clean English on update (`rabota-i-biznes` -> `business`, `avto` -> `auto`, `nedvizhimost` -> `realty`, `dlya-doma` -> `home`, `elektronika` -> `electronics`, `sredstva-svyazi` -> `phones`, `razvlecheniya` -> `entertainment`, `hozyajstvo` -> `household`, `raznoe` -> `other`, `ezoterika` -> `esoterics`).
+- Clean Admin Query Engine URLs:
+  - Replaced long transliterated admin query arguments with short English parameters: `edit.php?post_type=vb_listing&type=ads` and `edit.php?post_type=vb_listing&type=companies`.
+  - Added aggressive client-side form sanitizer stripping default and empty query flags (`action=-1`, `action2=-1`, `m=0`, `filter_action`, empty `category`, empty `location`, `paged=1`, `post_status=all`), ensuring admin URLs remain clean, short, and question-mark-free.
+
 ## [2026-11__1.12] - 2026-11-19
 ### Added
 - Separated Admin Menus & Dedicated Views:

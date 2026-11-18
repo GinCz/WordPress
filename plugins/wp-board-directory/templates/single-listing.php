@@ -69,7 +69,7 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                     <?php if ( $vb_type === 'company' ) : ?>
                         <a href="<?php echo esc_url( home_url( '/company/' ) ); ?>">Каталог компаний</a>
                     <?php else : ?>
-                        <a href="<?php echo esc_url( home_url( '/inzeraty/' ) ); ?>">Все объявления</a>
+                        <a href="<?php echo esc_url( home_url( '/ads/' ) ); ?>">Все объявления</a>
                     <?php endif; ?>
                     <?php if ( $primary_cat ) : ?>
                         <span class="vb-bc-sep">&rsaquo;</span>
