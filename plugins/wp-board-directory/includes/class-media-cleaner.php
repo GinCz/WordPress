@@ -123,10 +123,29 @@ class VB_Media_Cleaner {
         // 3. Attachments with an active parent post
         $parent_ids = $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a JOIN {$wpdb->posts} p ON a.post_parent = p.ID WHERE a.post_type = 'attachment' AND a.post_parent > 0 AND p.post_type != 'attachment'" );
 
-        // 4. Site icon and custom logo
-        $site_icon   = get_option( 'site_icon' );
-        $custom_logo = get_theme_mod( 'custom_logo' );
-        $special_ids = array_filter( [ (int) $site_icon, (int) $custom_logo ] );
+        // 4. Site icon, custom logo, Flatsome logos and all theme mods
+        $theme_mod_ids = array_filter( [
+            (int) get_option( 'site_icon' ),
+            (int) get_theme_mod( 'custom_logo' ),
+            (int) get_theme_mod( 'site_logo' ),
+            (int) get_theme_mod( 'site_logo_dark' ),
+            (int) get_theme_mod( 'site_logo_sticky' ),
+        ] );
+
+        $theme_mod_options = $wpdb->get_col( "SELECT option_value FROM {$wpdb->options} WHERE option_name LIKE 'theme_mods_%'" );
+        foreach ( $theme_mod_options as $tmo ) {
+            $mods = maybe_unserialize( $tmo );
+            if ( is_array( $mods ) ) {
+                foreach ( $mods as $k => $v ) {
+                    if ( is_numeric( $v ) && (int) $v > 0 ) {
+                        if ( preg_match( '/(logo|icon|header|image|bg|banner|img)/i', (string) $k ) ) {
+                            $theme_mod_ids[] = (int) $v;
+                        }
+                    }
+                }
+            }
+        }
+        $special_ids = array_unique( array_filter( $theme_mod_ids ) );
 
         // Merge all used IDs
         $used_ids = array_unique( array_merge( $thumb_ids, $gallery_ids, $parent_ids, $special_ids ) );

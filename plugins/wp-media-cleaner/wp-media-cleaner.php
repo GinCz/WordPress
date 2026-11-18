@@ -237,10 +237,15 @@ final class WP_Media_Cleaner_App {
             }
         }
 
-        // Check if site icon or custom logo
-        $site_icon   = (int) get_option( 'site_icon' );
-        $custom_logo = (int) get_theme_mod( 'custom_logo' );
-        if ( $att_id === $site_icon || $att_id === $custom_logo ) {
+        // Check if site icon, custom logo, or Flatsome logo
+        $theme_logo_ids = array_filter( [
+            (int) get_option( 'site_icon' ),
+            (int) get_theme_mod( 'custom_logo' ),
+            (int) get_theme_mod( 'site_logo' ),
+            (int) get_theme_mod( 'site_logo_dark' ),
+            (int) get_theme_mod( 'site_logo_sticky' ),
+        ] );
+        if ( in_array( $att_id, $theme_logo_ids, true ) ) {
             return false;
         }
 
@@ -304,10 +309,30 @@ final class WP_Media_Cleaner_App {
         // 5. Attachments with an active parent post (not in trash)
         $parent_ids = $wpdb->get_col( "SELECT a.ID FROM {$wpdb->posts} a JOIN {$wpdb->posts} p ON a.post_parent = p.ID WHERE a.post_type = 'attachment' AND a.post_parent > 0 AND p.post_type != 'attachment' AND p.post_status NOT IN ('trash', 'auto-draft')" );
 
-        // 6. Theme elements: Site Icon, Custom Logo, Header Image, Background Image
-        $site_icon   = get_option( 'site_icon' );
-        $custom_logo = get_theme_mod( 'custom_logo' );
-        $special_ids = array_filter( [ (int) $site_icon, (int) $custom_logo ] );
+        // 6. Theme elements: Site Icon, Custom Logo, Flatsome Logos (site_logo, site_logo_dark, site_logo_sticky) & Theme Mods
+        $theme_mod_ids = array_filter( [
+            (int) get_option( 'site_icon' ),
+            (int) get_theme_mod( 'custom_logo' ),
+            (int) get_theme_mod( 'site_logo' ),
+            (int) get_theme_mod( 'site_logo_dark' ),
+            (int) get_theme_mod( 'site_logo_sticky' ),
+        ] );
+
+        // Protect any attachment IDs referenced in any theme_mods_* options
+        $theme_mod_options = $wpdb->get_col( "SELECT option_value FROM {$wpdb->options} WHERE option_name LIKE 'theme_mods_%'" );
+        foreach ( $theme_mod_options as $tmo ) {
+            $mods = maybe_unserialize( $tmo );
+            if ( is_array( $mods ) ) {
+                foreach ( $mods as $k => $v ) {
+                    if ( is_numeric( $v ) && (int) $v > 0 ) {
+                        if ( preg_match( '/(logo|icon|header|image|bg|banner|img)/i', (string) $k ) ) {
+                            $theme_mod_ids[] = (int) $v;
+                        }
+                    }
+                }
+            }
+        }
+        $special_ids = array_unique( array_filter( $theme_mod_ids ) );
 
         // 7. Scan post_content for inline image IDs (Gutenberg <!-- wp:image {"id":123} --> or Flatsome [ux_image id="123"])
         $content_ids = [];
