@@ -1,5 +1,16 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.03] - 2026-11-18
+### Added
+- Company Directory Filter Bar: instant filtering by Category (from classifieds category tree), by Region/City (Czech kraje), and keyword search.
+- Turnkey Unified User Dashboard (`[vb_dashboard]`):
+  - Tab 1: «Мой профиль» — Edit Display Name, Phone, City/Region, Company Name, and Bio (no password change required).
+  - Tab 2: «Мои объявления» — Table of user's classifieds with thumbnail, status, views, view/edit actions, and «+ Подать объявление» button.
+  - Tab 3: «Мои компании» — Table of user's company cards with logo, address, phone, ratings, view/edit actions, and «+ Добавить компанию» button.
+  - Header summary card with user avatar, company badge, contact details, and listing statistics.
+- Aliased old `[acadp_user_dashboard]` and `[directorist_user_dashboard]` shortcodes to the unified dashboard.
+- Linked menu items «Мой профайл», «Личный кабинет», «Мои компании», and «Управление объявлениями» to the unified dashboard.
+
 ## [2026-11__1.02] - 2026-11-18
 ### Added
 - Left sidebar «Все страны»: removed top gap, converted to clean unbold links with full-width thin divider lines.
