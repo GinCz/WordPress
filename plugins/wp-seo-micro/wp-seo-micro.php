@@ -3,7 +3,7 @@
  * Plugin Name: WP SEO Micro (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/Linux_Server_Public/tree/main/WordPress/Plugins/wp-seo-micro
  * Description: Ultra-lightweight SEO engine: Smart Title, Meta Description & Keywords, Open Graph social tags, canonical URLs, full robots indexation control, native XML sitemap (/sitemap.xml & /sitemaps.xml), and seamless backward compatibility with SEOPress metadata. Zero database bloat.
- * Version:     2026-09__1.31
+ * Version:     2026-11__1.32
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -385,6 +385,14 @@ add_filter( 'pre_get_document_title', function( $title ) {
 // 5. ROBOTS META CONTROL
 // ─────────────────────────────────────────────
 
+// Prevent core WordPress from outputting a duplicate rel="canonical" link
+add_action( 'wp_head', function() {
+    $settings = vladimir_seo_get_settings();
+    if ( ! empty( $settings['enable_canonical'] ) ) {
+        remove_action( 'wp_head', 'rel_canonical' );
+    }
+}, 0 );
+
 add_action( 'wp_head', function() {
     $settings = vladimir_seo_get_settings();
     if ( empty( $settings['enable_smart_robots'] ) ) {
@@ -399,6 +407,12 @@ add_action( 'wp_head', function() {
             echo "<meta name=\"robots\" content=\"noindex,follow\">\n";
             return;
         }
+    }
+
+    // Exclude technical, member, and checkout pages from indexation
+    if ( is_page( array( 'dashboard', 'my-ads', 'kabinet', 'checkout-9', 'checkout', 'payment-receipt-8', 'transaction-failure-8', 'sign-in', 'login', 'registration', 'registr', 'add-listing', 'author-profile', 'single-category', 'single-location', 'single-tag' ) ) ) {
+        echo "<meta name=\"robots\" content=\"noindex,follow\">\n";
+        return;
     }
 
     if ( is_search() || is_404() || is_author() || is_date() || is_attachment() || is_tag() || is_tax( 'product_tag' ) || is_tax( 'post_format' ) ) {
@@ -416,7 +430,7 @@ add_action( 'wp_head', function() {
         return;
     }
 
-    if ( is_front_page() || is_home() || is_singular( array( 'post', 'page', 'product' ) ) || is_category() || is_tax( 'product_cat' ) ) {
+    if ( is_front_page() || is_home() || is_singular( array( 'post', 'page', 'product', 'vb_listing' ) ) || is_category() || is_tax( array( 'product_cat', 'vb_category', 'vb_location' ) ) ) {
         echo "<meta name=\"robots\" content=\"index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1\">\n";
     }
 }, 1 );
@@ -452,6 +466,9 @@ add_action( 'wp_head', function() {
                 // ends up in the meta description of every page built with a page builder.
                 $raw  = wp_strip_all_tags( strip_shortcodes( $obj->post_excerpt ?: $obj->post_content ) );
                 $raw  = trim( preg_replace( '/\s+/', ' ', $raw ) );
+                if ( empty( $raw ) ) {
+                    $raw = sprintf( '%s — подробная информация, контакты, адрес и телефон на %s.', get_the_title( $obj->ID ), get_bloginfo( 'name' ) );
+                }
                 // mb_substr is not guaranteed on shared hosting; a missing mbstring used to be a fatal error.
                 $desc = function_exists( 'mb_substr' ) ? mb_substr( $raw, 0, 160 ) : substr( $raw, 0, 160 );
             }
@@ -463,7 +480,7 @@ add_action( 'wp_head', function() {
 
             if ( empty( $keywords ) ) {
                 $tags = array();
-                $post_tags = get_the_terms( $obj->ID, 'product_tag' ) ?: get_the_tags( $obj->ID );
+                $post_tags = get_the_terms( $obj->ID, 'product_tag' ) ?: get_the_terms( $obj->ID, 'vb_category' ) ?: get_the_tags( $obj->ID );
                 if ( ! empty( $post_tags ) && ! is_wp_error( $post_tags ) ) {
                     foreach ( $post_tags as $t ) {
                         $tags[] = $t->name;
@@ -494,10 +511,13 @@ add_action( 'wp_head', function() {
                 $og_img = $seopress_fb;
             }
         }
-    } elseif ( is_category() || is_tax( 'product_cat' ) ) {
+    } elseif ( is_category() || is_tax( array( 'product_cat', 'vb_category', 'vb_location' ) ) ) {
         $obj = get_queried_object();
         if ( $obj ) {
             $desc      = wp_strip_all_tags( term_description( $obj->term_id ) );
+            if ( empty( $desc ) ) {
+                $desc = sprintf( '%s — бесплатные объявления, каталог компаний, товаров и услуг на %s.', $obj->name, get_bloginfo( 'name' ) );
+            }
             $keywords  = $obj->name . ', ' . get_bloginfo( 'name' );
             $title     = $obj->name;
             $permalink = get_term_link( $obj );
@@ -568,31 +588,50 @@ add_action( 'init', function() {
     // Homepage
     echo '  <url><loc>' . esc_url( home_url( '/' ) ) . '</loc><changefreq>daily</changefreq><priority>1.0</priority></url>' . "\n";
 
-    // Posts, Pages, Products
+    // Posts, Pages, Products, Listings
     $post_types = array( 'post', 'page' );
     if ( post_type_exists( 'product' ) ) {
         $post_types[] = 'product';
     }
+    if ( post_type_exists( 'vb_listing' ) ) {
+        $post_types[] = 'vb_listing';
+    }
 
     $posts = get_posts( array(
         'post_type'        => $post_types,
-        'posts_per_page'   => 2000,
+        'posts_per_page'   => 3000,
         'post_status'      => 'publish',
         'orderby'          => 'modified',
         'order'            => 'DESC',
         'suppress_filters' => true,
     ) );
 
+    $exclude_slugs = array(
+        'dashboard', 'my-ads', 'kabinet', 'checkout-9', 'checkout',
+        'payment-receipt-8', 'transaction-failure-8', 'sign-in', 'login',
+        'registration', 'registr', 'add-listing', 'single-category',
+        'single-location', 'single-tag', 'author-profile', 'search-result', 'search-home'
+    );
+
     foreach ( $posts as $p ) {
+        if ( 'page' === $p->post_type && in_array( $p->post_name, $exclude_slugs, true ) ) {
+            continue;
+        }
         $date = get_the_modified_date( 'c', $p->ID );
-        $prio = ( 'page' === $p->post_type ) ? '0.8' : ( ( 'product' === $p->post_type ) ? '0.9' : '0.7' );
+        $prio = ( 'page' === $p->post_type ) ? '0.8' : ( ( 'product' === $p->post_type || 'vb_listing' === $p->post_type ) ? '0.8' : '0.7' );
         echo '  <url><loc>' . esc_url( get_permalink( $p->ID ) ) . '</loc><lastmod>' . esc_xml( $date ) . '</lastmod><changefreq>weekly</changefreq><priority>' . $prio . '</priority></url>' . "\n";
     }
 
-    // Categories
+    // Categories and Locations
     $taxonomies = array( 'category' );
     if ( taxonomy_exists( 'product_cat' ) ) {
         $taxonomies[] = 'product_cat';
+    }
+    if ( taxonomy_exists( 'vb_category' ) ) {
+        $taxonomies[] = 'vb_category';
+    }
+    if ( taxonomy_exists( 'vb_location' ) ) {
+        $taxonomies[] = 'vb_location';
     }
 
     $terms = get_terms( array(
@@ -602,7 +641,7 @@ add_action( 'init', function() {
 
     if ( ! is_wp_error( $terms ) ) {
         foreach ( $terms as $t ) {
-            echo '  <url><loc>' . esc_url( get_term_link( $t ) ) . '</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>' . "\n";
+            echo '  <url><loc>' . esc_url( get_term_link( $t ) ) . '</loc><changefreq>daily</changefreq><priority>0.8</priority></url>' . "\n";
         }
     }
 
@@ -638,7 +677,83 @@ add_filter( 'robots_txt', function( $output, $public ) {
 }, 10, 2 );
 
 // ─────────────────────────────────────────────
-// 8. POST METABOX
+// 8. SCHEMA.ORG JSON-LD STRUCTURED DATA
+// ─────────────────────────────────────────────
+
+add_action( 'wp_head', function() {
+    if ( is_front_page() || is_home() ) {
+        $schema = array(
+            '@context' => 'https://schema.org',
+            '@graph'   => array(
+                array(
+                    '@type'       => 'WebSite',
+                    '@id'         => home_url( '/#website' ),
+                    'url'         => home_url( '/' ),
+                    'name'        => get_bloginfo( 'name' ),
+                    'description' => get_bloginfo( 'description' ),
+                    'potentialAction' => array(
+                        '@type'       => 'SearchAction',
+                        'target'      => home_url( '/poisk-obyavlenij/?keyword={search_term_string}' ),
+                        'query-input' => 'required name=search_term_string',
+                    ),
+                ),
+                array(
+                    '@type' => 'Organization',
+                    '@id'   => home_url( '/#organization' ),
+                    'name'  => get_bloginfo( 'name' ),
+                    'url'   => home_url( '/' ),
+                ),
+            ),
+        );
+        echo "<script type=\"application/ld+json\">\n" . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . "\n</script>\n";
+    } elseif ( is_singular( 'vb_listing' ) ) {
+        $post_id = get_queried_object_id();
+        $type    = get_post_meta( $post_id, '_vb_type', true );
+        $phone   = get_post_meta( $post_id, '_vb_phone', true );
+        $email   = get_post_meta( $post_id, '_vb_email', true );
+        $address = get_post_meta( $post_id, '_vb_address', true );
+        $site    = get_post_meta( $post_id, '_vb_website', true );
+        $img     = has_post_thumbnail( $post_id ) ? get_the_post_thumbnail_url( $post_id, 'full' ) : '';
+
+        if ( 'company' === $type ) {
+            $item = array(
+                '@context'    => 'https://schema.org',
+                '@type'       => 'LocalBusiness',
+                'name'        => get_the_title( $post_id ),
+                'description' => wp_strip_all_tags( get_the_excerpt( $post_id ) ?: get_the_title( $post_id ) ),
+                'url'         => get_permalink( $post_id ),
+            );
+            if ( $phone ) { $item['telephone'] = $phone; }
+            if ( $email ) { $item['email'] = $email; }
+            if ( $address ) { $item['address'] = array( '@type' => 'PostalAddress', 'streetAddress' => $address ); }
+            if ( $site ) { $item['sameAs'] = $site; }
+            if ( $img ) { $item['image'] = $img; }
+            echo "<script type=\"application/ld+json\">\n" . wp_json_encode( $item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . "\n</script>\n";
+        } else {
+            $price = get_post_meta( $post_id, '_vb_price', true );
+            $item  = array(
+                '@context'    => 'https://schema.org',
+                '@type'       => 'Product',
+                'name'        => get_the_title( $post_id ),
+                'description' => wp_strip_all_tags( get_the_excerpt( $post_id ) ?: get_the_title( $post_id ) ),
+                'url'         => get_permalink( $post_id ),
+            );
+            if ( $img ) { $item['image'] = $img; }
+            if ( $price ) {
+                $item['offers'] = array(
+                    '@type'         => 'Offer',
+                    'price'         => preg_replace( '/[^0-9.]/', '', (string) $price ) ?: '0',
+                    'priceCurrency' => 'CZK',
+                    'availability'  => 'https://schema.org/InStock',
+                );
+            }
+            echo "<script type=\"application/ld+json\">\n" . wp_json_encode( $item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . "\n</script>\n";
+        }
+    }
+}, 10 );
+
+// ─────────────────────────────────────────────
+// 9. POST METABOX
 // ─────────────────────────────────────────────
 
 add_action( 'add_meta_boxes', function() {
@@ -650,6 +765,9 @@ add_action( 'add_meta_boxes', function() {
     $post_types = array( 'post', 'page' );
     if ( post_type_exists( 'product' ) ) {
         $post_types[] = 'product';
+    }
+    if ( post_type_exists( 'vb_listing' ) ) {
+        $post_types[] = 'vb_listing';
     }
 
     add_meta_box( 'wsm_seo', 'SEO (VladiMIR+AI✅)', function( $post ) {

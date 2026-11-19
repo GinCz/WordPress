@@ -3,7 +3,7 @@
  * Plugin Name: WP Board & Directory (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-board-directory
  * Description: Ultra-fast unified classified ads and business directory plugin. Integrates ads, company profiles, anti-fraud ratings, client-side WebP compression up to 15 photos, Cloudflare Turnstile and 1-Click migration.
- * Version:     2026-11__1.20
+ * Version:     2026-11__1.21
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later

@@ -1,5 +1,11 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.21] - 2026-11-19
+### Changed
+- SEO & Semantic Heading Hierarchy:
+  - На странице рубрик (`taxonomy-category.php`) заголовок переведен в семантический `<h2>` (`vb-tax-title`) для соблюдения правильной иерархии документа и исключения конкуренции с главным сайтовым `<h1>`.
+  - На странице отдельного объявления/компании (`single-listing.php`) заголовок публикации переведен в `<h2>` (`vb-single-title`), синхронизируя общую типографику шапки и контента сети досок.
+
 ## [2026-11__1.20] - 2026-11-19
 ### Added
 - Beautiful Universal Search Module (`[vb_search]` and backward-compatible aliases `[acadp_search_form]`, `[acadp_search]`):

@@ -51,7 +51,7 @@ if ( $term && $term->term_id ) {
 
                 <div class="vb-tax-header">
                     <div class="vb-tax-title-wrap">
-                        <h1 class="vb-tax-title">Объявления: <?php echo esc_html( $term_name ); ?></h1>
+                        <h2 class="vb-tax-title">Объявления: <?php echo esc_html( $term_name ); ?></h2>
                         <span class="vb-tax-total-badge"><?php echo (int) ( $term->count ?? 0 ); ?> объявл.</span>
                     </div>
                     <div class="vb-tax-cta">

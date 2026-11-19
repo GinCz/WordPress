@@ -82,7 +82,7 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                 <div class="vb-single-layout">
                     <!-- Left / Main Column -->
                     <div class="vb-single-main">
-                        <h1 class="vb-single-title"><?php the_title(); ?></h1>
+                        <h2 class="vb-single-title"><?php the_title(); ?></h2>
 
                         <div class="vb-single-meta-bar">
                             <span class="vb-meta-item">📅 <?php echo esc_html( get_the_date( 'd.m.Y' ) ); ?></span>

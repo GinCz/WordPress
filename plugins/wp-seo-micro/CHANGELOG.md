@@ -4,6 +4,16 @@ Versioning format: YYYY-MM__<generation>.<build> (see [../../README.md](../../RE
 Monotonically increasing version: each update must strictly increment the build number.
 
 ---
+## 2026-11__1.32 — 2026-11-19
+
+- **Network-wide Classified & Directory SEO Engine:**
+  - Добавлена нативная поддержка кастомного типа записей доски объявлений `vb_listing` (объявления и карточки компаний) и таксономий `vb_category` (рубрики) и `vb_location` (регионы/города) в XML Карту Сайта (`/sitemap.xml`, `/sitemaps.xml`).
+  - Интеллектуальная фильтрация страниц: из sitemap автоматически исключены служебные и технические страницы (`dashboard`, `my-ads`, `kabinet`, `sign-in`, `login`, `registration`, `checkout`, `add-listing`).
+  - Устранено дублирование тега канонического адреса: отключен дефолтный хук ядра `rel_canonical`, теперь формируется ровно один валидный `<link rel="canonical">`.
+  - Полноценная поддержка микроразметки Schema.org (JSON-LD): автоматическая генерация сущностей `WebSite` с `SearchAction` и `Organization` для главной, `LocalBusiness` для карточек фирм каталога и `Product` / `Offer` для товарных объявлений.
+  - Мета-теги `Description`, `Canonical` и `Robots` теперь полноценно генерируются для всех рубрик и фильтров доски `vb_category` и `vb_location`.
+
+---
 ## 2026-09__1.24 — 2026-09-20
 
 - **Окончательное устранение аварии с HTTP 500.** Общие модули (`vladimir-ai-updater.php`, `vladimir-ai-i18n.php`) больше не дублируются в каждом плагине — они поставляются только внутри `404-410-301`, остальные плагины подключают их, если файл есть, и прекрасно работают без него.
