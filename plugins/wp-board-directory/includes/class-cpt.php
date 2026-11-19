@@ -44,7 +44,7 @@ class VB_CPT {
         // Custom clean permalinks for Ads vs Companies
         add_filter( 'post_type_link', [ __CLASS__, 'custom_post_type_link' ], 10, 2 );
         add_action( 'init', [ __CLASS__, 'add_custom_rewrite_rules' ], 1 );
-        add_action( 'template_redirect', [ __CLASS__, 'handle_legacy_redirects' ], 1 );
+        add_action( 'init', [ __CLASS__, 'handle_legacy_redirects' ], 1 );
 
         // Automatic Category & Location Slugs Migration on Update
         add_action( 'init', [ __CLASS__, 'migrate_terms_to_english' ], 20 );
@@ -857,23 +857,81 @@ class VB_CPT {
      * Backward compatibility 301 redirects for legacy Czech/Russian URLs
      */
     public static function handle_legacy_redirects() {
-        $uri = $_SERVER['REQUEST_URI'] ?? '';
-        if ( preg_match( '#^/inzerat/([^/]+)/?#', $uri, $m ) ) {
-            $post = get_page_by_path( $m[1], OBJECT, 'vb_listing' );
+        if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+            return;
+        }
+
+        $uri  = $_SERVER['REQUEST_URI'] ?? '';
+        $path = parse_url( $uri, PHP_URL_PATH ) ?: '';
+
+        if ( preg_match( '#^/inzerat/([^/]+)/?#', $path, $m ) ) {
+            $slug = sanitize_title( $m[1] );
+            $post = get_page_by_path( $slug, OBJECT, 'vb_listing' );
             if ( $post ) {
-                $type = get_post_meta( $post->ID, '_vb_type', true );
+                $type   = get_post_meta( $post->ID, '_vb_type', true );
                 $prefix = ( 'company' === $type ) ? '/company/' : '/ad/';
                 wp_safe_redirect( home_url( $prefix . $post->post_name . '/' ), 301 );
                 exit;
             }
-        } elseif ( preg_match( '#^/inzeraty/?#', $uri ) ) {
+        } elseif ( preg_match( '#^/inzeraty/?#', $path ) ) {
             wp_safe_redirect( home_url( '/ads/' ), 301 );
             exit;
-        } elseif ( preg_match( '#^/kategorie/(.*)$#', $uri, $m ) ) {
-            wp_safe_redirect( home_url( '/category/' . $m[1] ), 301 );
+        } elseif ( preg_match( '#^/kategorie/([^/]+)/?#', $path, $m ) ) {
+            $cat_slug = sanitize_title( $m[1] );
+            $map = [
+                'rabota-i-biznes'     => 'business',
+                'biznes-uslugi'       => 'services',
+                'avto'                => 'auto',
+                'nedvizhimost'        => 'realty',
+                'elektronika'         => 'electronics',
+                'kompyutery-soft'     => 'computers',
+                'uslugi'              => 'services',
+                'stroitelstvo-remont' => 'construction',
+                'otdyh-turizm'        => 'tourism',
+                'moda-i-stil'         => 'fashion',
+                'krasota-zdorove'     => 'beauty-health',
+                'obuchenie-kursy'     => 'education',
+                'dom-i-sad'           => 'home-garden',
+                'detskij-mir'         => 'kids',
+                'zhivotnye'           => 'pets',
+                'dosug-razvlecheniya' => 'leisure',
+                'raznoe'              => 'other',
+                'znakomstva'          => 'dating',
+                'remont-stroitelstvo' => 'construction',
+                'ezoterika'           => 'esoterics',
+            ];
+            $new_slug = $map[ $cat_slug ] ?? $cat_slug;
+            wp_safe_redirect( home_url( '/category/' . $new_slug . '/' ), 301 );
             exit;
-        } elseif ( preg_match( '#^/mesto/(.*)$#', $uri, $m ) ) {
-            wp_safe_redirect( home_url( '/location/' . $m[1] ), 301 );
+        } elseif ( preg_match( '#^/mesto/([^/]+)/?#', $path, $m ) ) {
+            $loc_slug = sanitize_title( $m[1] );
+            $loc_map = [
+                'chehiya'         => 'czechia',
+                'germaniya'       => 'germany',
+                'ispaniya'        => 'spain',
+                'franciya'        => 'france',
+                'greciya'         => 'greece',
+                'vengriya'        => 'hungary',
+                'izrail'          => 'israel',
+                'italiya'         => 'italy',
+                'moldova'         => 'moldova',
+                'polsha'          => 'poland',
+                'ukraina'         => 'ukraine',
+                'praga'           => 'prague',
+                'berlin'          => 'berlin',
+                'madrid'          => 'madrid',
+                'parizh'          => 'paris',
+                'afiny'           => 'athens',
+                'budapesht'       => 'budapest',
+                'ierusalim'       => 'jerusalem',
+                'rim'             => 'rome',
+                'kishinev'        => 'chisinau',
+                'varshava'        => 'warsaw',
+                'kiev'            => 'kyiv',
+                'internet-onlajn' => 'internet-online',
+            ];
+            $new_slug = $loc_map[ $loc_slug ] ?? $loc_slug;
+            wp_safe_redirect( home_url( '/location/' . $new_slug . '/' ), 301 );
             exit;
         }
     }
