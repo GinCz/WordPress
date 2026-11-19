@@ -278,6 +278,9 @@ class VB_Shortcodes {
         }
 
         $title        = sanitize_text_field( $_POST['title'] ?? '' );
+        if ( mb_strlen( $title, 'UTF-8' ) > 100 ) {
+            $title = mb_substr( $title, 0, 100, 'UTF-8' );
+        }
         $category_id  = absint( $_POST['category_id'] ?? 0 );
         $location_val = sanitize_text_field( $_POST['location_id'] ?? '' );
         $price        = floatval( $_POST['price'] ?? 0 );

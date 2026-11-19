@@ -1,5 +1,13 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.18] - 2026-11-19
+### Added
+- Strict 100-character post title limit for listings (`vb_listing`) and companies (`vb_company`):
+  - DB & Save level: `wp_insert_post_data` filter enforces `mb_substr( $title, 0, 100, 'UTF-8' )` on all creations and updates.
+  - Frontend form: `maxlength="100"` attribute with real-time character counter (`0 / 100 символов`) and dynamic color indicator.
+  - WordPress Admin: injected script on post edit screen enforcing `maxlength="100"` on `#title` with live character counter.
+  - Submission handler: sanitizes and strictly clamps `$title` to 100 characters.
+
 ## [2026-11__1.17] - 2026-11-19
 ### Changed
 - Symmetrical category layout: added balanced horizontal padding (`padding: 10px 45px; box-sizing: border-box;`) to `.vb-categories-columns-wrap` and `.vb-categories-enhanced` to eliminate left-side stickiness and match right-side spacing equally across all screen sizes.

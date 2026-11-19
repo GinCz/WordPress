@@ -82,7 +82,10 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
             <div class="vb-form-grid">
                 <div class="vb-form-group vb-form-full">
                     <label class="vb-label">Заголовок объявления <span class="vb-req">*</span></label>
-                    <input type="text" name="title" required placeholder="Например: Аренда 2+кк Прага 3 Жижков или Ремонт ноутбуков" class="vb-form-input">
+                    <input type="text" name="title" id="vb-title-input" required maxlength="100" placeholder="Например: Аренда 2+кк Прага 3 Жижков или Ремонт ноутбуков" class="vb-form-input">
+                    <div style="font-size: 11px; color: #64748b; text-align: right; margin-top: 3px; font-weight: 500;">
+                        <span id="vb-title-char-count">0</span> / 100 символов (макс. 100)
+                    </div>
                 </div>
 
                 <div class="vb-form-group">
@@ -302,4 +305,24 @@ function vbRemovePhoto(idx) {
     var inp = document.getElementById('vb-input-' + idx);
     if (inp) inp.remove();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var tInp = document.getElementById('vb-title-input');
+    var tCnt = document.getElementById('vb-title-char-count');
+    if (tInp && tCnt) {
+        function updateTitleCount() {
+            var len = tInp.value.length;
+            tCnt.textContent = len;
+            if (len >= 95) {
+                tCnt.style.color = '#ef4444';
+            } else if (len >= 80) {
+                tCnt.style.color = '#f59e0b';
+            } else {
+                tCnt.style.color = '#64748b';
+            }
+        }
+        tInp.addEventListener('input', updateTitleCount);
+        updateTitleCount();
+    }
+});
 </script>

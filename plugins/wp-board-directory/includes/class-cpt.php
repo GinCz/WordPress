@@ -38,8 +38,11 @@ class VB_CPT {
         add_action( 'add_meta_boxes', [ __CLASS__, 'add_listing_meta_boxes' ] );
         add_action( 'save_post_vb_listing', [ __CLASS__, 'save_listing_meta_boxes' ], 10, 2 );
 
-        // Title Placeholder Customization
+        // Title Placeholder & Max Length Restriction (100 Chars)
         add_filter( 'enter_title_here', [ __CLASS__, 'custom_title_placeholder' ], 10, 2 );
+        add_filter( 'wp_insert_post_data', [ __CLASS__, 'enforce_max_title_length' ], 10, 2 );
+        add_action( 'admin_footer-post.php', [ __CLASS__, 'render_admin_title_limit_script' ] );
+        add_action( 'admin_footer-post-new.php', [ __CLASS__, 'render_admin_title_limit_script' ] );
 
         // Custom clean permalinks for Ads vs Companies
         add_filter( 'post_type_link', [ __CLASS__, 'custom_post_type_link' ], 10, 2 );
@@ -1082,5 +1085,57 @@ class VB_CPT {
 
         flush_rewrite_rules( false );
         update_option( 'vb_english_slugs_v113', 'yes' );
+    }
+
+    /**
+     * Enforce maximum 100 characters for listing and company titles on DB level.
+     */
+    public static function enforce_max_title_length( $data, $postarr ) {
+        if ( isset( $data['post_type'] ) && in_array( $data['post_type'], [ 'vb_listing', 'vb_company' ], true ) ) {
+            if ( ! empty( $data['post_title'] ) && mb_strlen( $data['post_title'], 'UTF-8' ) > 100 ) {
+                $data['post_title'] = mb_substr( $data['post_title'], 0, 100, 'UTF-8' );
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Admin Title character limit and live counter for vb_listing and vb_company.
+     */
+    public static function render_admin_title_limit_script() {
+        $screen = get_current_screen();
+        if ( ! $screen || ! in_array( $screen->post_type, [ 'vb_listing', 'vb_company' ], true ) ) {
+            return;
+        }
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var titleInput = document.getElementById('title');
+            if (!titleInput) return;
+
+            titleInput.setAttribute('maxlength', '100');
+
+            var counter = document.createElement('div');
+            counter.id = 'vb-title-limit-counter';
+            counter.style.cssText = 'font-size: 12px; color: #64748b; text-align: right; margin-top: 5px; font-weight: 500;';
+            titleInput.parentNode.appendChild(counter);
+
+            function updateCounter() {
+                var len = titleInput.value.length;
+                counter.textContent = len + ' / 100 символов (максимальная длина)';
+                if (len >= 95) {
+                    counter.style.color = '#ef4444';
+                } else if (len >= 80) {
+                    counter.style.color = '#f59e0b';
+                } else {
+                    counter.style.color = '#64748b';
+                }
+            }
+
+            titleInput.addEventListener('input', updateCounter);
+            updateCounter();
+        });
+        </script>
+        <?php
     }
 }
