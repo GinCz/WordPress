@@ -110,14 +110,23 @@ wp --path=/var/www/doski/data/www/<domain> plugin delete advanced-classifieds-an
 - **Подача объявления (`/new/`):** содержит `[vb_submit_listing]`.
 - **Каталог компаний (`/company/`):** содержит `[vb_companies_catalog]`.
 
-### Шаг 7: Сброс правил постоянных ссылок (Permalinks)
+### Шаг 7: Сброс правил постоянных ссылок (Permalinks) и проверка SEO-ссылок (v1.13)
+В версии 1.13 внедрены чистые короткие англоязычные URL:
+- Объявление: `/ad/<slug>/`
+- Компания: `/company/<slug>/`
+- Архив объявлений: `/ads/`
+- Каталог компаний: `/company/`
+- Рубрика: `/category/<english-slug>/` (авто-миграция старых транслитов `rabota-i-biznes` ➔ `business`)
+- Регион: `/location/<english-slug>/`
+- 301 Redirects: автоматическое перенаправление со старых адресов (`/inzeraty/`, `/inzerat/...`, `/kategorie/...`, `/mesto/...`) на новые постоянные ссылки.
+
 ```bash
-wp --path=/var/www/doski/data/www/<domain> rewrite flush --allow-root
+wp --path=/var/www/doski/data/www/<domain> eval 'VB_CPT::migrate_terms_to_english(); flush_rewrite_rules();' --allow-root
 ```
 
 ### Шаг 8: Контроль целостности логотипа и шапки
 - Убедиться, что `theme_mods_flatsome['site_logo']` указывает на валидный флаг страны (`de.gif`, `pl.gif`, `fr.gif` и т.д.).
-- Проверить HTTP 200 главной, архива `/inzeraty/`, категорий и кабинета `/kabinet/`.
+- Проверить HTTP 200 главной, архива `/ads/`, каталога `/company/`, категорий `/category/business/` и кабинета `/kabinet/`.
 
 ### Шаг 9: Запуск Media Cleaner
 ```bash
