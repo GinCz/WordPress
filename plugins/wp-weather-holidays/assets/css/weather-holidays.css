@@ -1,0 +1,164 @@
+/* ==========================================================================
+   WP Weather & Holidays (VladiMIR+AI✅)
+   Compact 2-Column Weather Grid & Holidays Banner
+   ========================================================================== */
+
+/* Weather Widget Container */
+.vb-weather-widget {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.vb-weather-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.vb-weather-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 6px;
+}
+
+/* Compact Weather Chip / Pill */
+.vb-weather-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #334155;
+    transition: all 0.2s ease;
+    cursor: default;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.vb-weather-chip:hover {
+    background: #f3e8ff;
+    border-color: #3f0077;
+    color: #3f0077;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(63, 0, 119, 0.12);
+}
+
+.vb-wc-flag {
+    font-size: 11px;
+    margin-right: 4px;
+}
+
+.vb-wc-city {
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 4px;
+}
+
+.vb-wc-temp {
+    font-weight: 700;
+    color: #0f172a;
+    margin-right: 3px;
+}
+
+.vb-weather-chip:hover .vb-wc-temp {
+    color: #3f0077;
+}
+
+.vb-wc-icon {
+    font-size: 11px;
+}
+
+/* Holidays Widget Container */
+.vb-holidays-widget {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.vb-holidays-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.vb-holidays-item {
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.vb-holidays-item:last-child {
+    margin-bottom: 0;
+}
+
+.vb-hi-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 3px;
+}
+
+.vb-hi-title strong {
+    color: #334155;
+}
+
+.vb-svatek-highlight {
+    background: #fdf4ff;
+    border: 1px solid #f0abfc;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #86198f;
+    font-weight: 600;
+}
+
+.vb-hi-names {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #475569;
+    line-height: 1.4;
+}
+
+.vb-hi-list {
+    margin: 2px 0 0;
+    padding-left: 16px;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.35;
+}
+
+.vb-hi-list li {
+    margin-bottom: 2px;
+}

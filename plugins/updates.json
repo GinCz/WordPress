@@ -144,6 +144,15 @@
             "requires": "6.0",
             "requires_php": "7.4",
             "tested": "6.8"
+        },
+        "wp-weather-holidays": {
+            "version": "2026-11__1.00",
+            "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-weather-holidays.zip",
+            "url": "https://github.com/GinCz/plugins/tree/main/wp-weather-holidays",
+            "name": "WP Weather & Holidays (VladiMIR+AI✅)",
+            "requires": "6.0",
+            "requires_php": "7.4",
+            "tested": "6.8"
         }
     }
 }
