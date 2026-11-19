@@ -29,6 +29,11 @@ class VB_Shortcodes {
         add_shortcode( 'acadp_listing_form', [ __CLASS__, 'render_submit_form' ] );
         add_shortcode( 'directorist_add_listing', [ __CLASS__, 'render_submit_form' ] );
 
+        // Search shortcodes
+        add_shortcode( 'vb_search', [ __CLASS__, 'render_search' ] );
+        add_shortcode( 'acadp_search_form', [ __CLASS__, 'render_search' ] );
+        add_shortcode( 'acadp_search', [ __CLASS__, 'render_search' ] );
+
         // Handle profile save POST
         add_action( 'init', [ __CLASS__, 'handle_profile_save' ] );
 
@@ -945,6 +950,324 @@ class VB_Shortcodes {
                     </div>
                 </div>
             <?php endwhile; wp_reset_postdata(); ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    private static $search_rendered = false;
+
+    /**
+     * Dedicated Universal Search Page & Shortcode ([vb_search], [acadp_search_form], [acadp_search])
+     */
+    public static function render_search( $atts = [] ) {
+        if ( self::$search_rendered ) {
+            return '';
+        }
+        self::$search_rendered = true;
+
+        $atts = shortcode_atts( [
+            'per_page' => 24,
+        ], $atts, 'vb_search' );
+
+        $search_term = sanitize_text_field( $_GET['s'] ?? $_GET['q'] ?? $_GET['vb_search'] ?? '' );
+        $cat_slug    = sanitize_text_field( $_GET['category'] ?? $_GET['cat'] ?? $_GET['vb_cat'] ?? '' );
+        $loc_slug    = sanitize_text_field( $_GET['location'] ?? $_GET['city'] ?? $_GET['vb_loc'] ?? '' );
+        $type_filter = sanitize_text_field( $_GET['type'] ?? $_GET['vb_type'] ?? '' );
+        $sort_val    = sanitize_key( $_GET['sort'] ?? 'newest' );
+        $paged       = max( 1, (int) ( $_GET['paged'] ?? get_query_var( 'paged' ) ?: 1 ) );
+
+        $args = [
+            'post_type'      => 'vb_listing',
+            'post_status'    => 'publish',
+            'posts_per_page' => (int) $atts['per_page'],
+            'paged'          => $paged,
+        ];
+
+        if ( ! empty( $search_term ) ) {
+            $args['s'] = $search_term;
+        }
+
+        if ( in_array( $type_filter, [ 'classified', 'company' ], true ) ) {
+            $args['meta_query'][] = [
+                'key'   => '_vb_type',
+                'value' => $type_filter,
+            ];
+        }
+
+        $tax_query = [];
+        if ( ! empty( $cat_slug ) ) {
+            $tax_query[] = [
+                'taxonomy' => 'vb_category',
+                'field'    => 'slug',
+                'terms'    => $cat_slug,
+            ];
+        }
+        if ( ! empty( $loc_slug ) ) {
+            $tax_query[] = [
+                'taxonomy' => 'vb_location',
+                'field'    => 'slug',
+                'terms'    => $loc_slug,
+            ];
+        }
+        if ( ! empty( $tax_query ) ) {
+            if ( count( $tax_query ) > 1 ) {
+                $tax_query['relation'] = 'AND';
+            }
+            $args['tax_query'] = $tax_query;
+        }
+
+        if ( 'price_asc' === $sort_val ) {
+            $args['meta_key'] = '_vb_price';
+            $args['orderby']  = 'meta_value_num';
+            $args['order']    = 'ASC';
+        } elseif ( 'price_desc' === $sort_val ) {
+            $args['meta_key'] = '_vb_price';
+            $args['orderby']  = 'meta_value_num';
+            $args['order']    = 'DESC';
+        } elseif ( 'oldest' === $sort_val ) {
+            $args['orderby'] = 'date';
+            $args['order']   = 'ASC';
+        } else {
+            $args['orderby'] = 'date';
+            $args['order']   = 'DESC';
+        }
+
+        $query = new WP_Query( $args );
+
+        $categories = get_terms( [
+            'taxonomy'   => 'vb_category',
+            'hide_empty' => false,
+            'parent'     => 0,
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        ] );
+
+        $locations = get_terms( [
+            'taxonomy'   => 'vb_location',
+            'hide_empty' => false,
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        ] );
+
+        $has_filters = ( ! empty( $search_term ) || ! empty( $cat_slug ) || ! empty( $loc_slug ) || ! empty( $type_filter ) || ( 'newest' !== $sort_val && ! empty( $sort_val ) ) );
+        $form_action = strtok( $_SERVER['REQUEST_URI'] ?? '', '?' );
+
+        ob_start();
+        ?>
+        <div class="vb-search-container">
+            <div class="vb-search-hero">
+                <h2 class="vb-search-heading">🔍 Поиск объявлений и компаний</h2>
+                <p class="vb-search-subheading">Быстрый поиск товаров, услуг, недвижимости, работы и компаний</p>
+            </div>
+
+            <form method="GET" action="<?php echo esc_url( $form_action ); ?>" class="vb-search-form">
+                <!-- Search Keyword Row -->
+                <div class="vb-search-main-row">
+                    <div class="vb-search-input-wrap">
+                        <span class="vb-search-icon">🔍</span>
+                        <input type="text" name="s" value="<?php echo esc_attr( $search_term ); ?>" placeholder="Что вы ищете? Например: авто, квартира, работа, ремонт, юрист..." class="vb-search-input">
+                        <?php if ( ! empty( $search_term ) ) : ?>
+                            <a href="<?php echo esc_url( $form_action ); ?>" class="vb-search-clear" title="Очистить">✕</a>
+                        <?php endif; ?>
+                    </div>
+                    <button type="submit" class="vb-search-submit-btn">
+                        <span>Найти</span>
+                    </button>
+                </div>
+
+                <!-- Secondary Filters Row -->
+                <div class="vb-search-filters-row">
+                    <div class="vb-sf-item">
+                        <label class="vb-sf-label">📁 Рубрика:</label>
+                        <select name="category" class="vb-sf-select">
+                            <option value="">Все рубрики</option>
+                            <?php if ( ! empty( $categories ) && ! is_wp_error( $categories ) ) : ?>
+                                <?php foreach ( $categories as $cat ) : 
+                                    $c_clean = trim( preg_replace( '/^[◉\s\-\•\·]+/u', '', $cat->name ) );
+                                ?>
+                                    <option value="<?php echo esc_attr( $cat->slug ); ?>" <?php selected( $cat_slug, $cat->slug ); ?>>
+                                        ◉ <?php echo esc_html( $c_clean ); ?> (<?php echo (int) $cat->count; ?>)
+                                    </option>
+                                    <?php 
+                                    $subs = get_terms( [
+                                        'taxonomy'   => 'vb_category',
+                                        'hide_empty' => false,
+                                        'parent'     => $cat->term_id,
+                                        'orderby'    => 'name',
+                                        'order'      => 'ASC',
+                                    ] );
+                                    if ( ! empty( $subs ) && ! is_wp_error( $subs ) ) :
+                                        foreach ( $subs as $sub ) : ?>
+                                            <option value="<?php echo esc_attr( $sub->slug ); ?>" <?php selected( $cat_slug, $sub->slug ); ?>>
+                                                &nbsp;&nbsp;— <?php echo esc_html( $sub->name ); ?> (<?php echo (int) $sub->count; ?>)
+                                            </option>
+                                        <?php endforeach;
+                                    endif; ?>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="vb-sf-item">
+                        <label class="vb-sf-label">📍 Город / Регион:</label>
+                        <select name="location" class="vb-sf-select">
+                            <option value="">Все города и регионы</option>
+                            <?php if ( ! empty( $locations ) && ! is_wp_error( $locations ) ) : ?>
+                                <?php foreach ( $locations as $loc ) : ?>
+                                    <option value="<?php echo esc_attr( $loc->slug ); ?>" <?php selected( $loc_slug, $loc->slug ); ?>>
+                                        <?php echo esc_html( $loc->name ); ?> (<?php echo (int) $loc->count; ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="vb-sf-item">
+                        <label class="vb-sf-label">🏷️ Тип:</label>
+                        <select name="type" class="vb-sf-select">
+                            <option value="">Все публикации</option>
+                            <option value="classified" <?php selected( $type_filter, 'classified' ); ?>>📢 Только объявления</option>
+                            <option value="company" <?php selected( $type_filter, 'company' ); ?>>🏢 Только компании</option>
+                        </select>
+                    </div>
+
+                    <div class="vb-sf-item">
+                        <label class="vb-sf-label">⇅ Сортировка:</label>
+                        <select name="sort" class="vb-sf-select" onchange="this.form.submit();">
+                            <option value="newest" <?php selected( $sort_val, 'newest' ); ?>>Сначала новые</option>
+                            <option value="oldest" <?php selected( $sort_val, 'oldest' ); ?>>Сначала старые</option>
+                            <option value="price_asc" <?php selected( $sort_val, 'price_asc' ); ?>>Сначала дешевле</option>
+                            <option value="price_desc" <?php selected( $sort_val, 'price_desc' ); ?>>Сначала дороже</option>
+                        </select>
+                    </div>
+
+                    <?php if ( $has_filters ) : ?>
+                        <div class="vb-sf-item vb-sf-reset">
+                            <a href="<?php echo esc_url( $form_action ); ?>" class="vb-sf-reset-btn">✕ Сбросить фильтры</a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </form>
+
+            <!-- Results Summary Bar -->
+            <div class="vb-search-results-bar">
+                <?php if ( $has_filters ) : ?>
+                    <span class="vb-srb-count">Найдено публикаций: <strong><?php echo (int) $query->found_posts; ?></strong></span>
+                    <?php if ( ! empty( $search_term ) ) : ?>
+                        <span class="vb-srb-query">по запросу «<strong><?php echo esc_html( $search_term ); ?></strong>»</span>
+                    <?php endif; ?>
+                <?php else : ?>
+                    <span class="vb-srb-count">Свежие объявления и компании:</span>
+                <?php endif; ?>
+            </div>
+
+            <!-- Results Grid -->
+            <?php if ( $query->have_posts() ) : ?>
+                <div class="vb-listings-grid">
+                    <?php while ( $query->have_posts() ) : $query->the_post(); 
+                        $id       = get_the_ID();
+                        $type     = get_post_meta( $id, '_vb_type', true ) ?: 'classified';
+                        $price    = get_post_meta( $id, '_vb_price', true );
+                        $thumb    = get_the_post_thumbnail_url( $id, 'medium' );
+                        if ( ! $thumb ) {
+                            $raw_imgs = get_post_meta( $id, '_vb_images', true );
+                            $imgs = maybe_unserialize( $raw_imgs );
+                            if ( is_array( $imgs ) && ! empty( $imgs ) && is_numeric( $imgs[0] ) ) {
+                                $thumb = wp_get_attachment_image_url( (int) $imgs[0], 'medium' );
+                            }
+                        }
+                        if ( ! $thumb ) {
+                            $thumb = defined( 'VB_BOARD_URL' ) ? ( VB_BOARD_URL . 'assets/no-photo.svg' ) : '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                        }
+                        $cats     = wp_get_post_terms( $id, 'vb_category', [ 'fields' => 'names' ] );
+                        $cat_name = ! empty( $cats ) ? $cats[0] : '';
+                        $locs     = wp_get_post_terms( $id, 'vb_location', [ 'fields' => 'names' ] );
+                        $loc_name = ! empty( $locs ) ? $locs[0] : '';
+                        $stats    = VB_Ratings::get_vote_stats( $type === 'company' ? 'company' : 'listing', $id );
+                    ?>
+                        <div class="vb-card" data-id="<?php echo esc_attr( $id ); ?>">
+                            <div class="vb-card-img-wrap">
+                                <a href="<?php the_permalink(); ?>">
+                                    <img src="<?php echo esc_url( $thumb ); ?>" alt="<?php the_title_attribute(); ?>" loading="lazy" class="vb-card-img">
+                                </a>
+                                <span class="vb-badge-type <?php echo 'company' === $type ? 'vb-badge-company' : 'vb-badge-ad'; ?>">
+                                    <?php echo 'company' === $type ? '🏢 Компания' : '📢 Объявление'; ?>
+                                </span>
+                            </div>
+                            <div class="vb-card-body">
+                                <div class="vb-card-meta-top">
+                                    <?php if ( $cat_name ) : ?>
+                                        <span class="vb-card-category"><?php echo esc_html( $cat_name ); ?></span>
+                                    <?php endif; ?>
+                                    <?php if ( $loc_name ) : ?>
+                                        <span class="vb-card-location">📍 <?php echo esc_html( $loc_name ); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <h4 class="vb-card-title">
+                                    <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                </h4>
+                                <div class="vb-card-price">
+                                    <?php if ( 'company' === $type ) : 
+                                        $web = get_post_meta( $id, '_vb_website', true ) ?: get_post_meta( $id, '_website', true );
+                                    ?>
+                                        <strong class="vb-price-company"><?php echo $web ? '🌐 ' . esc_html( preg_replace( '#^https?://#', '', rtrim( $web, '/' ) ) ) : '🏢 Каталог фирм'; ?></strong>
+                                    <?php elseif ( $price > 0 ) : ?>
+                                        <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> Kč</strong>
+                                    <?php else : ?>
+                                        <strong class="vb-price-free">Договорная / Бесплатно</strong>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="vb-card-meta">
+                                    <span class="vb-meta-date">🕒 <?php echo esc_html( get_the_date( 'd.m.Y' ) ); ?></span>
+                                    <div class="vb-rating-dual">
+                                        <button type="button" class="vb-btn-vote vb-vote-up" data-target="<?php echo 'company' === $type ? 'company' : 'listing'; ?>" data-id="<?php echo esc_attr( $id ); ?>" data-vote="1" title="Лайк">
+                                            👍 <span id="vb-likes-<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $stats['likes'] ); ?></span>
+                                        </button>
+                                        <button type="button" class="vb-btn-vote vb-vote-down" data-target="<?php echo 'company' === $type ? 'company' : 'listing'; ?>" data-id="<?php echo esc_attr( $id ); ?>" data-vote="-1" title="Дизлайк">
+                                            👎 <span id="vb-dislikes-<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $stats['dislikes'] ); ?></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; wp_reset_postdata(); ?>
+                </div>
+
+                <!-- Numbered Pagination -->
+                <?php if ( $query->max_num_pages > 1 ) : ?>
+                    <div class="vb-pagination">
+                        <?php 
+                        echo paginate_links( [
+                            'base'      => add_query_arg( 'paged', '%#%' ),
+                            'format'    => '',
+                            'current'   => $paged,
+                            'total'     => $query->max_num_pages,
+                            'prev_text' => '&laquo; Назад',
+                            'next_text' => 'Вперед &raquo;',
+                        ] );
+                        ?>
+                    </div>
+                <?php endif; ?>
+
+            <?php else : ?>
+                <div class="vb-search-empty-box">
+                    <div class="vb-seb-icon">🔎</div>
+                    <h3>По вашему запросу ничего не найдено</h3>
+                    <p>К сожалению, объявлений или компаний с такими параметрами не обнаружено.</p>
+                    <div class="vb-seb-tips">
+                        <p><strong>Полезные советы для поиска:</strong></p>
+                        <ul>
+                            <li>Проверьте написание поисковых слов на наличие опечаток.</li>
+                            <li>Попробуйте использовать более общие слова (например, «авто» вместо конкретной модификации).</li>
+                            <li>Попробуйте выбрать «Все рубрики» или «Все города и регионы».</li>
+                        </ul>
+                    </div>
+                    <?php if ( $has_filters ) : ?>
+                        <a href="<?php echo esc_url( $form_action ); ?>" class="vb-f-btn-submit" style="display:inline-block; margin-top:16px;">Показать все объявления</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <?php
         return ob_get_clean();

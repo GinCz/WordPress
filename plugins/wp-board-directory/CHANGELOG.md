@@ -1,5 +1,22 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.20] - 2026-11-19
+### Added
+- Beautiful Universal Search Module (`[vb_search]` and backward-compatible aliases `[acadp_search_form]`, `[acadp_search]`):
+  - Modern hero search container with prominent query input, search magnifier icon, and instant clear button (`✕`).
+  - Hierarchical Category dropdown (`Рубрика`) with item count badges and nested subcategory indentations.
+  - Region / City dropdown (`Город / Регион`) covering all localized kraje, cities, and Internet / OnLine.
+  - Publication type selector (`Все публикации`, `📢 Только объявления`, `🏢 Только компании`).
+  - Sorting options (`Сначала новые`, `Сначала старые`, `Сначала дешевле`, `Сначала дороже`).
+  - Rich listings & companies card grid matching the board styling with ratings, price, photo, category, and location.
+  - Interactive pagination with numbered page links.
+  - Friendly empty state with search hints when no matches are found.
+  - Enhanced search across custom meta fields (`_vb_email`, `_vb_phone`, `_vb_address`, `_vb_whatsapp`, `_vb_telegram`, `_vb_website`) and author names.
+- Top bar navigation menu button styling:
+  - Added dedicated styling for `Поиск` in header navigation with magnifier icon (`🔍 Поиск`), translucent pill background (`rgba(255, 255, 255, 0.18)`), smooth hover animations, and elevated contrast.
+- Global Search Routing:
+  - Standard WordPress frontend searches (`/?s=...`) automatically include custom post types `vb_listing` and `vb_company` and redirect to the unified rich search page (`/poisk-obyavlenij/?s=...`).
+
 ## [2026-11__1.19] - 2026-11-19
 ### Added
 - Eternal listings for Vladimir Bulantsev (`gin@volny.cz` / author ID 1 / `ekaterinburg-sro.eu`):

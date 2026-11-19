@@ -25,7 +25,10 @@ class VB_CPT {
         // Pre get posts for frontend city filter and admin sorting/filtering
         add_action( 'pre_get_posts', [ __CLASS__, 'handle_pre_get_posts' ] );
 
-        // Enhanced admin search across custom fields (email, phone, address)
+        // Redirect frontend standard ?s= query to unified /poisk-obyavlenij/
+        add_action( 'template_redirect', [ __CLASS__, 'handle_search_redirect' ] );
+
+        // Enhanced search across custom fields (email, phone, address)
         add_filter( 'posts_search', [ __CLASS__, 'enhance_admin_search' ], 10, 2 );
 
         // Admin Submenu Reordering & Highlighting
@@ -396,6 +399,14 @@ class VB_CPT {
             }
         }
 
+        // FRONTEND QUERY: Standard Search (include vb_listing and vb_company)
+        if ( ! is_admin() && $query->is_main_query() && $query->is_search() ) {
+            $post_types = (array) $query->get( 'post_type' );
+            if ( empty( $post_types ) || $post_types === [ 'post' ] || in_array( 'post', $post_types, true ) ) {
+                $query->set( 'post_type', [ 'vb_listing', 'vb_company', 'post' ] );
+            }
+        }
+
         // FRONTEND QUERY: Category Archive City & Keyword Filter
         if ( ! is_admin() && $query->is_main_query() && ( is_tax( 'vb_category' ) || is_post_type_archive( 'vb_listing' ) ) ) {
             $city_slug = sanitize_text_field( $_GET['city'] ?? $_GET['location'] ?? $_GET['mesto'] ?? '' );
@@ -433,25 +444,48 @@ class VB_CPT {
     }
 
     /**
+     * Redirect standard frontend ?s= search queries to dedicated /poisk-obyavlenij/
+     */
+    public static function handle_search_redirect() {
+        if ( ! is_admin() && is_search() && ! empty( get_search_query() ) ) {
+            $req_uri = $_SERVER['REQUEST_URI'] ?? '';
+            if ( strpos( $req_uri, 'poisk-obyavlenij' ) === false ) {
+                $search_q = get_search_query();
+                wp_safe_redirect( home_url( '/poisk-obyavlenij/?s=' . urlencode( $search_q ) ) );
+                exit;
+            }
+        }
+    }
+
+    /**
      * Enhanced search across custom fields (_vb_email, _vb_phone, _vb_address) and author email
      */
     public static function enhance_admin_search( $search, $query ) {
         global $wpdb;
 
-        if ( ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) && 'vb_listing' === $query->get( 'post_type' ) && $query->is_search() ) {
+        $post_type = $query->get( 'post_type' );
+        $is_vb = false;
+        if ( is_string( $post_type ) && ( 'vb_listing' === $post_type || 'vb_company' === $post_type ) ) {
+            $is_vb = true;
+        } elseif ( is_array( $post_type ) && ( in_array( 'vb_listing', $post_type, true ) || in_array( 'vb_company', $post_type, true ) ) ) {
+            $is_vb = true;
+        }
+
+        if ( $is_vb && $query->is_search() ) {
             $search_term = trim( (string) $query->get( 's' ) );
             if ( ! empty( $search_term ) ) {
                 $term_like = '%' . $wpdb->esc_like( $search_term ) . '%';
 
                 // Find matching post IDs from postmeta
                 $meta_ids = $wpdb->get_col( $wpdb->prepare(
-                    "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_email', '_vb_phone', '_vb_address', 'email', 'phone', '_email', '_phone') AND meta_value LIKE %s",
+                    "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_email', '_vb_phone', '_vb_address', 'email', 'phone', '_email', '_phone', '_vb_whatsapp', '_vb_telegram', '_vb_website') AND meta_value LIKE %s",
                     $term_like
                 ) );
 
                 // Find matching post IDs from author users
                 $user_ids = $wpdb->get_col( $wpdb->prepare(
-                    "SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->users} u ON p.post_author = u.ID WHERE p.post_type = 'vb_listing' AND (u.user_email LIKE %s OR u.display_name LIKE %s)",
+                    "SELECT p.ID FROM {$wpdb->posts} p JOIN {$wpdb->users} u ON p.post_author = u.ID WHERE p.post_type IN ('vb_listing', 'vb_company') AND (u.user_email LIKE %s OR u.display_name LIKE %s OR u.user_login LIKE %s)",
+                    $term_like,
                     $term_like,
                     $term_like
                 ) );
