@@ -143,7 +143,7 @@ class VB_Holidays {
             <!-- Czech Svátek -->
             <div class="vb-holidays-item vb-hi-svatek">
                 <div class="vb-hi-title">
-                    <span class="vb-flag">🇨🇿</span>
+                    <span class="vb-flag"><?php echo VB_Weather::get_flag_svg('cz'); ?></span>
                     <strong>Svátek v ČR (именины):</strong>
                 </div>
                 <div class="vb-hi-value vb-svatek-highlight">
@@ -181,7 +181,7 @@ class VB_Holidays {
             <?php if ( ! empty( $hols_data['russia'] ) ) : ?>
                 <div class="vb-holidays-item vb-hi-russia">
                     <div class="vb-hi-title">
-                        <span>🇷🇺</span>
+                        <span class="vb-flag"><?php echo VB_Weather::get_flag_svg('ru'); ?></span>
                         <strong>В России:</strong>
                     </div>
                     <ul class="vb-hi-list">

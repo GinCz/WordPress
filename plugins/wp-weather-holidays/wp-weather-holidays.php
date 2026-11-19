@@ -3,7 +3,7 @@
  * Plugin Name: WP Weather & Holidays (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-weather-holidays
  * Description: Compact multi-city weather widget for 11 European capitals with Open-Meteo caching, daily Czech Svátek, Name Days (День Ангела), and European/Russian holidays.
- * Version:     2026-11__1.00
+ * Version:     2026-11__1.01
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_WH_VERSION', '2026-11__1.00' );
+define( 'VB_WH_VERSION', '2026-11__1.01' );
 define( 'VB_WH_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VB_WH_URL', plugin_dir_url( __FILE__ ) );
 

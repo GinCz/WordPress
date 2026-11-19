@@ -146,7 +146,7 @@
             "tested": "6.8"
         },
         "wp-weather-holidays": {
-            "version": "2026-11__1.00",
+            "version": "2026-11__1.01",
             "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-weather-holidays.zip",
             "url": "https://github.com/GinCz/plugins/tree/main/wp-weather-holidays",
             "name": "WP Weather & Holidays (VladiMIR+AI✅)",

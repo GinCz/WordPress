@@ -199,7 +199,41 @@ class VB_Weather {
     }
 
     /**
-     * Render compact 2-column weather widget
+     * Return SVG vector flag for country
+     */
+    public static function get_flag_svg( $code ) {
+        $flags = [
+            'cz'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#fff"/><rect y="5.5" width="16" height="5.5" fill="#d7141a"/><polygon points="0,0 8,5.5 0,11" fill="#11457e"/></svg>',
+            'prague'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#fff"/><rect y="5.5" width="16" height="5.5" fill="#d7141a"/><polygon points="0,0 8,5.5 0,11" fill="#11457e"/></svg>',
+            'de'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#000"/><rect y="3.67" width="16" height="3.67" fill="#dd0000"/><rect y="7.34" width="16" height="3.66" fill="#ffce00"/></svg>',
+            'berlin'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#000"/><rect y="3.67" width="16" height="3.67" fill="#dd0000"/><rect y="7.34" width="16" height="3.66" fill="#ffce00"/></svg>',
+            'fr'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#002654"/><rect x="5.33" width="5.34" height="11" fill="#fff"/><rect x="10.67" width="5.33" height="11" fill="#ce1126"/></svg>',
+            'paris'    => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#002654"/><rect x="5.33" width="5.34" height="11" fill="#fff"/><rect x="10.67" width="5.33" height="11" fill="#ce1126"/></svg>',
+            'es'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="2.75" fill="#aa151b"/><rect y="2.75" width="16" height="5.5" fill="#f1bf00"/><rect y="8.25" width="16" height="2.75" fill="#aa151b"/></svg>',
+            'madrid'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="2.75" fill="#aa151b"/><rect y="2.75" width="16" height="5.5" fill="#f1bf00"/><rect y="8.25" width="16" height="2.75" fill="#aa151b"/></svg>',
+            'it'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#009246"/><rect x="5.33" width="5.34" height="11" fill="#fff"/><rect x="10.67" width="5.33" height="11" fill="#ce2b37"/></svg>',
+            'rome'     => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#009246"/><rect x="5.33" width="5.34" height="11" fill="#fff"/><rect x="10.67" width="5.33" height="11" fill="#ce2b37"/></svg>',
+            'pl'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#fff"/><rect y="5.5" width="16" height="5.5" fill="#dc143c"/></svg>',
+            'warsaw'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#fff"/><rect y="5.5" width="16" height="5.5" fill="#dc143c"/></svg>',
+            'hu'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#ce2939"/><rect y="3.67" width="16" height="3.67" fill="#fff"/><rect y="7.34" width="16" height="3.66" fill="#477050"/></svg>',
+            'budapest' => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#ce2939"/><rect y="3.67" width="16" height="3.67" fill="#fff"/><rect y="7.34" width="16" height="3.66" fill="#477050"/></svg>',
+            'gr'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="11" fill="#0d5eaf"/><rect y="1.22" width="16" height="1.22" fill="#fff"/><rect y="3.66" width="16" height="1.22" fill="#fff"/><rect y="6.10" width="16" height="1.22" fill="#fff"/><rect y="8.54" width="16" height="1.22" fill="#fff"/><rect width="5.5" height="5.5" fill="#0d5eaf"/><rect x="2.1" width="1.3" height="5.5" fill="#fff"/><rect y="2.1" width="5.5" height="1.3" fill="#fff"/></svg>',
+            'athens'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="11" fill="#0d5eaf"/><rect y="1.22" width="16" height="1.22" fill="#fff"/><rect y="3.66" width="16" height="1.22" fill="#fff"/><rect y="6.10" width="16" height="1.22" fill="#fff"/><rect y="8.54" width="16" height="1.22" fill="#fff"/><rect width="5.5" height="5.5" fill="#0d5eaf"/><rect x="2.1" width="1.3" height="5.5" fill="#fff"/><rect y="2.1" width="5.5" height="1.3" fill="#fff"/></svg>',
+            'il'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="11" fill="#fff"/><rect y="1.2" width="16" height="1.4" fill="#0038b8"/><rect y="8.4" width="16" height="1.4" fill="#0038b8"/><polygon points="8,3.5 9.8,7 6.2,7" fill="none" stroke="#0038b8" stroke-width="0.7"/><polygon points="8,7.5 9.8,4 6.2,4" fill="none" stroke="#0038b8" stroke-width="0.7"/></svg>',
+            'jerusalem'=> '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="11" fill="#fff"/><rect y="1.2" width="16" height="1.4" fill="#0038b8"/><rect y="8.4" width="16" height="1.4" fill="#0038b8"/><polygon points="8,3.5 9.8,7 6.2,7" fill="none" stroke="#0038b8" stroke-width="0.7"/><polygon points="8,7.5 9.8,4 6.2,4" fill="none" stroke="#0038b8" stroke-width="0.7"/></svg>',
+            'md'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#003da5"/><rect x="5.33" width="5.34" height="11" fill="#ffd100"/><rect x="10.67" width="5.33" height="11" fill="#c8102e"/><circle cx="8" cy="5.5" r="1.5" fill="#a05a2c"/></svg>',
+            'chisinau' => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#003da5"/><rect x="5.33" width="5.34" height="11" fill="#ffd100"/><rect x="10.67" width="5.33" height="11" fill="#c8102e"/><circle cx="8" cy="5.5" r="1.5" fill="#a05a2c"/></svg>',
+            'ua'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#0057b7"/><rect y="5.5" width="16" height="5.5" fill="#ffd700"/></svg>',
+            'kyiv'     => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#0057b7"/><rect y="5.5" width="16" height="5.5" fill="#ffd700"/></svg>',
+            'ru'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#fff"/><rect y="3.67" width="16" height="3.67" fill="#0039a6"/><rect y="7.34" width="16" height="3.66" fill="#d52b1e"/></svg>',
+            'russia'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#fff"/><rect y="3.67" width="16" height="3.67" fill="#0039a6"/><rect y="7.34" width="16" height="3.66" fill="#d52b1e"/></svg>',
+        ];
+
+        return $flags[ strtolower( $code ) ] ?? '<span class="vb-flag-fallback">🌐</span>';
+    }
+
+    /**
+     * Render compact 1-column weather widget
      */
     public static function render( $atts = [] ) {
         $data = self::get_weather_data();
@@ -209,17 +243,21 @@ class VB_Weather {
         <div class="vb-weather-widget">
             <div class="vb-weather-title">
                 <span class="vb-wt-icon">🌤️</span>
-                <span class="vb-wt-text">Погода в столицах</span>
+                <span class="vb-wt-text">Погода</span>
             </div>
-            <div class="vb-weather-grid">
+            <div class="vb-weather-list">
                 <?php foreach ( $data as $k => $c ) : 
                     $temp_str = ( $c['temp'] > 0 ) ? ( '+' . $c['temp'] . '°' ) : ( $c['temp'] . '°' );
                 ?>
-                    <div class="vb-weather-chip" title="<?php echo esc_attr( $c['name'] . ': ' . $c['desc'] . ', ' . $temp_str ); ?>">
-                        <span class="vb-wc-flag"><?php echo esc_html( $c['flag'] ); ?></span>
-                        <span class="vb-wc-city"><?php echo esc_html( $c['name'] ); ?></span>
-                        <span class="vb-wc-temp"><?php echo esc_html( $temp_str ); ?></span>
-                        <span class="vb-wc-icon"><?php echo esc_html( $c['icon'] ); ?></span>
+                    <div class="vb-weather-row" title="<?php echo esc_attr( $c['name'] . ': ' . $c['desc'] . ', ' . $temp_str ); ?>">
+                        <div class="vb-wr-left">
+                            <span class="vb-wr-flag"><?php echo self::get_flag_svg( $k ); ?></span>
+                            <span class="vb-wr-city"><?php echo esc_html( $c['name'] ); ?></span>
+                        </div>
+                        <div class="vb-wr-right">
+                            <span class="vb-wr-temp"><?php echo esc_html( $temp_str ); ?></span>
+                            <span class="vb-wr-icon"><?php echo esc_html( $c['icon'] ); ?></span>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
