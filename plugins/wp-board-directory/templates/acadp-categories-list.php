@@ -14,14 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     <?php
     $tax = 'acadp_categories';
 
-    // Grouping: Column 1, Column 2 (Razvlecheniya and Dlya doma swapped for perfect row balance), Column 3
-    // Row 1: Авто, Развлечения, Недвижимость
-    // Row 2: Работа и бизнес, Для дома, Разное
-    // Row 3: Средства связи, Хозяйство, Электроника
+    // Grouping: Row 1, Row 2, Row 3
     $matrix = [
-        0 => [ 'avto', 'razvlecheniya', 'nedvizhimost' ],
-        1 => [ 'rabota-i-biznes', 'dlya-doma', 'raznoe' ],
-        2 => [ 'sredstva-svyazi', 'hozyajstvo', 'elektronika' ],
+        0 => [ 'auto', 'entertainment', 'realty', 'avto', 'razvlecheniya', 'nedvizhimost' ],
+        1 => [ 'business', 'home', 'other', 'rabota-i-biznes', 'dlya-doma', 'raznoe' ],
+        2 => [ 'phones', 'household', 'electronics', 'sredstva-svyazi', 'hozyajstvo', 'elektronika' ],
     ];
 
     $pad_counts = isset( $attributes['pad_counts'] ) ? $attributes['pad_counts'] : true;

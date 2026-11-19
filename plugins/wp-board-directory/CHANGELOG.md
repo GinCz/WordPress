@@ -1,5 +1,9 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.16] - 2026-11-19
+### Fixed
+- Fixed homepage categories rendering in `render_categories()`: dynamically fetch and balance all top-level parent categories across 3 columns, with full dual-slug support for both migrated English slugs (`auto`, `business`, `phones`, `home`, `entertainment`, `household`, `realty`, `other`, `electronics`) and legacy slugs.
+
 ## [2026-11__1.15] - 2026-11-19
 ### Fixed
 - Added native `assets/no-photo.svg` camera placeholder icon.

@@ -473,11 +473,55 @@ class VB_Shortcodes {
     public static function render_categories( $atts ) {
         $tax = 'vb_category';
 
-        $col_slugs = [
-            0 => [ 'avto', 'rabota-i-biznes', 'sredstva-svyazi' ],
-            1 => [ 'dlya-doma', 'razvlecheniya', 'hozyajstvo' ],
-            2 => [ 'nedvizhimost', 'raznoe', 'elektronika' ],
+        $preferred_cols = [
+            0 => [ 'auto', 'business', 'phones', 'avto', 'rabota-i-biznes', 'sredstva-svyazi' ],
+            1 => [ 'home', 'entertainment', 'household', 'dlya-doma', 'razvlecheniya', 'hozyajstvo' ],
+            2 => [ 'realty', 'other', 'electronics', 'nedvizhimost', 'raznoe', 'elektronika' ],
         ];
+
+        // 1. Fetch all top-level parent categories
+        $all_parents = get_terms( [
+            'taxonomy'   => $tax,
+            'hide_empty' => false,
+            'parent'     => 0,
+            'orderby'    => 'term_id',
+            'order'      => 'ASC',
+        ] );
+
+        if ( is_wp_error( $all_parents ) || empty( $all_parents ) ) {
+            return '';
+        }
+
+        $parents_by_slug = [];
+        foreach ( $all_parents as $p ) {
+            $parents_by_slug[ $p->slug ] = $p;
+        }
+
+        $cols = [ 0 => [], 1 => [], 2 => [] ];
+        $used_ids = [];
+
+        // Distribute preferred categories across columns
+        foreach ( $preferred_cols as $c_idx => $slug_list ) {
+            foreach ( $slug_list as $slug ) {
+                if ( isset( $parents_by_slug[ $slug ] ) ) {
+                    $p = $parents_by_slug[ $slug ];
+                    if ( ! in_array( $p->term_id, $used_ids, true ) ) {
+                        $cols[ $c_idx ][] = $p;
+                        $used_ids[] = $p->term_id;
+                    }
+                }
+            }
+        }
+
+        // Place any remaining or custom top-level categories
+        $col_target = 0;
+        foreach ( $all_parents as $p ) {
+            if ( ! in_array( $p->term_id, $used_ids, true ) ) {
+                $cols[ $col_target % 3 ][] = $p;
+                $used_ids[] = $p->term_id;
+                $col_target++;
+            }
+        }
 
         ob_start();
         ?>
@@ -485,8 +529,7 @@ class VB_Shortcodes {
             <div class="vb-cat-row">
                 <?php for ( $col = 0; $col < 3; $col++ ) : ?>
                     <div class="vb-cat-col">
-                        <?php foreach ( $col_slugs[ $col ] as $slug ) : 
-                            $parent = get_term_by( 'slug', $slug, $tax );
+                        <?php foreach ( $cols[ $col ] as $parent ) : 
                             if ( ! $parent ) continue;
 
                             $children = get_terms( [
