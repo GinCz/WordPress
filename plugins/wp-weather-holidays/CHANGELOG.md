@@ -1,5 +1,11 @@
 # Changelog — WP Weather & Holidays
 
+## [2026-11__1.02] - 2026-11-19
+### Added & Improved
+- Added horizontal country boards module `[vb_country_boards]` featuring all 11 classified boards with SVG country flags, bold uppercase typography, and dynamic current-country badge (`ВЫ ЗДЕСЬ`).
+- Added responsive styling and smooth hover animation for country cards.
+- Added clean top header spacing rule for home page: removes redundant `.entry-header` title and sets ~4mm (15px) margin above main banner image.
+
 ## [2026-11__1.01] - 2026-11-19
 ### Changed & Improved
 - Changed weather layout from 2-column grid to compact 1-column vertical list (1 line per capital).

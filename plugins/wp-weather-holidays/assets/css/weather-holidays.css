@@ -212,3 +212,131 @@
     margin-bottom: 3px;
     text-align: left !important;
 }
+
+/* ==========================================================================
+   Home Page - Clean Top Header & 4mm Spacing
+   ========================================================================== */
+.home .entry-header {
+    display: none !important;
+}
+.home #content.page-wrapper {
+    padding-top: 15px !important;
+}
+
+/* ==========================================================================
+   Horizontal Country Boards Block (VladiMIR+AI✅)
+   ========================================================================== */
+.vb-country-boards-block {
+    margin: 30px 0 15px 0;
+    padding: 18px 20px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    box-sizing: border-box;
+}
+
+.vb-cbb-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.vb-cbb-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.vb-cbb-title {
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #1e293b;
+    margin: 0;
+}
+
+.vb-cbb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    align-items: stretch;
+}
+
+.vb-cbb-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-decoration: none !important;
+    transition: all 0.22s ease-in-out;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.vb-cbb-card:hover {
+    background: #3f0077 !important;
+    border-color: #3f0077 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(63, 0, 119, 0.22);
+}
+
+.vb-cbb-flag {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.vb-cbb-flag svg {
+    width: 20px;
+    height: 14px;
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(0,0,0,0.4);
+    display: block;
+}
+
+.vb-cbb-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #1e293b;
+    white-space: nowrap;
+    transition: color 0.22s ease-in-out;
+}
+
+.vb-cbb-card:hover .vb-cbb-name {
+    color: #ffffff !important;
+}
+
+.vb-cbb-card.is-current {
+    background: #fdf4ff;
+    border-color: #c084fc;
+}
+
+.vb-cbb-card.is-current .vb-cbb-name {
+    color: #7e22ce;
+}
+
+.vb-cbb-badge {
+    position: absolute;
+    top: -7px;
+    right: 8px;
+    font-size: 8.5px;
+    font-weight: 800;
+    background: #7e22ce;
+    color: #ffffff;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+

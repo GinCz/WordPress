@@ -227,6 +227,10 @@ class VB_Weather {
             'kyiv'     => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="5.5" fill="#0057b7"/><rect y="5.5" width="16" height="5.5" fill="#ffd700"/></svg>',
             'ru'       => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#fff"/><rect y="3.67" width="16" height="3.67" fill="#0039a6"/><rect y="7.34" width="16" height="3.66" fill="#d52b1e"/></svg>',
             'russia'   => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#fff"/><rect y="3.67" width="16" height="3.67" fill="#0039a6"/><rect y="7.34" width="16" height="3.66" fill="#d52b1e"/></svg>',
+            'esp'      => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="2.75" fill="#aa151b"/><rect y="2.75" width="16" height="5.5" fill="#f1bf00"/><rect y="8.25" width="16" height="2.75" fill="#aa151b"/></svg>',
+            'hun'      => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="3.67" fill="#ce2939"/><rect y="3.67" width="16" height="3.67" fill="#fff"/><rect y="7.34" width="16" height="3.66" fill="#477050"/></svg>',
+            'isl'      => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="16" height="11" fill="#fff"/><rect y="1.2" width="16" height="1.4" fill="#0038b8"/><rect y="8.4" width="16" height="1.4" fill="#0038b8"/><polygon points="8,3.5 9.8,7 6.2,7" fill="none" stroke="#0038b8" stroke-width="0.7"/><polygon points="8,7.5 9.8,4 6.2,4" fill="none" stroke="#0038b8" stroke-width="0.7"/></svg>',
+            'mld'      => '<svg class="vb-flag-svg" viewBox="0 0 16 11" width="16" height="11"><rect width="5.33" height="11" fill="#003da5"/><rect x="5.33" width="5.34" height="11" fill="#ffd100"/><rect x="10.67" width="5.33" height="11" fill="#c8102e"/><circle cx="8" cy="5.5" r="1.5" fill="#a05a2c"/></svg>',
         ];
 
         return $flags[ strtolower( $code ) ] ?? '<span class="vb-flag-fallback">🌐</span>';

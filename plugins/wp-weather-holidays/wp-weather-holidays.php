@@ -3,7 +3,7 @@
  * Plugin Name: WP Weather & Holidays (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-weather-holidays
  * Description: Compact multi-city weather widget for 11 European capitals with Open-Meteo caching, daily Czech Svátek, Name Days (День Ангела), and European/Russian holidays.
- * Version:     2026-11__1.01
+ * Version:     2026-11__1.02
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,13 +27,14 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_WH_VERSION', '2026-11__1.01' );
+define( 'VB_WH_VERSION', '2026-11__1.02' );
 define( 'VB_WH_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VB_WH_URL', plugin_dir_url( __FILE__ ) );
 
 // Load Submodules
 require_once VB_WH_PATH . 'includes/class-weather.php';
 require_once VB_WH_PATH . 'includes/class-holidays.php';
+require_once VB_WH_PATH . 'includes/class-country-boards.php';
 
 // Enqueue CSS
 add_action( 'wp_enqueue_scripts', function() {
@@ -43,6 +44,7 @@ add_action( 'wp_enqueue_scripts', function() {
 // Register Shortcodes
 add_shortcode( 'vb_weather', [ 'VB_Weather', 'render' ] );
 add_shortcode( 'vb_holidays', [ 'VB_Holidays', 'render' ] );
+add_shortcode( 'vb_country_boards', [ 'VB_Country_Boards', 'render' ] );
 add_shortcode( 'vb_svatek', [ 'VB_Holidays', 'render' ] );
 
 // Combined Shortcode
