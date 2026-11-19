@@ -128,7 +128,7 @@
             "tested": "6.8"
         },
         "wp-board-directory": {
-            "version": "2026-11__1.18",
+            "version": "2026-11__1.19",
             "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-board-directory.zip",
             "url": "https://github.com/GinCz/plugins/tree/main/wp-board-directory",
             "name": "WP Board & Directory (VladiMIR+AI✅)",

@@ -3,7 +3,7 @@
  * Plugin Name: WP Board & Directory (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-board-directory
  * Description: Ultra-fast unified classified ads and business directory plugin. Integrates ads, company profiles, anti-fraud ratings, client-side WebP compression up to 15 photos, Cloudflare Turnstile and 1-Click migration.
- * Version:     2026-11__1.18
+ * Version:     2026-11__1.19
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_BOARD_VERSION', '2026-11__1.18' );
+define( 'VB_BOARD_VERSION', '2026-11__1.19' );
 define( 'VB_BOARD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VB_BOARD_DIR', VB_BOARD_PATH );
 define( 'VB_BOARD_URL', plugin_dir_url( __FILE__ ) );
@@ -39,6 +39,7 @@ require_once VB_BOARD_PATH . 'includes/class-ratings.php';
 require_once VB_BOARD_PATH . 'includes/class-importer.php';
 require_once VB_BOARD_PATH . 'includes/class-media-cleaner.php';
 require_once VB_BOARD_PATH . 'includes/class-shortcodes.php';
+require_once VB_BOARD_PATH . 'includes/class-cron.php';
 
 // Activation Hook
 register_activation_hook( __FILE__, function() {
@@ -55,6 +56,7 @@ add_action( 'plugins_loaded', function() {
     VB_Importer::init();
     VB_Media_Cleaner::init();
     VB_Shortcodes::init();
+    VB_Cron::init();
 } );
 
 // Enqueue Frontend Assets

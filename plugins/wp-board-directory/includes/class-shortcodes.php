@@ -373,8 +373,19 @@ class VB_Shortcodes {
         update_post_meta( $post_id, '_vb_email', $email );
         update_post_meta( $post_id, '_vb_address', $address );
 
-        // Expiry date (default 6 months)
-        $expiry_str = date( 'Y-m-d H:i:s', strtotime( '+6 months', current_time( 'timestamp' ) ) );
+        // Expiry date (Vladimir: eternal 2099; Others: default 6 months)
+        $is_vladimir = ( 1 === (int) $author_id || strtolower( trim( $email ) ) === 'gin@volny.cz' || strtolower( trim( $email ) ) === 'gin.vladimir@gmail.com' );
+        if ( $is_vladimir ) {
+            $expiry_str = '2099-12-31 23:59:59';
+            update_post_meta( $post_id, 'never_expires', 1 );
+            update_post_meta( $post_id, '_never_expires', 1 );
+            update_post_meta( $post_id, '_vb_never_expires', 1 );
+        } else {
+            $expiry_str = date( 'Y-m-d H:i:s', strtotime( '+6 months', current_time( 'timestamp' ) ) );
+            delete_post_meta( $post_id, 'never_expires' );
+            delete_post_meta( $post_id, '_never_expires' );
+            delete_post_meta( $post_id, '_vb_never_expires' );
+        }
         update_post_meta( $post_id, 'expiry_date', $expiry_str );
         update_post_meta( $post_id, '_expiry_date', $expiry_str );
         update_post_meta( $post_id, '_vb_expiry_date', $expiry_str );
@@ -1225,7 +1236,11 @@ class VB_Shortcodes {
                                                     <td class="vb-col-cat"><?php echo esc_html( $cat_str ); ?></td>
                                                     <td class="vb-col-date">
                                                         <div><?php echo esc_html( get_the_date( 'd.m.Y', $ad->ID ) ); ?></div>
-                                                        <?php if ( $expiry ) : ?>
+                                                        <?php 
+                                                        $ad_never = get_post_meta( $ad->ID, 'never_expires', true ) ?: get_post_meta( $ad->ID, '_never_expires', true );
+                                                        if ( $ad_never || ( $expiry && strpos( $expiry, '2099' ) !== false ) ) : ?>
+                                                            <small class="vb-expiry-tag" style="background:#ecfdf5;color:#059669;border-color:#a7f3d0;font-weight:700;">вечно ♾️</small>
+                                                        <?php elseif ( $expiry ) : ?>
                                                             <small class="vb-expiry-tag">до <?php echo esc_html( date( 'd.m.Y', strtotime( $expiry ) ) ); ?></small>
                                                         <?php endif; ?>
                                                     </td>
@@ -1331,7 +1346,11 @@ class VB_Shortcodes {
                                                     <td class="vb-col-info">
                                                         <div>📍 <?php echo esc_html( $cmp_addr ?: '—' ); ?></div>
                                                         <div>📞 <?php echo esc_html( $cmp_phone ?: '—' ); ?></div>
-                                                        <?php if ( $cmp_expiry ) : ?>
+                                                        <?php 
+                                                        $cmp_never = get_post_meta( $cmp->ID, 'never_expires', true ) ?: get_post_meta( $cmp->ID, '_never_expires', true );
+                                                        if ( $cmp_never || ( $cmp_expiry && strpos( $cmp_expiry, '2099' ) !== false ) ) : ?>
+                                                            <small class="vb-expiry-tag" style="background:#ecfdf5;color:#059669;border-color:#a7f3d0;font-weight:700;">вечно ♾️</small>
+                                                        <?php elseif ( $cmp_expiry ) : ?>
                                                             <small class="vb-expiry-tag">до <?php echo esc_html( date( 'd.m.Y', strtotime( $cmp_expiry ) ) ); ?></small>
                                                         <?php endif; ?>
                                                     </td>

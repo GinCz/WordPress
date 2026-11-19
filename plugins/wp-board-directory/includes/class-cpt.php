@@ -227,8 +227,16 @@ class VB_CPT {
                 break;
 
             case 'vb_expiry':
+                $post = get_post( $post_id );
+                $author_id = (int) ( $post ? $post->post_author : 0 );
+                $email = get_post_meta( $post_id, '_vb_email', true ) ?: get_post_meta( $post_id, 'email', true );
+                $is_vladimir = ( 1 === $author_id || strtolower( trim( $email ) ) === 'gin@volny.cz' || strtolower( trim( $email ) ) === 'gin.vladimir@gmail.com' );
+                $never_expires = get_post_meta( $post_id, 'never_expires', true ) ?: get_post_meta( $post_id, '_never_expires', true ) ?: get_post_meta( $post_id, '_vb_never_expires', true );
                 $expiry = get_post_meta( $post_id, 'expiry_date', true ) ?: get_post_meta( $post_id, '_expiry_date', true ) ?: get_post_meta( $post_id, '_vb_expiry_date', true );
-                if ( $expiry ) {
+
+                if ( $is_vladimir || $never_expires || ( $expiry && strpos( $expiry, '2099' ) !== false ) ) {
+                    echo '<span style="color:#059669; font-size:12px; font-weight:700;">Вечно ♾️</span>';
+                } elseif ( $expiry ) {
                     $exp_ts = strtotime( $expiry );
                     $is_expired = $exp_ts && $exp_ts < time();
                     $color = $is_expired ? '#dc2626' : '#059669';
@@ -698,6 +706,14 @@ class VB_CPT {
         $address      = get_post_meta( $post->ID, '_vb_address', true );
         $website      = get_post_meta( $post->ID, '_vb_website', true ) ?: get_post_meta( $post->ID, '_website', true );
         $expiry       = get_post_meta( $post->ID, 'expiry_date', true ) ?: get_post_meta( $post->ID, '_expiry_date', true ) ?: get_post_meta( $post->ID, '_vb_expiry_date', true );
+        $post_obj     = get_post( $post->ID );
+        $author_id    = (int) ( $post_obj ? $post_obj->post_author : 0 );
+        $is_vladimir  = ( 1 === $author_id || strtolower( trim( $email ) ) === 'gin@volny.cz' || strtolower( trim( $email ) ) === 'gin.vladimir@gmail.com' );
+        $never_expires = get_post_meta( $post->ID, 'never_expires', true ) ?: get_post_meta( $post->ID, '_never_expires', true ) ?: get_post_meta( $post->ID, '_vb_never_expires', true );
+        if ( $is_vladimir || ( $expiry && strpos( $expiry, '2099' ) !== false ) ) {
+            $never_expires = 1;
+        }
+
         if ( ! $expiry ) {
             $expiry = date( 'Y-m-d', strtotime( '+6 months' ) );
         } else {
@@ -767,6 +783,10 @@ class VB_CPT {
             <div class="vb-meta-field">
                 <label for="vb_expiry_date">📅 Дата окончания публикации:</label>
                 <input type="date" id="vb_expiry_date" name="vb_expiry_date" value="<?php echo esc_attr( $expiry ); ?>">
+                <label style="margin-top:8px; font-size:13px; font-weight:600; color:#059669; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" name="vb_never_expires" value="1" <?php checked( (bool) $never_expires, true ); ?>>
+                    Отображать вечно (без ограничения срока) ♾️
+                </label>
             </div>
         </div>
 
@@ -839,11 +859,28 @@ class VB_CPT {
             update_post_meta( $post_id, '_website', $website );
         }
 
-        if ( ! empty( $_POST['vb_expiry_date'] ) ) {
+        $post = get_post( $post_id );
+        $author_id = (int) ( $post ? $post->post_author : 0 );
+        $email = sanitize_email( $_POST['vb_email'] ?? '' );
+        $is_vladimir = ( 1 === $author_id || strtolower( trim( $email ) ) === 'gin@volny.cz' || strtolower( trim( $email ) ) === 'gin.vladimir@gmail.com' );
+        $never_expires = ! empty( $_POST['vb_never_expires'] ) || $is_vladimir;
+
+        if ( $never_expires ) {
+            $exp_str = '2099-12-31 23:59:59';
+            update_post_meta( $post_id, 'never_expires', 1 );
+            update_post_meta( $post_id, '_never_expires', 1 );
+            update_post_meta( $post_id, '_vb_never_expires', 1 );
+            update_post_meta( $post_id, 'expiry_date', $exp_str );
+            update_post_meta( $post_id, '_expiry_date', $exp_str );
+            update_post_meta( $post_id, '_vb_expiry_date', $exp_str );
+        } elseif ( ! empty( $_POST['vb_expiry_date'] ) ) {
             $exp_str = date( 'Y-m-d 23:59:59', strtotime( $_POST['vb_expiry_date'] ) );
             update_post_meta( $post_id, 'expiry_date', $exp_str );
             update_post_meta( $post_id, '_expiry_date', $exp_str );
             update_post_meta( $post_id, '_vb_expiry_date', $exp_str );
+            delete_post_meta( $post_id, 'never_expires' );
+            delete_post_meta( $post_id, '_never_expires' );
+            delete_post_meta( $post_id, '_vb_never_expires' );
         }
     }
 

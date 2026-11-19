@@ -1,5 +1,18 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.19] - 2026-11-19
+### Added
+- Eternal listings for Vladimir Bulantsev (`gin@volny.cz` / author ID 1 / `ekaterinburg-sro.eu`):
+  - Automatically marked as `never_expires = 1` and `expiry_date = '2099-12-31 23:59:59'` across all 11 boards.
+  - Distinctive green `Вечно ♾️` badge in WordPress Admin listings table and user dashboard.
+  - Admin checkbox `Отображать вечно (без ограничения срока) ♾️` in listing parameters meta box.
+- Standard 6-month publication period for all other users with automated email reminder system:
+  - Automated watchdog cron (`VB_Cron`) running daily.
+  - Email notification 14 days before expiration with 1-click renewal link.
+  - Email notification 7 days before expiration with 1-click renewal link.
+  - Automated expiration handling when publication period ends.
+  - Free 1-click renewal mechanism (`vb_action=renew_ad`) extending listings by +6 months with live confirmation toast banner.
+
 ## [2026-11__1.18] - 2026-11-19
 ### Added
 - Strict 100-character post title limit for listings (`vb_listing`) and companies (`vb_company`):
