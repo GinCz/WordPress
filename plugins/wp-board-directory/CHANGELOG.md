@@ -1,5 +1,10 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.14] - 2026-11-19
+### Removed / Changed
+- Removed WordPress Native Custom Fields (`postcustom`) and Excerpt (`postexcerpt`) meta boxes from post editor for `vb_listing` (`supports` simplified, explicit `remove_meta_box` attached).
+- Preserved Discussion / Comments (`comments`) support for permitted discussion moderation.
+
 ## [2026-11__1.13] - 2026-11-19
 ### Added
 - Ultra-Clean English SEO Permalinks & Slugs:

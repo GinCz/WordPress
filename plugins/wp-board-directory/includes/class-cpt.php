@@ -80,7 +80,7 @@ class VB_CPT {
             'hierarchical'       => false,
             'menu_position'      => 5,
             'menu_icon'          => 'dashicons-grid-view',
-            'supports'           => [ 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments', 'custom-fields' ],
+            'supports'           => [ 'title', 'editor', 'author', 'thumbnail', 'comments' ],
             'show_in_rest'       => true,
         ];
 
@@ -656,6 +656,10 @@ class VB_CPT {
      * Register Meta Box for listing / company parameters
      */
     public static function add_listing_meta_boxes() {
+        // Remove clutter: WordPress native Custom Fields and Excerpt boxes
+        remove_meta_box( 'postcustom', 'vb_listing', 'normal' );
+        remove_meta_box( 'postexcerpt', 'vb_listing', 'normal' );
+
         add_meta_box(
             'vb_listing_meta',
             '⚙️ Параметры записи (Доска & Каталог)',
