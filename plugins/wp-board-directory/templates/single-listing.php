@@ -241,7 +241,7 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                             <?php while ( $similar->have_posts() ) : $similar->the_post(); 
                                 $sim_id = get_the_ID();
                                 $sim_price = get_post_meta( $sim_id, '_vb_price', true );
-                                $sim_thumb = get_the_post_thumbnail_url( $sim_id, 'medium' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                                $sim_thumb = get_the_post_thumbnail_url( $sim_id, 'medium' ) ?: ( defined( 'VB_BOARD_URL' ) ? ( VB_BOARD_URL . 'assets/no-photo.svg' ) : '/wp-content/plugins/wp-board-directory/assets/no-photo.svg' );
                                 $sim_stats = VB_Ratings::get_vote_stats( 'listing', $sim_id );
                             ?>
                                 <div class="vb-card" data-id="<?php echo esc_attr( $sim_id ); ?>">

@@ -1,5 +1,11 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.15] - 2026-11-19
+### Fixed
+- Added native `assets/no-photo.svg` camera placeholder icon.
+- Enhanced thumbnail resolution: automatically fallback to `_vb_images[0]` attachment URL before placeholder.
+- Dynamic `VB_BOARD_URL` asset URL calculation avoiding broken relative path lookups.
+
 ## [2026-11__1.14] - 2026-11-19
 ### Removed / Changed
 - Removed WordPress Native Custom Fields (`postcustom`) and Excerpt (`postexcerpt`) meta boxes from post editor for `vb_listing` (`supports` simplified, explicit `remove_meta_box` attached).

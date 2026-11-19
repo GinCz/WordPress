@@ -839,7 +839,17 @@ class VB_Shortcodes {
             <?php while ( $query->have_posts() ) : $query->the_post(); 
                 $id       = get_the_ID();
                 $price    = get_post_meta( $id, '_vb_price', true );
-                $thumb    = get_the_post_thumbnail_url( $id, 'medium' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                $thumb    = get_the_post_thumbnail_url( $id, 'medium' );
+                if ( ! $thumb ) {
+                    $raw_imgs = get_post_meta( $id, '_vb_images', true );
+                    $imgs = maybe_unserialize( $raw_imgs );
+                    if ( is_array( $imgs ) && ! empty( $imgs ) && is_numeric( $imgs[0] ) ) {
+                        $thumb = wp_get_attachment_image_url( (int) $imgs[0], 'medium' );
+                    }
+                }
+                if ( ! $thumb ) {
+                    $thumb = defined( 'VB_BOARD_URL' ) ? ( VB_BOARD_URL . 'assets/no-photo.svg' ) : '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                }
                 $cats     = wp_get_post_terms( $id, 'vb_category', [ 'fields' => 'names' ] );
                 $cat_name = ! empty( $cats ) ? $cats[0] : '';
                 $stats    = VB_Ratings::get_vote_stats( 'listing', $id );
@@ -1133,7 +1143,17 @@ class VB_Shortcodes {
                                         </thead>
                                         <tbody>
                                             <?php foreach ( $user_ads as $ad ) : 
-                                                $thumb = get_the_post_thumbnail_url( $ad->ID, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                                                $thumb = get_the_post_thumbnail_url( $ad->ID, 'thumbnail' );
+                                                if ( ! $thumb ) {
+                                                    $raw_imgs = get_post_meta( $ad->ID, '_vb_images', true );
+                                                    $imgs = maybe_unserialize( $raw_imgs );
+                                                    if ( is_array( $imgs ) && ! empty( $imgs ) && is_numeric( $imgs[0] ) ) {
+                                                        $thumb = wp_get_attachment_image_url( (int) $imgs[0], 'thumbnail' );
+                                                    }
+                                                }
+                                                if ( ! $thumb ) {
+                                                    $thumb = defined( 'VB_BOARD_URL' ) ? ( VB_BOARD_URL . 'assets/no-photo.svg' ) : '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                                                }
                                                 $cats = wp_get_post_terms( $ad->ID, 'vb_category', [ 'fields' => 'names' ] );
                                                 if ( is_wp_error( $cats ) || empty( $cats ) ) {
                                                     if ( taxonomy_exists( 'acadp_categories' ) ) {

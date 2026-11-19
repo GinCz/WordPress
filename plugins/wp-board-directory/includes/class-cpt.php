@@ -166,7 +166,17 @@ class VB_CPT {
     public static function render_custom_columns( $column, $post_id ) {
         switch ( $column ) {
             case 'vb_thumb':
-                $thumb = get_the_post_thumbnail_url( $post_id, 'thumbnail' ) ?: '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                $thumb = get_the_post_thumbnail_url( $post_id, 'thumbnail' );
+                if ( ! $thumb ) {
+                    $raw_imgs = get_post_meta( $post_id, '_vb_images', true );
+                    $imgs = maybe_unserialize( $raw_imgs );
+                    if ( is_array( $imgs ) && ! empty( $imgs ) && is_numeric( $imgs[0] ) ) {
+                        $thumb = wp_get_attachment_image_url( (int) $imgs[0], 'thumbnail' );
+                    }
+                }
+                if ( ! $thumb ) {
+                    $thumb = defined( 'VB_BOARD_URL' ) ? ( VB_BOARD_URL . 'assets/no-photo.svg' ) : '/wp-content/plugins/wp-board-directory/assets/no-photo.svg';
+                }
                 echo '<a href="' . esc_url( get_edit_post_link( $post_id ) ) . '">';
                 echo '<img src="' . esc_url( $thumb ) . '" class="vb-admin-col-thumb" alt="" />';
                 echo '</a>';
