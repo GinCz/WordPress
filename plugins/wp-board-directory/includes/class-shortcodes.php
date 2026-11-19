@@ -1066,7 +1066,7 @@ class VB_Shortcodes {
                 <div class="vb-search-main-row">
                     <div class="vb-search-input-wrap">
                         <span class="vb-search-icon">🔍</span>
-                        <input type="text" name="s" value="<?php echo esc_attr( $search_term ); ?>" placeholder="Что вы ищете? Например: авто, квартира, работа, ремонт, юрист..." class="vb-search-input">
+                        <input type="text" name="q" value="<?php echo esc_attr( $search_term ); ?>" placeholder="Что вы ищете? Например: авто, квартира, работа, ремонт, юрист..." class="vb-search-input">
                         <?php if ( ! empty( $search_term ) ) : ?>
                             <a href="<?php echo esc_url( $form_action ); ?>" class="vb-search-clear" title="Очистить">✕</a>
                         <?php endif; ?>

@@ -451,7 +451,7 @@ class VB_CPT {
             $req_uri = $_SERVER['REQUEST_URI'] ?? '';
             if ( strpos( $req_uri, 'poisk-obyavlenij' ) === false ) {
                 $search_q = get_search_query();
-                wp_safe_redirect( home_url( '/poisk-obyavlenij/?s=' . urlencode( $search_q ) ) );
+                wp_safe_redirect( home_url( '/poisk-obyavlenij/?q=' . urlencode( $search_q ) ) );
                 exit;
             }
         }
