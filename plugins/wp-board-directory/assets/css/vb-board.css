@@ -18,42 +18,51 @@
 }
 
 /* ==========================================================================
-   1. LEFT SIDEBAR: ALL COUNTRIES LIST (CLEAN, NO GAP, THIN DIVIDERS)
+   1. LEFT SIDEBAR: ALL COUNTRIES LIST (CLEAN 2-COLUMN GRID TILES)
    ========================================================================== */
 .section-title-container {
-    margin-bottom: 6px !important;
+    margin-bottom: 8px !important;
 }
 .vb-countries-list {
     list-style: none !important;
-    margin: 0 0 15px 0 !important;
-    padding: 0 !important;
+    margin: 6px 0 16px 0 !important;
+    padding: 0 4px !important;
     width: 100% !important;
-    display: block !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px 5px !important;
+    box-sizing: border-box !important;
 }
 .vb-countries-list li {
     margin: 0 !important;
-    padding: 7px 0 !important;
-    border-bottom: 1px solid #edf2f7 !important;
+    padding: 0 !important;
+    border: none !important;
     width: 100% !important;
-    text-align: center !important;
     box-sizing: border-box !important;
 }
-.vb-countries-list li:last-child {
-    border-bottom: none !important;
-}
 .vb-countries-list li a {
-    font-weight: 400 !important;
-    font-size: 0.95rem !important;
-    color: #4a5568 !important;
-    text-decoration: none !important;
     display: block !important;
     width: 100% !important;
-    line-height: 1.35 !important;
-    transition: color 0.15s ease, background-color 0.15s ease !important;
+    padding: 5px 2px !important;
+    font-weight: 500 !important;
+    font-size: 0.82rem !important;
+    color: #4a5568 !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+    transition: all 0.15s ease !important;
 }
 .vb-countries-list li a:hover {
-    color: var(--vb-primary) !important;
-    background-color: #f8fafc !important;
+    color: #ffffff !important;
+    background-color: var(--vb-primary) !important;
+    border-color: var(--vb-primary) !important;
 }
 
 /* ==========================================================================
@@ -61,6 +70,8 @@
    ========================================================================== */
 .vb-categories-enhanced {
     margin: 15px 0 25px 0;
+    padding: 10px 45px;
+    box-sizing: border-box;
     width: 100%;
 }
 .acadp-cat-row {
@@ -140,19 +151,35 @@
 
 /* Also support [vb_categories] shortcode */
 .vb-categories-columns-wrap {
-    margin: 20px 0;
+    margin: 15px 0 25px 0;
+    padding: 10px 45px;
+    box-sizing: border-box;
     width: 100%;
 }
 .vb-cat-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
+    gap: 28px;
 }
-@media (max-width: 900px) {
-    .vb-cat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 992px) {
+    .vb-categories-columns-wrap,
+    .vb-categories-enhanced {
+        padding: 10px 20px;
+    }
+    .vb-cat-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
 }
 @media (max-width: 600px) {
-    .vb-cat-row { grid-template-columns: 1fr; }
+    .vb-categories-columns-wrap,
+    .vb-categories-enhanced {
+        padding: 10px 10px;
+    }
+    .vb-cat-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
 }
 .vb-cat-col {
     display: flex;

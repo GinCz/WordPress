@@ -1,5 +1,10 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.17] - 2026-11-19
+### Changed
+- Symmetrical category layout: added balanced horizontal padding (`padding: 10px 45px; box-sizing: border-box;`) to `.vb-categories-columns-wrap` and `.vb-categories-enhanced` to eliminate left-side stickiness and match right-side spacing equally across all screen sizes.
+- Two-column countries module: transformed `.vb-countries-list` into a compact, responsive 2-column grid (`grid-template-columns: repeat(2, 1fr);`) with clean tile styling and smooth purple hover effects, halving vertical sidebar height.
+
 ## [2026-11__1.16] - 2026-11-19
 ### Fixed
 - Fixed homepage categories rendering in `render_categories()`: dynamically fetch and balance all top-level parent categories across 3 columns, with full dual-slug support for both migrated English slugs (`auto`, `business`, `phones`, `home`, `entertainment`, `household`, `realty`, `other`, `electronics`) and legacy slugs.
