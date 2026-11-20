@@ -148,9 +148,15 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                         <div class="vb-contact-card">
                             <!-- Price Block -->
                             <div class="vb-single-price-box">
-                                <?php if ( $price > 0 ) : ?>
-                                    <div class="vb-single-price"><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> Kč</div>
-                                    <div class="vb-price-eur">~ <?php echo number_format( (float) $price / 25, 0, '.', ' ' ); ?> €</div>
+                                <?php if ( $price > 0 ) : 
+                                    $curr_info   = VB_CPT::get_currency_info();
+                                    $curr_symbol = $curr_info['symbol'];
+                                    $curr_code   = $curr_info['currency'];
+                                ?>
+                                    <div class="vb-single-price"><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> <?php echo esc_html( $curr_symbol ); ?></div>
+                                    <?php if ( 'CZK' === $curr_code ) : ?>
+                                        <div class="vb-price-eur">~ <?php echo number_format( (float) $price / 25, 0, '.', ' ' ); ?> €</div>
+                                    <?php endif; ?>
                                 <?php else : ?>
                                     <div class="vb-single-price vb-price-free">Договорная / Бесплатно</div>
                                 <?php endif; ?>
@@ -256,7 +262,7 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                                         </h4>
                                         <div class="vb-card-price">
                                             <?php if ( $sim_price > 0 ) : ?>
-                                                <strong><?php echo number_format( (float) $sim_price, 0, '.', ' ' ); ?> Kč</strong>
+                                                <strong><?php echo number_format( (float) $sim_price, 0, '.', ' ' ); ?> <?php echo esc_html( VB_CPT::get_currency_symbol() ); ?></strong>
                                             <?php else : ?>
                                                 <strong class="vb-price-free">Договорная</strong>
                                             <?php endif; ?>

@@ -56,6 +56,50 @@ class VB_CPT {
         add_action( 'init', [ __CLASS__, 'migrate_terms_to_english' ], 20 );
     }
 
+    /**
+     * Detect country currency code and symbol based on domain host
+     */
+    public static function get_currency_info() {
+        static $info = null;
+        if ( null !== $info ) {
+            return $info;
+        }
+
+        $host = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( (string) $_SERVER['HTTP_HOST'] ) : '';
+        if ( empty( $host ) ) {
+            $host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+        }
+
+        $map = [
+            'cz'  => [ 'currency' => 'CZK', 'symbol' => 'Kč' ],
+            'de'  => [ 'currency' => 'EUR', 'symbol' => '€' ],
+            'pl'  => [ 'currency' => 'PLN', 'symbol' => 'zł' ],
+            'fr'  => [ 'currency' => 'EUR', 'symbol' => '€' ],
+            'esp' => [ 'currency' => 'EUR', 'symbol' => '€' ],
+            'it'  => [ 'currency' => 'EUR', 'symbol' => '€' ],
+            'gr'  => [ 'currency' => 'EUR', 'symbol' => '€' ],
+            'hun' => [ 'currency' => 'HUF', 'symbol' => 'Ft' ],
+            'mld' => [ 'currency' => 'MDL', 'symbol' => 'L' ],
+            'ua'  => [ 'currency' => 'UAH', 'symbol' => 'грн' ],
+            'isl' => [ 'currency' => 'ILS', 'symbol' => '₪' ],
+        ];
+
+        foreach ( $map as $slug => $data ) {
+            if ( false !== strpos( $host, 'doska-' . $slug . '.' ) ) {
+                $info = $data;
+                return $info;
+            }
+        }
+
+        $info = [ 'currency' => 'EUR', 'symbol' => '€' ];
+        return $info;
+    }
+
+    public static function get_currency_symbol() {
+        $info = self::get_currency_info();
+        return $info['symbol'];
+    }
+
     public static function register_post_types() {
         $labels = [
             'name'                  => 'Доска и Каталог',
@@ -223,7 +267,7 @@ class VB_CPT {
             case 'vb_price':
                 $price = get_post_meta( $post_id, '_vb_price', true ) ?: get_post_meta( $post_id, 'price', true );
                 if ( $price > 0 ) {
-                    echo '<strong>' . number_format( (float) $price, 0, '.', ' ' ) . ' Kč</strong>';
+                    echo '<strong>' . number_format( (float) $price, 0, '.', ' ' ) . ' ' . esc_html( self::get_currency_symbol() ) . '</strong>';
                 } else {
                     echo '<span style="color:#64748b;">—</span>';
                 }
@@ -780,7 +824,7 @@ class VB_CPT {
 
         <div class="vb-meta-grid">
             <div class="vb-meta-field" id="vb-field-price">
-                <label for="vb_price">💰 Цена (Kč / валюта):</label>
+                <label for="vb_price">💰 Цена (<?php echo esc_html( self::get_currency_symbol() ); ?> / валюта):</label>
                 <input type="number" step="any" id="vb_price" name="vb_price" value="<?php echo esc_attr( $price ); ?>" placeholder="0 (или оставьте пустым)">
             </div>
 

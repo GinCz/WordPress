@@ -172,7 +172,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
                 </div>
 
                 <div class="vb-form-group">
-                    <label class="vb-label">Цена (Kč)</label>
+                    <label class="vb-label">Цена (<?php echo esc_html( VB_CPT::get_currency_symbol() ); ?>)</label>
                     <input type="number" name="price" placeholder="Например: 1500 (0 - договорная)" class="vb-form-input">
                     <small class="vb-hint">Оставьте пустым или 0, если цена договорная</small>
                 </div>

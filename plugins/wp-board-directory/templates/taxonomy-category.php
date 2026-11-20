@@ -184,7 +184,7 @@ if ( $term && $term->term_id ) {
                                     </h4>
                                     <div class="vb-card-price">
                                         <?php if ( $price > 0 ) : ?>
-                                            <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> Kč</strong>
+                                            <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> <?php echo esc_html( VB_CPT::get_currency_symbol() ); ?></strong>
                                         <?php else : ?>
                                             <strong class="vb-price-free">Договорная / Бесплатно</strong>
                                         <?php endif; ?>

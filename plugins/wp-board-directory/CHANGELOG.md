@@ -1,5 +1,12 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.22] - 2026-11-20
+### Fixed & Improved
+- Multi-Currency Localization across All 11 Country Boards:
+  - Added dynamic currency resolver `VB_CPT::get_currency_info()` and `VB_CPT::get_currency_symbol()` automatically detecting the host domain (`EUR / €` for Germany, France, Spain, Italy, Greece; `PLN / zł` for Poland; `CZK / Kč` for Czech Republic; `HUF / Ft` for Hungary; `MDL / L` for Moldova; `UAH / грн` for Ukraine; `ILS / ₪` for Israel).
+  - Replaced hardcoded `Kč` with localized country currency symbols on single listings (`single-listing.php`), category archives (`taxonomy-category.php`), submission form (`submit-form.php`), search loops (`class-shortcodes.php`), and admin listings table (`class-cpt.php`).
+  - Approximate EUR conversion block `~ XX €` is now displayed strictly on non-EUR domains (e.g. `CZK`), avoiding redundant duplicate currency displays in eurozone countries (`doska-de.ru`, etc.).
+
 ## [2026-11__1.21] - 2026-11-19
 ### Changed
 - SEO & Semantic Heading Hierarchy:

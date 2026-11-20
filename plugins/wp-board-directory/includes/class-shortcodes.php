@@ -931,7 +931,7 @@ class VB_Shortcodes {
                         </h4>
                         <div class="vb-card-price">
                             <?php if ( $price > 0 ) : ?>
-                                <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> Kč</strong>
+                                <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> <?php echo esc_html( VB_CPT::get_currency_symbol() ); ?></strong>
                             <?php else : ?>
                                 <strong class="vb-price-free">Договорная / Бесплатно</strong>
                             <?php endif; ?>
@@ -1213,7 +1213,7 @@ class VB_Shortcodes {
                                     ?>
                                         <strong class="vb-price-company"><?php echo $web ? '🌐 ' . esc_html( preg_replace( '#^https?://#', '', rtrim( $web, '/' ) ) ) : '🏢 Каталог фирм'; ?></strong>
                                     <?php elseif ( $price > 0 ) : ?>
-                                        <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> Kč</strong>
+                                        <strong><?php echo number_format( (float) $price, 0, '.', ' ' ); ?> <?php echo esc_html( VB_CPT::get_currency_symbol() ); ?></strong>
                                     <?php else : ?>
                                         <strong class="vb-price-free">Договорная / Бесплатно</strong>
                                     <?php endif; ?>
