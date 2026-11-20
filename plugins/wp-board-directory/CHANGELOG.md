@@ -1,5 +1,12 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.23] - 2026-11-20
+### Fixed & Improved
+- Semantic Heading Structure & Clean Category Hierarchy:
+  - Replaced `<h3>` tags around category sub-items with clean `<div class="vb-subcat-title">`, completely eliminating over 60 redundant H3 headings from the homepage and category layouts.
+  - Added `aria-hidden="true"` to visual bullet marks (`<span class="vb-cat-bullet">◉</span>`) inside parent category `<h2>` tags, preserving the stylish visual dot while ensuring search engines and screen readers index clean, standard category text.
+  - Automatic bullet stripping on subcategory names (`^[◉\s\-\•\·]+`).
+
 ## [2026-11__1.22] - 2026-11-20
 ### Fixed & Improved
 - Multi-Currency Localization across All 11 Country Boards:

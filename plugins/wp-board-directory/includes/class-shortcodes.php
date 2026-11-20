@@ -573,7 +573,7 @@ class VB_Shortcodes {
                                 <div class="vb-cat-accent-line"></div>
                                 <h2 class="vb-cat-parent-title">
                                     <a href="<?php echo esc_url( $parent_url ); ?>">
-                                        <span class="vb-cat-bullet">◉</span> <?php echo esc_html( $clean_parent_name ); ?>
+                                        <span class="vb-cat-bullet" aria-hidden="true">◉</span> <?php echo esc_html( $clean_parent_name ); ?>
                                         <span class="vb-count">(<?php echo esc_html( $padded_count ); ?>)</span>
                                     </a>
                                 </h2>
@@ -582,14 +582,15 @@ class VB_Shortcodes {
                                     <ul class="vb-subcat-list">
                                         <?php foreach ( $children as $child ) : 
                                             $child_url = get_term_link( $child );
+                                            $clean_child_name = trim( preg_replace( '/^[◉\s\-\•\·]+/u', '', $child->name ) );
                                         ?>
                                             <li class="vb-subcat-item">
-                                                <h3 class="vb-subcat-title">
+                                                <div class="vb-subcat-title">
                                                     <a href="<?php echo esc_url( $child_url ); ?>">
-                                                        <?php echo esc_html( $child->name ); ?>
+                                                        <?php echo esc_html( $clean_child_name ); ?>
                                                         <span class="vb-count">(<?php echo (int) $child->count; ?>)</span>
                                                     </a>
-                                                </h3>
+                                                </div>
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
