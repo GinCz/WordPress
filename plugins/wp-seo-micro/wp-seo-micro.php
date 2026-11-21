@@ -3,7 +3,7 @@
  * Plugin Name: WP SEO Micro (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/Linux_Server_Public/tree/main/WordPress/Plugins/wp-seo-micro
  * Description: Ultra-lightweight SEO engine: Smart Title, Meta Description & Keywords, Open Graph social tags, canonical URLs, full robots indexation control, native XML sitemap (/sitemap.xml & /sitemaps.xml), instant Google Indexing API & IndexNow push, and seamless backward compatibility with SEOPress metadata. Zero database bloat.
- * Version:     2026-11__1.36
+ * Version:     2026-11__1.37
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -1236,7 +1236,7 @@ add_action( 'wp_head', function() {
             $item = array(
                 '@context'    => 'https://schema.org',
                 '@type'       => 'LocalBusiness',
-                'name'        => $title,
+                'name'        => wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) ),
                 'description' => $desc,
                 'url'         => $permalink,
                 'image'       => $img,
@@ -1273,19 +1273,21 @@ add_action( 'wp_head', function() {
             $item = array(
                 '@context'    => 'https://schema.org',
                 '@type'       => 'Product',
-                'name'        => $title,
+                'name'        => wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) ),
                 'description' => $desc,
                 'image'       => array( $img ),
                 'url'         => $permalink,
+                'sku'         => (string) $post_id,
                 'brand'       => array(
                     '@type' => 'Brand',
-                    'name'  => get_bloginfo( 'name' ),
+                    'name'  => wp_strip_all_tags( html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' ) ),
                 ),
                 'offers'      => array(
                     '@type'           => 'Offer',
                     'price'           => $price_str,
                     'priceCurrency'   => $currency,
                     'priceValidUntil' => date( 'Y-12-31', strtotime( '+1 year' ) ),
+                    'validFrom'       => get_post_time( 'c', false, $post_id ) ?: gmdate( 'c' ),
                     'availability'    => 'https://schema.org/InStock',
                     'itemCondition'   => 'https://schema.org/UsedCondition',
                     'url'             => $permalink,
@@ -1295,10 +1297,6 @@ add_action( 'wp_head', function() {
                     ),
                 ),
             );
-
-            if ( $primary_cat ) {
-                $item['category'] = trim( preg_replace( '/^[◉\s\-\•\·]+/u', '', $primary_cat->name ) );
-            }
 
             echo "<script type=\"application/ld+json\">\n" . wp_json_encode( $item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . "\n</script>\n";
         }

@@ -4,6 +4,14 @@ Versioning format: YYYY-MM__<generation>.<build> (see [../../README.md](../../RE
 Monotonically increasing version: each update must strictly increment the build number.
 
 ---
+## 2026-11__1.37 — 2026-11-21
+
+- **Google Search Console Merchant Listing Structured Data Compliance:**
+  - **Resolved "Invalid value in field 'category'":** Removed raw taxonomy category strings from Schema.org `Product` JSON-LD markup to strictly comply with Google Merchant Listing standards (hierarchical categories remain cleanly defined via standard `BreadcrumbList`).
+  - **Resolved "Missing field 'validFrom' (in offers)":** Added ISO-8601 `validFrom` timestamp to `Offer` schema based on post publication date (`get_post_time( 'c', false, $post_id )`).
+  - **Schema Data Cleanliness:** Added `sku` identifier to `Product` and ensured `name` and `Brand` strings are cleanly decoded from HTML entities (`wp_strip_all_tags( html_entity_decode(...) )`).
+
+---
 ## 2026-11__1.36 — 2026-11-20
 
 - **Robots Meta Unification & Deep Parameter Filtering:**
