@@ -275,17 +275,35 @@ class VB_Shortcodes {
             wp_die( 'Ошибка безопасности (неверный nonce).' );
         }
 
-        // Verify Cloudflare Turnstile if available
-        if ( function_exists( 'cfturnstile_check' ) && ! cfturnstile_check() ) {
+        // 1. Mandatory User Authentication: No anonymous/guest submissions
+        if ( ! is_user_logged_in() ) {
             $referer = wp_get_referer() ?: home_url( '/new/' );
-            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Пожалуйста, подтвердите проверку Turnstile.' ) ], $referer ) );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Публикация доступна только авторизованным пользователям. Пожалуйста, войдите через соцсети или зарегистрируйтесь.' ) ], $referer ) );
             exit;
+        }
+
+        // 2. Strict Cloudflare Turnstile verification
+        if ( function_exists( 'cfturnstile_check' ) ) {
+            $ts_res = cfturnstile_check();
+            if ( empty( $ts_res['success'] ) ) {
+                $referer = wp_get_referer() ?: home_url( '/new/' );
+                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Пожалуйста, подтвердите проверку Turnstile (проверка безопасности не пройдена).' ) ], $referer ) );
+                exit;
+            }
         }
 
         $title        = sanitize_text_field( $_POST['title'] ?? '' );
         if ( mb_strlen( $title, 'UTF-8' ) > 100 ) {
             $title = mb_substr( $title, 0, 100, 'UTF-8' );
         }
+
+        // 3. Anti-Spam: Prohibit links, domains, and protocols in listing title
+        if ( preg_match( '/(https?:\/\/|www\.|t\.me\/|telegra\.ph\/|bit\.ly\/|[a-z0-9\-]+\.(com|ru|org|net|xyz|top|site|online|link|click|vip|io|me|app)\b)/i', $title ) ) {
+            $referer = wp_get_referer() ?: home_url( '/new/' );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Запрещено указывать ссылки, URL-адреса и доменные имена в заголовке объявления.' ) ], $referer ) );
+            exit;
+        }
+
         $category_id  = absint( $_POST['category_id'] ?? 0 );
         $location_val = sanitize_text_field( $_POST['location_id'] ?? '' );
         $price        = floatval( $_POST['price'] ?? 0 );
@@ -303,7 +321,7 @@ class VB_Shortcodes {
             exit;
         }
 
-        $author_id = get_current_user_id() ?: 1;
+        $author_id = get_current_user_id();
 
         // Enforce limit: maximum 10 listings per account/email in one category
         if ( $category_id > 0 && ! current_user_can( 'manage_options' ) ) {

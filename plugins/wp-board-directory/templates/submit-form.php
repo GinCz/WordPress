@@ -37,9 +37,32 @@ $locations = get_terms( [
 $action_url = esc_url( admin_url( 'admin-post.php' ) );
 ?>
 
+<?php if ( ! is_user_logged_in() ) : ?>
+<div class="vb-submit-wrapper">
+    <div class="vb-auth-required-box" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 40px 24px; text-align: center; max-width: 640px; margin: 30px auto; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+        <div style="font-size: 52px; margin-bottom: 12px;">🔒</div>
+        <h2 style="font-size: 23px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Подача объявлений доступна только после входа</h2>
+        <p style="font-size: 15px; color: #64748b; line-height: 1.6; margin-bottom: 25px;">
+            Чтобы защитить пользователей портала от спам-ботов и мошенников, публикация объявлений и добавление компаний открыты только для авторизованных пользователей.
+        </p>
+
+        <?php if ( shortcode_exists( 'miniorange_social_login' ) ) : ?>
+            <div class="vb-social-login-block" style="background: #f8fafc; border-radius: 10px; padding: 20px 15px; margin-bottom: 22px;">
+                <p style="font-weight: 600; color: #334155; margin-bottom: 12px; font-size: 15px;">Быстрый вход через соцсети в 1 клик:</p>
+                <?php echo do_shortcode( '[miniorange_social_login]' ); ?>
+            </div>
+        <?php endif; ?>
+
+        <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 18px; font-size: 14px; color: #64748b;">
+            Уже есть аккаунт? <a href="<?php echo esc_url( wp_login_url( home_url( '/new/' ) ) ); ?>" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Войти по логину</a> &nbsp;•&nbsp; <a href="<?php echo esc_url( wp_registration_url() ); ?>" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Регистрация</a>
+        </div>
+    </div>
+</div>
+<?php return; endif; ?>
+
 <div class="vb-submit-wrapper">
     <div class="vb-submit-header">
-        <h2 class="vb-submit-title">📢 Подать объявление в Чехии</h2>
+        <h2 class="vb-submit-title">📢 Подать объявление на <?php echo esc_html( get_bloginfo( 'name' ) ); ?></h2>
         <p class="vb-submit-subtitle">Быстрая публикация без лишней бюрократии. Фотографии автоматически сжимаются для максимальной скорости загрузки на телефонах.</p>
     </div>
 

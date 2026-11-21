@@ -4,6 +4,12 @@ Versioning format: YYYY-MM__<generation>.<build> (see [../../README.md](../../RE
 Monotonically increasing version: each update must strictly increment the build number.
 
 ---
+## 2026-11__1.39 — 2026-11-21
+
+- **Privacy & Authorship Safeguard in Schema.org:**
+  - Guaranteed that any listing with `author_id <= 1` is strictly emitted with author `'Пользователь'`, completely protecting site administrator personal identity from being erroneously linked to general or guest listings in search engine schema.
+
+---
 ## 2026-11__1.38 — 2026-11-21
 
 - **Classified Architecture Optimization: Migration from eCommerce Product to Schema.org ItemPage:**

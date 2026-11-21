@@ -3,7 +3,7 @@
  * Plugin Name: WP SEO Micro (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/Linux_Server_Public/tree/main/WordPress/Plugins/wp-seo-micro
  * Description: Ultra-lightweight SEO engine: Smart Title, Meta Description & Keywords, Open Graph social tags, canonical URLs, full robots indexation control, native XML sitemap (/sitemap.xml & /sitemaps.xml), instant Google Indexing API & IndexNow push, and seamless backward compatibility with SEOPress metadata. Zero database bloat.
- * Version:     2026-11__1.38
+ * Version:     2026-11__1.39
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -1263,8 +1263,13 @@ add_action( 'wp_head', function() {
                 $desc = sprintf( '%s — актуальное объявление, подробности, описание, контакты и условия на %s.', $title, get_bloginfo( 'name' ) );
             }
 
-            $author_id   = $post ? $post->post_author : 0;
-            $author_name = $author_id ? ( get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь' ) : 'Автор объявления';
+            $author_id   = $post ? (int) $post->post_author : 0;
+            // Never attribute guest or admin ID 1 to classified ads
+            if ( $author_id <= 1 ) {
+                $author_name = 'Пользователь';
+            } else {
+                $author_name = get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь';
+            }
 
             // Real image only - never output site logo/favicon as an ad photo in structured data
             $has_real_img = has_post_thumbnail( $post_id );

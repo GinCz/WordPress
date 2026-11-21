@@ -1,5 +1,13 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.24] - 2026-11-21
+### Security & Anti-Spam Hardening
+- **Mandatory User Authentication**: Anonymous and guest ad submissions are completely disabled. The submission form now displays a clean, inviting authorization block with 1-click social login via Google, Facebook, VK, OK (`miniorange_social_login`) and account registration.
+- **Backend Auth Enforcement**: In `handle_listing_submission()`, direct POST submissions from unauthenticated sessions are immediately rejected with redirect and notice.
+- **Turnstile Verification Bugfix**: Resolved PHP boolean truthiness bug with `cfturnstile_check()` (`if ( empty( $ts_res['success'] ) )`), ensuring Cloudflare Turnstile actively blocks automated bot submissions.
+- **Title Anti-Spam Filter**: Implemented strict regex filter rejecting any listing titles containing hyperlinks (`http://`, `https://`, `t.me/`, `telegra.ph/`, `bit.ly/`, domain extensions), preventing phishing and spam injection.
+- **Dynamic Title Localization**: Replaced hardcoded "в Чехии" in submit form header with dynamic site name `get_bloginfo('name')`.
+
 ## [2026-11__1.23] - 2026-11-20
 ### Fixed & Improved
 - Semantic Heading Structure & Clean Category Hierarchy:
