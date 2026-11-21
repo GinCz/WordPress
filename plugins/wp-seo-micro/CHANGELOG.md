@@ -4,6 +4,15 @@ Versioning format: YYYY-MM__<generation>.<build> (see [../../README.md](../../RE
 Monotonically increasing version: each update must strictly increment the build number.
 
 ---
+## 2026-11__1.38 — 2026-11-21
+
+- **Classified Architecture Optimization: Migration from eCommerce Product to Schema.org ItemPage:**
+  - **Eliminated Merchant Listings Mismatch:** Completely removed `@type: Product` and `@type: Offer` from classified listings. Classified boards are C2C listing platforms (services, jobs, auto, rentals, goods), not eCommerce retail stores with checkout. This permanently eliminates Google Search Console Merchant Listings demands (`shippingDetails`, `hasMerchantReturnPolicy`, `brand`, `gtin`, price validity).
+  - **Introduced Clean Schema.org ItemPage:** Classified ads now render as `ItemPage` with `datePublished`, `dateModified` (capturing actual price/content updates), `inLanguage`, `author` (Person), and `isPartOf` (WebSite).
+  - **Image Safeguard:** Prevented site logos/favicons from being emitted as listing photos; only genuine ad attachments (`has_post_thumbnail` or `_vb_images`) are passed in `image`.
+  - **Retained Business Directory Schema:** Verified and preserved `LocalBusiness` for corporate listings (`_vb_type === 'company'`) and `BreadcrumbList` across all pages.
+
+---
 ## 2026-11__1.37 — 2026-11-21
 
 - **Google Search Console Merchant Listing Structured Data Compliance:**

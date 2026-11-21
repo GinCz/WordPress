@@ -3,7 +3,7 @@
  * Plugin Name: WP SEO Micro (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/Linux_Server_Public/tree/main/WordPress/Plugins/wp-seo-micro
  * Description: Ultra-lightweight SEO engine: Smart Title, Meta Description & Keywords, Open Graph social tags, canonical URLs, full robots indexation control, native XML sitemap (/sitemap.xml & /sitemaps.xml), instant Google Indexing API & IndexNow push, and seamless backward compatibility with SEOPress metadata. Zero database bloat.
- * Version:     2026-11__1.37
+ * Version:     2026-11__1.38
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -1256,47 +1256,46 @@ add_action( 'wp_head', function() {
             echo "<script type=\"application/ld+json\">\n" . wp_json_encode( $item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . "\n</script>\n";
 
         } else {
-            // Classified Ad -> Valid Product / Merchant Listing Schema
+            // Classified Ad -> Valid ItemPage Schema (Classified Directory Listing, not eCommerce Shop)
             $post = get_post( $post_id );
             $desc = vladimir_seo_clean_text( $post ? ( $post->post_excerpt ?: $post->post_content ) : '', 500 );
             if ( empty( $desc ) || strlen( $desc ) < 20 ) {
-                $desc = sprintf( '%s — актуальное объявление, подробности, описание, контакты продавца и условия на %s.', $title, get_bloginfo( 'name' ) );
+                $desc = sprintf( '%s — актуальное объявление, подробности, описание, контакты и условия на %s.', $title, get_bloginfo( 'name' ) );
             }
 
-            $price_raw = get_post_meta( $post_id, '_vb_price', true );
-            $price_num = floatval( preg_replace( '/[^0-9.]/', '', (string) $price_raw ) );
-            $price_str = ( $price_num > 0 ) ? number_format( $price_num, 2, '.', '' ) : '0.00';
-
             $author_id   = $post ? $post->post_author : 0;
-            $seller_name = $author_id ? ( get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь' ) : 'Продавец';
+            $author_name = $author_id ? ( get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь' ) : 'Автор объявления';
+
+            // Real image only - never output site logo/favicon as an ad photo in structured data
+            $has_real_img = has_post_thumbnail( $post_id );
+            if ( ! $has_real_img ) {
+                $raw_imgs     = get_post_meta( $post_id, '_vb_images', true );
+                $has_real_img = ( ! empty( $raw_imgs ) && is_array( $raw_imgs ) && count( $raw_imgs ) > 0 );
+            }
 
             $item = array(
-                '@context'    => 'https://schema.org',
-                '@type'       => 'Product',
-                'name'        => wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) ),
-                'description' => $desc,
-                'image'       => array( $img ),
-                'url'         => $permalink,
-                'sku'         => (string) $post_id,
-                'brand'       => array(
-                    '@type' => 'Brand',
-                    'name'  => wp_strip_all_tags( html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' ) ),
+                '@context'      => 'https://schema.org',
+                '@type'         => 'ItemPage',
+                'name'          => wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) ),
+                'description'   => $desc,
+                'url'           => $permalink,
+                'datePublished' => get_post_time( 'c', false, $post_id ) ?: gmdate( 'c' ),
+                'dateModified'  => get_post_modified_time( 'c', false, $post_id ) ?: get_post_time( 'c', false, $post_id ),
+                'inLanguage'    => get_bloginfo( 'language' ) ?: 'ru',
+                'author'        => array(
+                    '@type' => 'Person',
+                    'name'  => wp_strip_all_tags( html_entity_decode( $author_name, ENT_QUOTES, 'UTF-8' ) ),
                 ),
-                'offers'      => array(
-                    '@type'           => 'Offer',
-                    'price'           => $price_str,
-                    'priceCurrency'   => $currency,
-                    'priceValidUntil' => date( 'Y-12-31', strtotime( '+1 year' ) ),
-                    'validFrom'       => get_post_time( 'c', false, $post_id ) ?: gmdate( 'c' ),
-                    'availability'    => 'https://schema.org/InStock',
-                    'itemCondition'   => 'https://schema.org/UsedCondition',
-                    'url'             => $permalink,
-                    'seller'          => array(
-                        '@type' => 'Person',
-                        'name'  => $seller_name,
-                    ),
+                'isPartOf'      => array(
+                    '@type' => 'WebSite',
+                    'name'  => get_bloginfo( 'name' ),
+                    'url'   => home_url( '/' ),
                 ),
             );
+
+            if ( $has_real_img && ! empty( $img ) ) {
+                $item['image'] = $img;
+            }
 
             echo "<script type=\"application/ld+json\">\n" . wp_json_encode( $item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT ) . "\n</script>\n";
         }
