@@ -896,6 +896,31 @@
     color: var(--vb-primary) !important;
     border-bottom-color: var(--vb-primary) !important;
 }
+.vb-dash-tab.vb-dash-tab-logout {
+    margin-left: auto !important;
+    color: #dc2626 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+.vb-dash-tab.vb-dash-tab-logout:hover {
+    color: #b91c1c !important;
+    border-bottom-color: #dc2626 !important;
+    background: rgba(220, 38, 38, 0.05) !important;
+}
+.vb-stat-badge.vb-stat-logout {
+    text-decoration: none !important;
+    cursor: pointer;
+    border-color: #fecaca !important;
+    background: #fff5f5 !important;
+    transition: all 0.2s ease !important;
+}
+.vb-stat-badge.vb-stat-logout:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+}
 .vb-alert-success {
     background: #e6f4ea;
     border: 1px solid #ceead6;

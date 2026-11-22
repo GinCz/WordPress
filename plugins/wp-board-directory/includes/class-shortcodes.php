@@ -1476,6 +1476,10 @@ class VB_Shortcodes {
                         <span class="vb-stat-num"><?php echo count( $user_companies ); ?></span>
                         <span class="vb-stat-label">🏢 Компаний</span>
                     </div>
+                    <a href="<?php echo esc_url( wp_logout_url( home_url() ) ); ?>" class="vb-stat-badge vb-stat-logout" title="Выйти из аккаунта">
+                        <span class="vb-stat-num" style="font-size: 1.1rem; color: #dc2626;">🚪</span>
+                        <span class="vb-stat-label" style="color: #dc2626; font-weight: 600;">Выход</span>
+                    </a>
                 </div>
             </div>
 
@@ -1489,6 +1493,9 @@ class VB_Shortcodes {
                 </a>
                 <a href="<?php echo esc_url( add_query_arg( 'tab', 'companies', get_permalink() ) ); ?>" class="vb-dash-tab <?php echo $active_tab === 'companies' ? 'vb-tab-active' : ''; ?>">
                     🏢 Мои компании (<?php echo count( $user_companies ); ?>)
+                </a>
+                <a href="<?php echo esc_url( wp_logout_url( home_url() ) ); ?>" class="vb-dash-tab vb-dash-tab-logout" style="margin-left: auto; color: #dc2626 !important;" title="Выйти из личного кабинета">
+                    🚪 Выход
                 </a>
             </div>
 
@@ -1532,13 +1539,13 @@ class VB_Shortcodes {
                                 </div>
 
                                 <div class="vb-form-group">
-                                    <label class="vb-label">Город / Регион в Чехии</label>
-                                    <input type="text" name="city" value="<?php echo esc_attr( $city ); ?>" placeholder="Прага, Брно, Пльзень..." class="vb-form-input">
+                                    <label class="vb-label">Город / Регион</label>
+                                    <input type="text" name="city" value="<?php echo esc_attr( $city ); ?>" placeholder="Ваш город / регион..." class="vb-form-input">
                                 </div>
 
                                 <div class="vb-form-group">
                                     <label class="vb-label">Название компании (если фирма или ИП)</label>
-                                    <input type="text" name="company" value="<?php echo esc_attr( $company ); ?>" placeholder="Название вашей фирмы / s.r.o. / OSVČ" class="vb-form-input">
+                                    <input type="text" name="company" value="<?php echo esc_attr( $company ); ?>" placeholder="Название вашей фирмы / компании / ИП" class="vb-form-input">
                                 </div>
 
                                 <div class="vb-form-group vb-form-full">

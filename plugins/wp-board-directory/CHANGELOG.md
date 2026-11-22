@@ -1,5 +1,14 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.26] - 2026-11-22
+### Added & Improved
+- **User Dashboard Logout Action («Выход»)**:
+  - Added dedicated, highly visible «🚪 Выход» action button in the dashboard navigation tabs bar (`.vb-dash-tab-logout`, styled in alert red with hover effects and right-alignment).
+  - Added quick logout badge in the dashboard header card stats row (`.vb-stat-logout`) alongside listing and company counters.
+  - Implemented secure `wp_logout_url( home_url() )` redirecting users smoothly to homepage upon exit.
+- **Form Field Internationalization**:
+  - Replaced hardcoded Czech references in profile editing form (`Город / Регион в Чехии` -> `Город / Регион`, generic placeholders) for universal multi-country board support.
+
 ## [2026-11__1.25] - 2026-11-22
 ### Fixed & Improved
 - **Turnkey Legacy Shortcode Resolution (`[acadp_manage_listings]`, etc.)**:
