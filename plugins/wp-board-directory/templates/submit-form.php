@@ -12,10 +12,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 $user = wp_get_current_user();
 $uid  = get_current_user_id();
 
+$edit_id   = absint( $_GET['listing_id'] ?? 0 );
+$is_edit   = false;
+$edit_post = null;
+if ( $edit_id > 0 ) {
+    $edit_post = get_post( $edit_id );
+    if ( $edit_post && ( (int) $edit_post->post_author === (int) $uid || current_user_can( 'edit_post', $edit_id ) ) ) {
+        $is_edit = true;
+    }
+}
+
 $default_phone   = $uid ? ( get_user_meta( $uid, 'phone', true ) ?: get_user_meta( $uid, 'acadp_phone', true ) ) : '';
 $default_city    = $uid ? ( get_user_meta( $uid, 'address', true ) ?: get_user_meta( $uid, 'user_city', true ) ) : '';
 $default_email   = $uid ? $user->user_email : '';
 $default_company = $uid ? ( get_user_meta( $uid, 'company_name', true ) ?: get_user_meta( $uid, 'user_company', true ) ) : '';
+
+if ( $is_edit ) {
+    $val_title    = $edit_post->post_title;
+    $val_content  = $edit_post->post_content;
+    $val_type     = get_post_meta( $edit_id, '_vb_type', true ) ?: 'classified';
+    $val_price    = get_post_meta( $edit_id, '_vb_price', true );
+    $val_phone    = get_post_meta( $edit_id, '_vb_phone', true ) ?: $default_phone;
+    $val_wa       = get_post_meta( $edit_id, '_vb_whatsapp', true );
+    $val_tg       = get_post_meta( $edit_id, '_vb_telegram', true );
+    $val_email    = get_post_meta( $edit_id, '_vb_email', true ) ?: $default_email;
+    $val_address  = get_post_meta( $edit_id, '_vb_address', true ) ?: $default_city;
+
+    $item_cats    = wp_get_post_terms( $edit_id, 'vb_category', [ 'fields' => 'ids' ] );
+    $val_cat_id   = ( ! empty( $item_cats ) && ! is_wp_error( $item_cats ) ) ? $item_cats[0] : 0;
+
+    $item_locs    = wp_get_post_terms( $edit_id, 'vb_location', [ 'fields' => 'slugs' ] );
+    $val_loc_slug = ( ! empty( $item_locs ) && ! is_wp_error( $item_locs ) ) ? $item_locs[0] : '';
+} else {
+    $val_title    = '';
+    $val_content  = '';
+    $val_type     = 'classified';
+    $val_price    = '';
+    $val_phone    = $default_phone;
+    $val_wa       = '';
+    $val_tg       = '';
+    $val_email    = $default_email;
+    $val_address  = $default_city;
+    $val_cat_id   = 0;
+    $val_loc_slug = $default_city;
+}
 
 // Get all parent categories and their children
 $parents = get_terms( [
@@ -62,8 +102,8 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
 
 <div class="vb-submit-wrapper">
     <div class="vb-submit-header">
-        <h2 class="vb-submit-title">📢 Подать объявление на <?php echo esc_html( get_bloginfo( 'name' ) ); ?></h2>
-        <p class="vb-submit-subtitle">Быстрая публикация без лишней бюрократии. Фотографии автоматически сжимаются для максимальной скорости загрузки на телефонах.</p>
+        <h2 class="vb-submit-title"><?php echo $is_edit ? '✏️ Редактирование объявления' : '📢 Подать объявление на ' . esc_html( get_bloginfo( 'name' ) ); ?></h2>
+        <p class="vb-submit-subtitle"><?php echo $is_edit ? 'Внесите необходимые изменения и сохраните публикацию.' : 'Быстрая публикация без лишней бюрократии. Фотографии автоматически сжимаются для максимальной скорости загрузки на телефонах.'; ?></p>
     </div>
 
     <?php if ( ! empty( $_GET['error'] ) ) : ?>
@@ -75,21 +115,24 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
     <form method="POST" action="<?php echo $action_url; ?>" class="vb-submit-form" id="vb-submit-form" enctype="multipart/form-data">
         <?php wp_nonce_field( 'vb_submit_listing_action', 'vb_submit_nonce' ); ?>
         <input type="hidden" name="action" value="vb_handle_submit_listing">
+        <?php if ( $is_edit ) : ?>
+            <input type="hidden" name="listing_id" value="<?php echo esc_attr( $edit_id ); ?>">
+        <?php endif; ?>
 
         <!-- Type Selector -->
         <div class="vb-form-section">
             <h3 class="vb-form-sec-title">1. Тип публикации</h3>
             <div class="vb-type-toggle-group">
-                <label class="vb-type-radio-card active">
-                    <input type="radio" name="listing_type" value="classified" checked onclick="document.querySelectorAll('.vb-type-radio-card').forEach(function(c){c.classList.remove('active');}); this.closest('.vb-type-radio-card').classList.add('active');">
+                <label class="vb-type-radio-card <?php echo $val_type === 'classified' ? 'active' : ''; ?>">
+                    <input type="radio" name="listing_type" value="classified" <?php checked( $val_type, 'classified' ); ?> onclick="document.querySelectorAll('.vb-type-radio-card').forEach(function(c){c.classList.remove('active');}); this.closest('.vb-type-radio-card').classList.add('active');">
                     <span class="vb-radio-icon">📢</span>
                     <span class="vb-radio-text">
                         <strong>Частное объявление</strong>
                         <small>Продажа, покупка, аренда, услуги, работа</small>
                     </span>
                 </label>
-                <label class="vb-type-radio-card">
-                    <input type="radio" name="listing_type" value="company" onclick="document.querySelectorAll('.vb-type-radio-card').forEach(function(c){c.classList.remove('active');}); this.closest('.vb-type-radio-card').classList.add('active');">
+                <label class="vb-type-radio-card <?php echo $val_type === 'company' ? 'active' : ''; ?>">
+                    <input type="radio" name="listing_type" value="company" <?php checked( $val_type, 'company' ); ?> onclick="document.querySelectorAll('.vb-type-radio-card').forEach(function(c){c.classList.remove('active');}); this.closest('.vb-type-radio-card').classList.add('active');">
                     <span class="vb-radio-icon">🏢</span>
                     <span class="vb-radio-text">
                         <strong>Компания / Каталог фирм</strong>
@@ -105,9 +148,9 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
             <div class="vb-form-grid">
                 <div class="vb-form-group vb-form-full">
                     <label class="vb-label">Заголовок объявления <span class="vb-req">*</span></label>
-                    <input type="text" name="title" id="vb-title-input" required maxlength="100" placeholder="Например: Аренда 2+кк Прага 3 Жижков или Ремонт ноутбуков" class="vb-form-input">
+                    <input type="text" name="title" id="vb-title-input" value="<?php echo esc_attr( $val_title ); ?>" required maxlength="100" placeholder="Например: Аренда 2+кк в центре или Ремонт техники" class="vb-form-input">
                     <div style="font-size: 11px; color: #64748b; text-align: right; margin-top: 3px; font-weight: 500;">
-                        <span id="vb-title-char-count">0</span> / 100 символов (макс. 100)
+                        <span id="vb-title-char-count"><?php echo mb_strlen( $val_title, 'UTF-8' ); ?></span> / 100 символов (макс. 100)
                     </div>
                 </div>
 
@@ -127,10 +170,10 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
                                 ] );
                             ?>
                                 <optgroup label="◉ <?php echo esc_attr( $clean_p_name ); ?>">
-                                    <option value="<?php echo esc_attr( $parent->term_id ); ?>">Все в: <?php echo esc_html( $clean_p_name ); ?></option>
+                                    <option value="<?php echo esc_attr( $parent->term_id ); ?>" <?php selected( $val_cat_id, $parent->term_id ); ?>>Все в: <?php echo esc_html( $clean_p_name ); ?></option>
                                     <?php if ( ! empty( $children ) && ! is_wp_error( $children ) ) : ?>
                                         <?php foreach ( $children as $child ) : ?>
-                                            <option value="<?php echo esc_attr( $child->term_id ); ?>">&nbsp;&nbsp;&bull; <?php echo esc_html( $child->name ); ?></option>
+                                            <option value="<?php echo esc_attr( $child->term_id ); ?>" <?php selected( $val_cat_id, $child->term_id ); ?>>&nbsp;&nbsp;&bull; <?php echo esc_html( $child->name ); ?></option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </optgroup>
@@ -145,7 +188,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
                         <option value="">-- Выберите город / регион --</option>
                         <?php
                         if ( class_exists( 'VB_CPT' ) && method_exists( 'VB_CPT', 'render_location_options' ) ) {
-                            VB_CPT::render_location_options( $default_city );
+                            VB_CPT::render_location_options( $val_loc_slug );
                         }
                         ?>
                     </select>
@@ -153,13 +196,13 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
 
                 <div class="vb-form-group">
                     <label class="vb-label">Цена (<?php echo esc_html( VB_CPT::get_currency_symbol() ); ?>)</label>
-                    <input type="number" name="price" placeholder="Например: 1500 (0 - договорная)" class="vb-form-input">
+                    <input type="number" name="price" value="<?php echo esc_attr( $val_price ); ?>" placeholder="Например: 1500 (0 - договорная)" class="vb-form-input">
                     <small class="vb-hint">Оставьте пустым или 0, если цена договорная</small>
                 </div>
 
                 <div class="vb-form-group">
                     <label class="vb-label">Точный адрес или район (необязательно)</label>
-                    <input type="text" name="address" value="<?php echo esc_attr( $default_city ); ?>" placeholder="Прага 4, Панкрац..." class="vb-form-input">
+                    <input type="text" name="address" value="<?php echo esc_attr( $val_address ); ?>" placeholder="Район, улица или ориентир..." class="vb-form-input">
                 </div>
             </div>
         </div>
@@ -186,7 +229,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
         <div class="vb-form-section">
             <h3 class="vb-form-sec-title">4. Подробное описание</h3>
             <div class="vb-form-group vb-form-full">
-                <textarea name="description" rows="6" required placeholder="Опишите ваше предложение, характеристики, условия сделки или подробности об услуге..." class="vb-form-textarea"></textarea>
+                <textarea name="description" rows="6" required placeholder="Опишите ваше предложение, характеристики, условия сделки или подробности об услуге..." class="vb-form-textarea"><?php echo esc_textarea( $val_content ); ?></textarea>
             </div>
         </div>
 
@@ -196,22 +239,22 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
             <div class="vb-form-grid">
                 <div class="vb-form-group">
                     <label class="vb-label">Контактный телефон <span class="vb-req">*</span></label>
-                    <input type="text" name="phone" value="<?php echo esc_attr( $default_phone ); ?>" required placeholder="+420..." class="vb-form-input">
+                    <input type="text" name="phone" value="<?php echo esc_attr( $val_phone ); ?>" required placeholder="+420..." class="vb-form-input">
                 </div>
 
                 <div class="vb-form-group">
                     <label class="vb-label">WhatsApp (номер или ссылка)</label>
-                    <input type="text" name="whatsapp" placeholder="+420..." class="vb-form-input">
+                    <input type="text" name="whatsapp" value="<?php echo esc_attr( $val_wa ); ?>" placeholder="+420..." class="vb-form-input">
                 </div>
 
                 <div class="vb-form-group">
                     <label class="vb-label">Telegram (@username)</label>
-                    <input type="text" name="telegram" placeholder="@username" class="vb-form-input">
+                    <input type="text" name="telegram" value="<?php echo esc_attr( $val_tg ); ?>" placeholder="@username" class="vb-form-input">
                 </div>
 
                 <div class="vb-form-group">
                     <label class="vb-label">Email для связи</label>
-                    <input type="email" name="email" value="<?php echo esc_attr( $default_email ); ?>" placeholder="vash-email@gmail.com" class="vb-form-input">
+                    <input type="email" name="email" value="<?php echo esc_attr( $val_email ); ?>" placeholder="vash-email@gmail.com" class="vb-form-input">
                 </div>
             </div>
         </div>
@@ -232,7 +275,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
 
             <div class="vb-submit-action-row">
                 <button type="submit" class="vb-btn-submit-listing" id="vb-submit-btn">
-                    🚀 Опубликовать объявление
+                    <?php echo $is_edit ? '💾 Сохранить изменения' : '🚀 Опубликовать объявление'; ?>
                 </button>
             </div>
         </div>

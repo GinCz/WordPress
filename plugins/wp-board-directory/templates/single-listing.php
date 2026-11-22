@@ -50,8 +50,12 @@ $primary_loc = ! empty( $locs ) && ! is_wp_error( $locs ) ? $locs[0] : null;
 $stats = VB_Ratings::get_vote_stats( $vb_type === 'company' ? 'company' : 'listing', $post_id );
 
 // Author info
-$author_id = get_post_field( 'post_author', $post_id );
-$author_name = get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь';
+$author_id          = (int) get_post_field( 'post_author', $post_id );
+$author_name        = get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь';
+$current_uid        = get_current_user_id();
+$is_author_or_admin = is_user_logged_in() && ( $author_id === $current_uid || current_user_can( 'edit_post', $post_id ) );
+$edit_url           = home_url( '/new/?listing_id=' . $post_id );
+$delete_url         = wp_nonce_url( add_query_arg( [ 'vb_action' => 'delete_item', 'item_id' => $post_id, 'tab' => ( $vb_type === 'company' ? 'companies' : 'ads' ) ], home_url( '/my-ads/' ) ), 'vb_delete_item_' . $post_id );
 
 // Clean phone for tel:
 $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
@@ -79,9 +83,32 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                     <span class="vb-bc-current"><?php the_title(); ?></span>
                 </nav>
 
+                <?php if ( ! empty( $_GET['updated'] ) ) : ?>
+                    <div class="vb-alert-success" style="margin-bottom: 20px; padding: 14px 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        ✅ Изменения успешно сохранены!
+                    </div>
+                <?php endif; ?>
+
                 <div class="vb-single-layout">
                     <!-- Left / Main Column -->
                     <div class="vb-single-main">
+                        <?php if ( $is_author_or_admin ) : ?>
+                            <div class="vb-author-manage-bar">
+                                <div class="vb-author-manage-left">
+                                    <span class="vb-author-badge">👤 Ваша публикация</span>
+                                    <span class="vb-author-meta-status">Статус: <strong><?php echo 'publish' === get_post_status( $post_id ) ? 'Опубликовано' : esc_html( get_post_status( $post_id ) ); ?></strong></span>
+                                </div>
+                                <div class="vb-author-manage-actions">
+                                    <a href="<?php echo esc_url( $edit_url ); ?>" class="vb-btn-author-edit">
+                                        ✏️ Редактировать
+                                    </a>
+                                    <a href="<?php echo esc_url( $delete_url ); ?>" class="vb-btn-author-delete" onclick="return confirm('Вы действительно хотите удалить это объявление? Это действие необратимо.');">
+                                        🗑️ Удалить
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <h2 class="vb-single-title"><?php the_title(); ?></h2>
 
                         <div class="vb-single-meta-bar">
@@ -125,7 +152,7 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                         <div class="vb-safety-box">
                             <div class="vb-safety-icon">🛡️</div>
                             <div class="vb-safety-text">
-                                <strong>Безопасные сделки в Чехии:</strong> Никогда не отправляйте предоплату незнакомым лицам. Встречайтесь лично в публичных местах. Проверяйте товар перед оплатой.
+                                <strong>Безопасные сделки:</strong> Никогда не отправляйте предоплату незнакомым лицам. Встречайтесь лично в публичных местах. Проверяйте товар перед оплатой.
                             </div>
                         </div>
 
@@ -146,6 +173,20 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                     <!-- Right Column: Sidebar / Contact Card -->
                     <div class="vb-single-sidebar">
                         <div class="vb-contact-card">
+                            <?php if ( $is_author_or_admin ) : ?>
+                                <div class="vb-sidebar-author-box">
+                                    <div class="vb-sidebar-author-title">⚙️ Управление объявлением:</div>
+                                    <div class="vb-sidebar-author-buttons">
+                                        <a href="<?php echo esc_url( $edit_url ); ?>" class="vb-btn-contact vb-btn-sidebar-edit">
+                                            ✏️ Редактировать объявление
+                                        </a>
+                                        <a href="<?php echo esc_url( $delete_url ); ?>" class="vb-btn-contact vb-btn-sidebar-delete" onclick="return confirm('Вы действительно хотите удалить это объявление? Это действие необратимо.');">
+                                            🗑️ Удалить объявление
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <!-- Price Block -->
                             <div class="vb-single-price-box">
                                 <?php if ( $price > 0 ) : 
@@ -217,7 +258,7 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                             </div>
 
                             <div class="vb-sidebar-post-ad-banner">
-                                <p>Есть что продать или предложить в Чехии?</p>
+                                <p>Есть что продать или предложить?</p>
                                 <a href="<?php echo esc_url( home_url( '/new/' ) ); ?>" class="vb-btn-sidebar-new">+ Подать объявление бесплатно</a>
                             </div>
                         </div>

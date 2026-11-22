@@ -143,8 +143,7 @@ class VB_Shortcodes {
 
             wp_delete_post( $item_id, true );
 
-            $redirect_url = remove_query_arg( [ 'vb_action', 'item_id', '_wpnonce' ] );
-            $redirect_url = add_query_arg( [ 'tab' => $tab, 'deleted' => 1 ], $redirect_url );
+            $redirect_url = home_url( '/my-ads/?tab=' . $tab . '&deleted=1' );
             wp_safe_redirect( $redirect_url );
             exit;
         }
@@ -337,38 +336,31 @@ class VB_Shortcodes {
         }
 
         $author_id = get_current_user_id();
+        $edit_id   = absint( $_POST['listing_id'] ?? 0 );
+        $is_edit   = false;
 
-        // Enforce limit: maximum 10 listings per account/email in one category
-        if ( $category_id > 0 && ! current_user_can( 'manage_options' ) ) {
-            $author_filter = ( $author_id > 1 ) ? [ 'author' => $author_id ] : [];
-            $existing_user_listings = get_posts( array_merge( [
-                'post_type'      => 'vb_listing',
-                'post_status'    => [ 'publish', 'draft', 'pending' ],
-                'posts_per_page' => -1,
-                'fields'         => 'ids',
-                'tax_query'      => [
-                    [
-                        'taxonomy' => 'vb_category',
-                        'field'    => 'term_id',
-                        'terms'    => $category_id,
-                    ],
-                ],
-            ], $author_filter ) );
+        if ( $edit_id > 0 ) {
+            $edit_post = get_post( $edit_id );
+            if ( ! $edit_post || ( (int) $edit_post->post_author !== (int) $author_id && ! current_user_can( 'edit_post', $edit_id ) ) ) {
+                wp_die( 'У вас нет прав на редактирование этого объявления.' );
+            }
+            $is_edit = true;
+            $post_id = $edit_id;
 
-            $existing_count = count( $existing_user_listings );
-            if ( $author_id === 1 && ! empty( $email ) ) {
-                $email_listings = get_posts( [
+            wp_update_post( [
+                'ID'           => $post_id,
+                'post_title'   => $title,
+                'post_content' => $description,
+            ] );
+        } else {
+            // Enforce limit: maximum 10 listings per account/email in one category
+            if ( $category_id > 0 && ! current_user_can( 'manage_options' ) ) {
+                $author_filter = ( $author_id > 1 ) ? [ 'author' => $author_id ] : [];
+                $existing_user_listings = get_posts( array_merge( [
                     'post_type'      => 'vb_listing',
                     'post_status'    => [ 'publish', 'draft', 'pending' ],
                     'posts_per_page' => -1,
                     'fields'         => 'ids',
-                    'meta_query'     => [
-                        [
-                            'key'     => '_vb_email',
-                            'value'   => $email,
-                            'compare' => '=',
-                        ],
-                    ],
                     'tax_query'      => [
                         [
                             'taxonomy' => 'vb_category',
@@ -376,30 +368,54 @@ class VB_Shortcodes {
                             'terms'    => $category_id,
                         ],
                     ],
-                ] );
-                $existing_count = max( $existing_count, count( $email_listings ) );
+                ], $author_filter ) );
+
+                $existing_count = count( $existing_user_listings );
+                if ( $author_id === 1 && ! empty( $email ) ) {
+                    $email_listings = get_posts( [
+                        'post_type'      => 'vb_listing',
+                        'post_status'    => [ 'publish', 'draft', 'pending' ],
+                        'posts_per_page' => -1,
+                        'fields'         => 'ids',
+                        'meta_query'     => [
+                            [
+                                'key'     => '_vb_email',
+                                'value'   => $email,
+                                'compare' => '=',
+                            ],
+                        ],
+                        'tax_query'      => [
+                            [
+                                'taxonomy' => 'vb_category',
+                                'field'    => 'term_id',
+                                'terms'    => $category_id,
+                            ],
+                        ],
+                    ] );
+                    $existing_count = max( $existing_count, count( $email_listings ) );
+                }
+
+                if ( $existing_count >= 10 ) {
+                    $referer = wp_get_referer() ?: home_url( '/new/' );
+                    wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Превышен лимит: разрешено максимум 10 объявлений от одного аккаунта в одну рубрику.' ) ], $referer ) );
+                    exit;
+                }
             }
 
-            if ( $existing_count >= 10 ) {
+            // Create vb_listing post
+            $post_id = wp_insert_post( [
+                'post_title'   => $title,
+                'post_content' => $description,
+                'post_status'  => 'publish',
+                'post_type'    => 'vb_listing',
+                'post_author'  => $author_id,
+            ] );
+
+            if ( is_wp_error( $post_id ) ) {
                 $referer = wp_get_referer() ?: home_url( '/new/' );
-                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Превышен лимит: разрешено максимум 10 объявлений от одного аккаунта в одну рубрику.' ) ], $referer ) );
+                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( $post_id->get_error_message() ) ], $referer ) );
                 exit;
             }
-        }
-
-        // Create vb_listing post
-        $post_id = wp_insert_post( [
-            'post_title'   => $title,
-            'post_content' => $description,
-            'post_status'  => 'publish',
-            'post_type'    => 'vb_listing',
-            'post_author'  => $author_id,
-        ] );
-
-        if ( is_wp_error( $post_id ) ) {
-            $referer = wp_get_referer() ?: home_url( '/new/' );
-            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( $post_id->get_error_message() ) ], $referer ) );
-            exit;
         }
 
         // Set metadata
@@ -488,8 +504,12 @@ class VB_Shortcodes {
             }
         }
 
-        // Redirect to newly published listing
-        wp_safe_redirect( get_permalink( $post_id ) );
+        // Redirect to published listing
+        $redirect_dest = get_permalink( $post_id );
+        if ( $is_edit ) {
+            $redirect_dest = add_query_arg( [ 'updated' => '1' ], $redirect_dest );
+        }
+        wp_safe_redirect( $redirect_dest );
         exit;
     }
 

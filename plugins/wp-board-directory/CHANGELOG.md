@@ -1,5 +1,15 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.30] - 2026-11-22
+### Added & Improved
+- **Author Listing Controls («Редактировать» & «Удалить») on Single Listing Pages**:
+  - Implemented prominent author management bar (`.vb-author-manage-bar`) at the top of single listing pages, displayed exclusively when the authenticated user is the listing author (via Google OAuth or password) or site administrator.
+  - Added duplicate quick-action controls in the right sidebar contact card (`.vb-sidebar-author-box`).
+  - Added «✏️ Редактировать» action: loads the listing into `/new/?listing_id=<ID>` with all pre-filled fields (title, category, location, price, address, phone, whatsapp, telegram, email, description), displaying header `✏️ Редактирование объявления` and submit button `💾 Сохранить изменения`.
+  - Added «🗑️ Удалить» action: opens browser confirmation prompt, securely verifies nonce and user ownership, permanently deletes listing via `wp_delete_post()`, and redirects cleanly to user cabinet `/my-ads/?tab=ads&deleted=1` with success notice.
+  - Added instant update notification alert (`✅ Изменения успешно сохранены!`) upon redirect after editing.
+  - Localized sidebar safety notice and promotional banner to universal multi-country wording.
+
 ## [2026-11__1.29] - 2026-11-22
 ### Added & Improved
 - **Universal Multi-Country Location Architecture (`render_location_options()`)**:
