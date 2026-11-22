@@ -1,5 +1,12 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.28] - 2026-11-22
+### Fixed & Improved
+- **Social OAuth Re-Registration & Orphan User Sync**:
+  - Fixed issue where deleting a WordPress user in WP-Admin left stale linkage records in `wp_mo_openid_linked_user`, causing Google / VK social login to fail silently (redirecting back unauthenticated) instead of registering the new or re-registered user.
+  - Added automatic deletion hook on WordPress `delete_user` action to purge matching linked accounts from `wp_mo_openid_linked_user`.
+  - Added robust validation in social login processor so that if an orphan record is encountered, it is automatically purged and the user is seamlessly passed to the new user registration flow.
+
 ## [2026-11__1.27] - 2026-11-22
 ### Fixed & Improved
 - **Cloudflare Turnstile Verification & Rendering**:
