@@ -1716,13 +1716,13 @@ class VB_Shortcodes {
                     <div class="vb-tab-pane vb-pane-companies">
                         <div class="vb-pane-toolbar">
                             <h3>Ваши компании в каталоге</h3>
-                            <a href="<?php echo esc_url( home_url( '/add-listing/' ) ); ?>" class="vb-btn-add-new">+ Добавить компанию</a>
+                            <a href="<?php echo esc_url( home_url( '/add-listing/?type=company' ) ); ?>" class="vb-btn-add-new">+ Добавить компанию</a>
                         </div>
 
                         <?php if ( empty( $user_companies ) ) : ?>
                             <div class="vb-empty-state-box">
                                 <p>У вас пока нет зарегистрированных компаний в каталоге.</p>
-                                <a href="<?php echo esc_url( home_url( '/add-listing/' ) ); ?>" class="vb-btn-add-new">+ Зарегистрировать компанию</a>
+                                <a href="<?php echo esc_url( home_url( '/add-listing/?type=company' ) ); ?>" class="vb-btn-add-new">+ Зарегистрировать компанию</a>
                             </div>
                         <?php else : ?>
                             <form method="POST" action="" class="vb-dash-bulk-form" onsubmit="return vbValidateBulk(this);">

@@ -3,7 +3,7 @@
  * Plugin Name: WP Login & Admin Branding (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-login-branding
  * Description: Ultra-modern turnkey customizer for WordPress authentication pages. Replaces standard WP logo with dynamic site brand and country flag, adds sleek glassmorphism card styling, responsive ambient glow background, custom favicon, social login styling, and custom brand footer.
- * Version:     2026-11__1.00
+ * Version:     2026-11__1.01
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_LOGIN_BRANDING_VERSION', '2026-11__1.00' );
+define( 'VB_LOGIN_BRANDING_VERSION', '2026-11__1.01' );
 
 final class VB_Login_Branding {
 
@@ -36,7 +36,6 @@ final class VB_Login_Branding {
         add_action( 'login_head', [ __CLASS__, 'render_login_styles' ] );
         add_filter( 'login_headerurl', [ __CLASS__, 'filter_login_headerurl' ] );
         add_filter( 'login_headertext', [ __CLASS__, 'filter_login_headertext' ] );
-        add_action( 'login_message', [ __CLASS__, 'render_login_title_badge' ] );
         add_action( 'login_footer', [ __CLASS__, 'render_login_footer' ] );
 
         // Admin head branding
@@ -128,42 +127,28 @@ final class VB_Login_Branding {
     }
 
     /**
-     * Render modern title badge above the form card.
-     */
-    public static function render_login_title_badge( $message ) {
-        $brand = self::get_brand_logo_info();
-        $site_name = get_bloginfo( 'name' );
-
-        $action = sanitize_key( $_GET['action'] ?? 'login' );
-        $badge_text = 'Вход в личный кабинет';
-        if ( 'register' === $action ) {
-            $badge_text = 'Регистрация аккаунта';
-        } elseif ( 'lostpassword' === $action || 'retrievepassword' === $action ) {
-            $badge_text = 'Восстановление пароля';
-        }
-
-        $badge_html = '
-        <div class="vb-login-badge-wrap">
-            <h2 class="vb-login-site-title">' . esc_html( $site_name ) . '</h2>
-            <div class="vb-login-page-badge">
-                <span class="vb-flag-emoji">' . $brand['flag'] . '</span>
-                <span>' . esc_html( $badge_text ) . '</span>
-            </div>
-        </div>';
-
-        return $message . $badge_html;
-    }
-
-    /**
-     * Render sleek brand footer below the login card.
+     * Render sleek single-row navigation and brand footer below the login card.
      */
     public static function render_login_footer() {
-        $year = date( 'Y' );
-        $name = get_bloginfo( 'name' );
+        $can_register = (bool) get_option( 'users_can_register' );
+        $register_url = wp_registration_url();
+        $lost_url     = wp_lostpassword_url();
+        $home_url     = home_url( '/' );
+        $year         = date( 'Y' );
+        $name         = get_bloginfo( 'name' );
         ?>
+        <div class="vb-login-nav-row">
+            <?php if ( $can_register ) : ?>
+                <a href="<?php echo esc_url( $register_url ); ?>">Регистрация</a>
+                <span class="vb-dot">&bull;</span>
+            <?php endif; ?>
+            <a href="<?php echo esc_url( $lost_url ); ?>">Забыли пароль?</a>
+            <span class="vb-dot">&bull;</span>
+            <a href="<?php echo esc_url( $home_url ); ?>">&larr; На главную</a>
+        </div>
         <div class="vb-login-footer">
             <div>&copy; <?php echo esc_html( $year ); ?> <?php echo esc_html( $name ); ?> &bull; Все права защищены</div>
-            <div style="margin-top: 4px; opacity: 0.75;">Designed by <a href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank">VladiMir + AI</a></div>
+            <div style="margin-top: 3px; opacity: 0.75;">Designed by <a href="<?php echo esc_url( $home_url ); ?>" target="_blank">VladiMir + AI</a></div>
         </div>
         <?php
     }
@@ -178,7 +163,7 @@ final class VB_Login_Branding {
         <style id="vb-login-branding-css">
         /* Reset & Canvas */
         html, body.login {
-            height: 100% !important;
+            height: auto !important;
             min-height: 100vh !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -197,10 +182,12 @@ final class VB_Login_Branding {
             position: relative !important;
             display: flex !important;
             flex-direction: column !important;
-            justify-content: center !important;
+            justify-content: flex-start !important;
             align-items: center !important;
+            padding: 24px 14px 16px !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
             overflow-x: hidden !important;
+            box-sizing: border-box !important;
         }
 
         /* Ambient glowing animated orb */
@@ -212,7 +199,7 @@ final class VB_Login_Branding {
             content: '';
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 50% 25%, rgba(168, 85, 247, 0.16) 0%, transparent 60%);
+            background: radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.16) 0%, transparent 60%);
             animation: vbGlowPulse 7s ease-in-out infinite alternate;
             pointer-events: none;
             z-index: 0;
@@ -222,16 +209,16 @@ final class VB_Login_Branding {
         #login {
             position: relative !important;
             z-index: 1 !important;
-            padding: 24px 20px !important;
+            padding: 6px 14px 10px !important;
             width: 100% !important;
-            max-width: 440px !important;
+            max-width: 410px !important;
             box-sizing: border-box !important;
-            margin: auto !important;
+            margin: 0 auto !important;
         }
 
         /* Logo Branding */
         .login h1 {
-            margin: 0 0 16px 0 !important;
+            margin: 0 0 10px 0 !important;
             text-align: center !important;
         }
 
@@ -242,16 +229,16 @@ final class VB_Login_Branding {
             background-position: center center !important;
             background-repeat: no-repeat !important;
             width: 100% !important;
-            max-width: 250px !important;
-            height: 85px !important;
+            max-width: 220px !important;
+            height: 62px !important;
             margin: 0 auto !important;
             display: block !important;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease !important;
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4)) !important;
+            filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35)) !important;
         }
         .login h1 a:hover {
-            transform: scale(1.05) translateY(-2px) !important;
-            filter: drop-shadow(0 14px 24px rgba(124, 58, 237, 0.5)) !important;
+            transform: scale(1.04) translateY(-1px) !important;
+            filter: drop-shadow(0 10px 20px rgba(124, 58, 237, 0.5)) !important;
         }
         <?php else : ?>
         .login h1 a {
@@ -259,37 +246,10 @@ final class VB_Login_Branding {
         }
         <?php endif; ?>
 
-        /* Title & Badge */
-        .vb-login-badge-wrap {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .vb-login-site-title {
-            font-size: 1.18rem;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: -0.2px;
-            margin: 0 0 8px 0;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
+        /* Remove badge/button under flag completely */
+        .vb-login-badge-wrap,
         .vb-login-page-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            color: #f1f5f9;
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 5px 14px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .vb-flag-emoji {
-            font-size: 1.05rem;
-            line-height: 1;
+            display: none !important;
         }
 
         /* Form Card */
@@ -298,18 +258,18 @@ final class VB_Login_Branding {
             backdrop-filter: blur(20px) !important;
             -webkit-backdrop-filter: blur(20px) !important;
             border: 1px solid rgba(255, 255, 255, 0.7) !important;
-            border-radius: 18px !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
-            padding: 32px 28px 28px !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+            padding: 22px 24px 20px !important;
             margin-top: 0 !important;
         }
 
         /* Form Labels */
         .login label {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             color: #334155 !important;
-            margin-bottom: 6px !important;
+            margin-bottom: 5px !important;
             display: block !important;
         }
 
@@ -320,13 +280,14 @@ final class VB_Login_Branding {
         .login input[type="email"] {
             background: #f8fafc !important;
             border: 1.5px solid #cbd5e1 !important;
-            border-radius: 10px !important;
-            padding: 10px 14px !important;
-            font-size: 15px !important;
+            border-radius: 9px !important;
+            padding: 9px 12px !important;
+            font-size: 14.5px !important;
             color: #0f172a !important;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.03) !important;
             transition: all 0.2s ease !important;
             box-sizing: border-box !important;
+            margin-bottom: 6px !important;
         }
         .login form .input:focus, 
         .login input[type="text"]:focus, 
@@ -334,29 +295,29 @@ final class VB_Login_Branding {
         .login input[type="email"]:focus {
             background: #ffffff !important;
             border-color: #7c3aed !important;
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18), inset 0 1px 2px rgba(0,0,0,0.03) !important;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18), inset 0 1px 2px rgba(0,0,0,0.03) !important;
             outline: none !important;
         }
 
         /* Checkbox & Forgetmenot */
         .login .forgetmenot {
-            margin-bottom: 16px !important;
+            margin-bottom: 12px !important;
             float: none !important;
         }
         .login .forgetmenot label {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             font-weight: 500 !important;
             color: #64748b !important;
             display: inline-flex !important;
             align-items: center !important;
-            gap: 8px !important;
+            gap: 7px !important;
             cursor: pointer !important;
         }
         .login input[type="checkbox"] {
             border: 1.5px solid #cbd5e1 !important;
             border-radius: 4px !important;
-            width: 16px !important;
-            height: 16px !important;
+            width: 15px !important;
+            height: 15px !important;
             cursor: pointer !important;
         }
         .login input[type="checkbox"]:checked {
@@ -370,24 +331,24 @@ final class VB_Login_Branding {
             height: auto !important;
             background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%) !important;
             border: none !important;
-            border-radius: 10px !important;
+            border-radius: 9px !important;
             color: #ffffff !important;
-            font-size: 15px !important;
+            font-size: 14.5px !important;
             font-weight: 700 !important;
-            padding: 12px 24px !important;
+            padding: 10px 20px !important;
             line-height: 1.3 !important;
             text-shadow: none !important;
             box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35) !important;
             cursor: pointer !important;
             transition: all 0.2s ease !important;
-            margin-top: 10px !important;
+            margin-top: 8px !important;
             float: none !important;
             display: block !important;
         }
         .login .button-primary:hover, 
         .login .button-primary:focus {
             background: linear-gradient(135deg, #6d28d9 0%, #3b0764 100%) !important;
-            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5) !important;
+            box-shadow: 0 6px 18px rgba(124, 58, 237, 0.5) !important;
             transform: translateY(-1px) !important;
             color: #ffffff !important;
         }
@@ -397,47 +358,59 @@ final class VB_Login_Branding {
         }
 
         /* Alerts & Messages */
-        #login_error, .login .message, .login .notice {
-            border-radius: 12px !important;
+        #login_error {
+            border-radius: 10px !important;
             border-left: 4px solid #ef4444 !important;
             background: #ffffff !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
-            padding: 14px 18px !important;
-            margin-bottom: 20px !important;
-            font-size: 13.5px !important;
-            line-height: 1.5 !important;
+            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.3) !important;
+            padding: 12px 16px !important;
+            margin-bottom: 14px !important;
+            font-size: 13px !important;
+            line-height: 1.4 !important;
             color: #1e293b !important;
         }
-        .login .message, .login .notice-info {
-            border-left-color: #7c3aed !important;
+
+        /* Suppress informational notice "Вы вышли из системы." */
+        #login-message,
+        .login .message, 
+        .login p.message,
+        .login .notice:not(.notice-error) {
+            display: none !important;
         }
 
-        /* Navigation Links below form */
+        /* Hide default standard WP #nav and #backtoblog */
         #nav, #backtoblog {
-            text-align: center !important;
-            padding: 12px 0 0 !important;
-            margin: 0 !important;
+            display: none !important;
         }
-        #nav a, #backtoblog a {
-            display: inline-block !important;
-            padding: 6px 14px !important;
-            margin: 3px 4px !important;
-            background: rgba(255, 255, 255, 0.09) !important;
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.16) !important;
-            border-radius: 8px !important;
-            color: #f1f5f9 !important;
+
+        /* Sleek single-row navigation */
+        .vb-login-nav-row {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 10px !important;
+            margin: 14px 0 6px 0 !important;
             font-size: 13px !important;
-            font-weight: 500 !important;
-            text-decoration: none !important;
-            transition: all 0.2s ease !important;
+            white-space: nowrap !important;
+            flex-wrap: wrap !important;
         }
-        #nav a:hover, #backtoblog a:hover {
-            background: rgba(255, 255, 255, 0.2) !important;
+        .vb-login-nav-row a {
+            color: #e2e8f0 !important;
+            text-decoration: none !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            padding: 3px 6px !important;
+            border-radius: 6px !important;
+        }
+        .vb-login-nav-row a:hover {
             color: #ffffff !important;
-            border-color: rgba(255, 255, 255, 0.3) !important;
-            transform: translateY(-1px) !important;
+            text-decoration: underline !important;
+            background: rgba(255, 255, 255, 0.12) !important;
+        }
+        .vb-login-nav-row .vb-dot {
+            color: rgba(255, 255, 255, 0.45) !important;
+            font-size: 14px !important;
+            user-select: none !important;
         }
 
         /* Hide language switcher for clean visual presentation */
@@ -447,28 +420,33 @@ final class VB_Login_Branding {
 
         /* Social Login icons integration */
         .mo_openid_login_icons {
-            margin-top: 20px !important;
-            padding-top: 18px !important;
+            margin-top: 14px !important;
+            padding-top: 14px !important;
             border-top: 1px solid #e2e8f0 !important;
             text-align: center !important;
         }
         .mo_openid_login_icons p {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             color: #64748b !important;
             font-weight: 600 !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 10px !important;
         }
 
         /* Footer Copyright */
         .vb-login-footer {
             text-align: center;
-            margin-top: 22px;
-            font-size: 12px;
+            margin-top: 14px;
+            font-size: 11.5px;
             color: rgba(255, 255, 255, 0.55);
             letter-spacing: 0.3px;
         }
         .vb-login-footer a {
             color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+        }
+        .vb-login-footer a:hover {
+            text-decoration: underline;
+        }
             text-decoration: none;
             font-weight: 600;
         }

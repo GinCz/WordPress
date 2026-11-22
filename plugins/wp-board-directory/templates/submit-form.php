@@ -44,9 +44,10 @@ if ( $is_edit ) {
     $item_locs    = wp_get_post_terms( $edit_id, 'vb_location', [ 'fields' => 'slugs' ] );
     $val_loc_slug = ( ! empty( $item_locs ) && ! is_wp_error( $item_locs ) ) ? $item_locs[0] : '';
 } else {
+    $req_type     = sanitize_key( $_GET['type'] ?? '' );
     $val_title    = '';
     $val_content  = '';
-    $val_type     = 'classified';
+    $val_type     = in_array( $req_type, [ 'company', 'biz', 'firm' ], true ) ? 'company' : 'classified';
     $val_price    = '';
     $val_phone    = $default_phone;
     $val_wa       = '';
@@ -102,8 +103,8 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
 
 <div class="vb-submit-wrapper">
     <div class="vb-submit-header">
-        <h2 class="vb-submit-title"><?php echo $is_edit ? '✏️ Редактирование объявления' : '📢 Подать объявление на ' . esc_html( get_bloginfo( 'name' ) ); ?></h2>
-        <p class="vb-submit-subtitle"><?php echo $is_edit ? 'Внесите необходимые изменения и сохраните публикацию.' : 'Быстрая публикация без лишней бюрократии. Фотографии автоматически сжимаются для максимальной скорости загрузки на телефонах.'; ?></p>
+        <h2 class="vb-submit-title" id="vb-page-submit-title"><?php echo $is_edit ? '✏️ Редактирование ' . ( $val_type === 'company' ? 'компании' : 'объявления' ) : ( $val_type === 'company' ? '🏢 Добавить компанию в каталог' : '📢 Подать объявление на ' . esc_html( get_bloginfo( 'name' ) ) ); ?></h2>
+        <p class="vb-submit-subtitle" id="vb-page-submit-sub"><?php echo $is_edit ? 'Внесите необходимые изменения и сохраните публикацию.' : ( $val_type === 'company' ? 'Заполните профиль вашей организации, услуги и контакты для каталога фирм.' : 'Быстрая публикация без лишней бюрократии. Фотографии автоматически сжимаются для максимальной скорости загрузки на телефонах.' ); ?></p>
     </div>
 
     <?php if ( ! empty( $_GET['error'] ) ) : ?>
@@ -124,7 +125,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
             <h3 class="vb-form-sec-title">1. Тип публикации</h3>
             <div class="vb-type-toggle-group">
                 <label class="vb-type-radio-card <?php echo $val_type === 'classified' ? 'active' : ''; ?>">
-                    <input type="radio" name="listing_type" value="classified" <?php checked( $val_type, 'classified' ); ?> onclick="document.querySelectorAll('.vb-type-radio-card').forEach(function(c){c.classList.remove('active');}); this.closest('.vb-type-radio-card').classList.add('active');">
+                    <input type="radio" name="listing_type" value="classified" <?php checked( $val_type, 'classified' ); ?> onchange="vbUpdateTypeSelection('classified');">
                     <span class="vb-radio-icon">📢</span>
                     <span class="vb-radio-text">
                         <strong>Частное объявление</strong>
@@ -132,7 +133,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
                     </span>
                 </label>
                 <label class="vb-type-radio-card <?php echo $val_type === 'company' ? 'active' : ''; ?>">
-                    <input type="radio" name="listing_type" value="company" <?php checked( $val_type, 'company' ); ?> onclick="document.querySelectorAll('.vb-type-radio-card').forEach(function(c){c.classList.remove('active');}); this.closest('.vb-type-radio-card').classList.add('active');">
+                    <input type="radio" name="listing_type" value="company" <?php checked( $val_type, 'company' ); ?> onchange="vbUpdateTypeSelection('company');">
                     <span class="vb-radio-icon">🏢</span>
                     <span class="vb-radio-text">
                         <strong>Компания / Каталог фирм</strong>
@@ -142,13 +143,39 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
             </div>
         </div>
 
+        <script>
+        function vbUpdateTypeSelection(type) {
+            document.querySelectorAll('.vb-type-radio-card').forEach(function(c){ c.classList.remove('active'); });
+            var checkedRadio = document.querySelector('.vb-type-radio-card input[value="' + type + '"]');
+            if (checkedRadio) {
+                checkedRadio.checked = true;
+                checkedRadio.closest('.vb-type-radio-card').classList.add('active');
+            }
+            var titleEl = document.getElementById('vb-page-submit-title');
+            var subEl = document.getElementById('vb-page-submit-sub');
+            var lblEl = document.getElementById('vb-title-label');
+            var inpEl = document.getElementById('vb-title-input');
+            if (type === 'company') {
+                if (titleEl) titleEl.innerText = '🏢 Добавить компанию в каталог';
+                if (subEl) subEl.innerText = 'Заполните профиль вашей организации, услуги и контакты для каталога фирм.';
+                if (lblEl) lblEl.innerHTML = 'Название компании / фирмы <span class="vb-req">*</span>';
+                if (inpEl) inpEl.placeholder = 'Например: ООО Автосервис Норд или Салон красоты Элит';
+            } else {
+                if (titleEl) titleEl.innerText = '📢 Подать объявление на <?php echo esc_js( get_bloginfo( 'name' ) ); ?>';
+                if (subEl) subEl.innerText = 'Быстрая публикация без лишней бюрократии. Фотографии автоматически сжимаются для максимальной скорости загрузки на телефонах.';
+                if (lblEl) lblEl.innerHTML = 'Заголовок объявления <span class="vb-req">*</span>';
+                if (inpEl) inpEl.placeholder = 'Например: Аренда 2+кк в центре или Ремонт техники';
+            }
+        }
+        </script>
+
         <!-- Basic Info -->
         <div class="vb-form-section">
             <h3 class="vb-form-sec-title">2. Основная информация</h3>
             <div class="vb-form-grid">
                 <div class="vb-form-group vb-form-full">
-                    <label class="vb-label">Заголовок объявления <span class="vb-req">*</span></label>
-                    <input type="text" name="title" id="vb-title-input" value="<?php echo esc_attr( $val_title ); ?>" required maxlength="100" placeholder="Например: Аренда 2+кк в центре или Ремонт техники" class="vb-form-input">
+                    <label class="vb-label" id="vb-title-label"><?php echo $val_type === 'company' ? 'Название компании / фирмы' : 'Заголовок объявления'; ?> <span class="vb-req">*</span></label>
+                    <input type="text" name="title" id="vb-title-input" value="<?php echo esc_attr( $val_title ); ?>" required maxlength="100" placeholder="<?php echo $val_type === 'company' ? 'Например: ООО Автосервис Норд или Салон красоты Элит' : 'Например: Аренда 2+кк в центре или Ремонт техники'; ?>" class="vb-form-input">
                     <div style="font-size: 11px; color: #64748b; text-align: right; margin-top: 3px; font-weight: 500;">
                         <span id="vb-title-char-count"><?php echo mb_strlen( $val_title, 'UTF-8' ); ?></span> / 100 символов (макс. 100)
                     </div>

@@ -1,5 +1,12 @@
 # Changelog — WP Login & Admin Branding
 
+## [2026-11__1.01] - 2026-11-23
+### UI Polish & Compact Viewport
+- **Compact Vertical Dimensions**: Reduced padding, input sizes, and margins so the entire login card comfortably fits on screen without vertical scrolling or cropping the header flag.
+- **Removed Redundant Badge**: Eliminated subtitle pill under the logo with "DE" text to keep visual focus strictly on site identity.
+- **Suppressed Logout Notice**: Cleaned away the bulky white "Вы вышли из системы" notice for a seamless card presentation.
+- **Single-Line Footer Navigation**: Combined `Регистрация • Забыли пароль? • ← На главную` into a single horizontal glass row.
+
 ## [2026-11__1.00] - 2026-11-22
 ### Initial Release
 - **Dynamic Site Branding & Country Awareness**:

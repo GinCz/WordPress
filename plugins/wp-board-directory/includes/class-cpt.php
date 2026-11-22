@@ -54,6 +54,9 @@ class VB_CPT {
 
         // Automatic Category & Location Slugs Migration on Update
         add_action( 'init', [ __CLASS__, 'migrate_terms_to_english' ], 20 );
+
+        // Filter page title for add-listing
+        add_filter( 'the_title', [ __CLASS__, 'filter_add_listing_page_title' ], 10, 2 );
     }
 
     /**
@@ -1495,5 +1498,17 @@ class VB_CPT {
                 echo '</optgroup>';
             }
         }
+    }
+
+    /**
+     * Filter entry title for Add Listing page
+     */
+    public static function filter_add_listing_page_title( $title, $id = null ) {
+        if ( ! is_admin() && ( ( $id && get_post_field( 'post_name', $id ) === 'add-listing' ) || ( is_page( 'add-listing' ) && in_the_loop() ) ) ) {
+            if ( empty( $title ) || in_array( trim( $title ), [ 'Add Listing', 'Listing Form', 'Добавить объявление' ], true ) ) {
+                return 'Добавить новое объявление или компанию';
+            }
+        }
+        return $title;
     }
 }

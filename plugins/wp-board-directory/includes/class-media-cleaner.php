@@ -42,14 +42,19 @@ class VB_Media_Cleaner {
             wp_delete_attachment( $thumb_id, true );
         }
 
-        // 2. Gallery images from _vb_images, images, _gallery_images, _atbdp_gallery, _listing_images
-        $meta_keys = [ '_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image' ];
+        // 2. Gallery images and custom media keys
+        $meta_keys = [ '_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image', '_company_logo', 'logo', '_thumbnail_id' ];
         foreach ( $meta_keys as $mk ) {
             $raw_val = get_post_meta( $post_id, $mk, true );
             if ( ! empty( $raw_val ) ) {
                 $items = maybe_unserialize( $raw_val );
                 if ( is_string( $items ) ) {
-                    $items = explode( ',', $items );
+                    $decoded = json_decode( $items, true );
+                    if ( is_array( $decoded ) ) {
+                        $items = $decoded;
+                    } else {
+                        $items = explode( ',', $items );
+                    }
                 }
                 if ( is_array( $items ) ) {
                     foreach ( $items as $img_id ) {

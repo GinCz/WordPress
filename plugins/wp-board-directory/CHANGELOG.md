@@ -1,5 +1,17 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.31] - 2026-11-23
+### Added & Improved
+- **Automated Company Submission Flow**:
+  - In user dashboard «Мои компании» tab, updated «+ Добавить компанию» and «+ Зарегистрировать компанию» buttons to include `?type=company`.
+  - In `templates/submit-form.php`, pre-selects and activates the «🏢 Компания / Каталог фирм» publication type card whenever `type=company` parameter is present.
+  - Dynamically updates page header to `🏢 Добавить компанию в каталог` and title input placeholder to business naming format.
+- **Add Listing Page Title Translation**:
+  - Added filter for `the_title` to automatically replace raw English «Add Listing» and «Listing Form» with localized Russian «Добавить новое объявление или компанию».
+- **Hardened Media Deletion Purge Engine (`VB_Media_Cleaner`)**:
+  - Enhanced `cleanup_post_media()` hook triggered on `before_delete_post` to inspect all gallery meta keys (`_vb_images`, `images`, `_gallery_images`, `_listing_images`, `_company_logo`, `logo`, `_thumbnail_id`), support JSON-encoded ID arrays, and wipe all child attachments.
+  - Calling `wp_delete_attachment( $id, true )` permanently unlinks the master image file, all intermediate thumbnail crops (150x150, 300x200, 1024x768), and WebP counterparts from disk, preventing any orphan media accumulation.
+
 ## [2026-11__1.30] - 2026-11-22
 ### Added & Improved
 - **Author Listing Controls («Редактировать» & «Удалить») on Single Listing Pages**:
