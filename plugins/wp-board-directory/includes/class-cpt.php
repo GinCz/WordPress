@@ -1258,25 +1258,13 @@ class VB_CPT {
     }
 
     /**
-     * Get flag emoji for a country slug or name.
+     * Get clean indicator or label for country optgroups.
+     * Note: Unicode regional indicator flag emojis (e.g. DE, RU, UA) are intentionally avoided
+     * because Windows OS / Chrome does not render flag glyphs in native selects, falling back
+     * to ugly dangling 2-letter codes. Empty string produces pure, clean country headers.
      */
     public static function get_country_flag( $slug, $name = '' ) {
-        $s = mb_strtolower( $slug . ' ' . $name, 'UTF-8' );
-        if ( strpos( $s, 'ukrain' ) !== false || strpos( $s, 'украин' ) !== false ) return '🇺🇦';
-        if ( strpos( $s, 'russi' ) !== false || strpos( $s, 'rossi' ) !== false || strpos( $s, 'росси' ) !== false ) return '🇷🇺';
-        if ( strpos( $s, 'europ' ) !== false || strpos( $s, 'evrop' ) !== false || strpos( $s, 'европ' ) !== false ) return '🇪🇺';
-        if ( strpos( $s, 'germany' ) !== false || strpos( $s, 'герман' ) !== false || strpos( $s, 'deutsch' ) !== false ) return '🇩🇪';
-        if ( strpos( $s, 'czech' ) !== false || strpos( $s, 'cheh' ) !== false || strpos( $s, 'чех' ) !== false ) return '🇨🇿';
-        if ( strpos( $s, 'austria' ) !== false || strpos( $s, 'avstri' ) !== false || strpos( $s, 'австри' ) !== false ) return '🇦🇹';
-        if ( strpos( $s, 'poland' ) !== false || strpos( $s, 'polsh' ) !== false || strpos( $s, 'польш' ) !== false ) return '🇵🇱';
-        if ( strpos( $s, 'spain' ) !== false || strpos( $s, 'ispan' ) !== false || strpos( $s, 'испан' ) !== false ) return '🇪🇸';
-        if ( strpos( $s, 'ital' ) !== false || strpos( $s, 'итал' ) !== false ) return '🇮🇹';
-        if ( strpos( $s, 'franc' ) !== false || strpos( $s, 'франц' ) !== false ) return '🇫🇷';
-        if ( strpos( $s, 'switz' ) !== false || strpos( $s, 'shvej' ) !== false || strpos( $s, 'швейц' ) !== false ) return '🇨🇭';
-        if ( strpos( $s, 'brit' ) !== false || strpos( $s, 'veliko' ) !== false || preg_match( '/\b(uk)\b/', $s ) ) return '🇬🇧';
-        if ( strpos( $s, 'usa' ) !== false || strpos( $s, 'ssha' ) !== false || strpos( $s, 'сша' ) !== false || preg_match( '/\b(us)\b/', $s ) ) return '🇺🇸';
-        if ( strpos( $s, 'uae' ) !== false || strpos( $s, 'oae' ) !== false || strpos( $s, 'оаэ' ) !== false ) return '🇦🇪';
-        return '🌍';
+        return '';
     }
 
     /**
@@ -1384,8 +1372,8 @@ class VB_CPT {
         $capital_keywords = [ 'berlin', 'prag', 'wien', 'warsz', 'madrid', 'rom', 'paris', 'bern', 'london', 'washington', 'dubai' ];
 
         if ( $primary_term ) {
-            $flag = self::get_country_flag( $primary_term->slug, $primary_term->name );
-            echo '<optgroup label="' . esc_attr( $flag . ' ' . $primary_term->name ) . '">';
+            $grp_label = trim( self::get_country_flag( $primary_term->slug, $primary_term->name ) . ' ' . $primary_term->name );
+            echo '<optgroup label="' . esc_attr( $grp_label ) . '">';
 
             $primary_children = get_terms([
                 'taxonomy'   => $tax,
@@ -1465,8 +1453,8 @@ class VB_CPT {
 
         if ( ! empty( $secondary_countries ) && ! is_wp_error( $secondary_countries ) ) {
             foreach ( $secondary_countries as $sc ) {
-                $flag = self::get_country_flag( $sc->slug, $sc->name );
-                echo '<optgroup label="' . esc_attr( $flag . ' ' . $sc->name ) . '">';
+                $grp_label = trim( self::get_country_flag( $sc->slug, $sc->name ) . ' ' . $sc->name );
+                echo '<optgroup label="' . esc_attr( $grp_label ) . '">';
 
                 // Whole country option
                 $sel_sc = ( $selected_slug === $sc->slug || $selected_slug === $sc->name ) ? ' selected' : '';

@@ -211,7 +211,7 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
 
                 <div class="vb-form-group">
                     <label class="vb-label">Город / Регион <span class="vb-req">*</span></label>
-                    <select name="location_id" class="vb-form-select">
+                    <select name="location_id" id="vb-location-select" class="vb-form-select">
                         <option value="">-- Выберите город / регион --</option>
                         <?php
                         if ( class_exists( 'VB_CPT' ) && method_exists( 'VB_CPT', 'render_location_options' ) ) {
@@ -219,6 +219,52 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
                         }
                         ?>
                     </select>
+
+                    <?php
+                    $quick_pills = [];
+                    $q_host = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( $_SERVER['HTTP_HOST'] ) : '';
+                    if ( strpos( $q_host, '-de' ) !== false || strpos( $q_host, '.de' ) !== false ) {
+                        $quick_pills = [
+                            [ 'slug' => 'berlin', 'name' => '📍 Берлин' ],
+                            [ 'slug' => 'germany', 'name' => 'Вся Германия' ],
+                            [ 'slug' => 'internet', 'name' => '🌐 OnLine' ],
+                            [ 'slug' => 'evropa', 'name' => 'Европа' ],
+                            [ 'slug' => 'russia', 'name' => 'Россия' ],
+                            [ 'slug' => 'ukraine', 'name' => 'Украина' ],
+                        ];
+                    } elseif ( strpos( $q_host, '.cz' ) !== false || strpos( $q_host, '-cz' ) !== false ) {
+                        $quick_pills = [
+                            [ 'slug' => 'praha', 'name' => '📍 Прага' ],
+                            [ 'slug' => 'cheh', 'name' => 'Вся Чехия' ],
+                            [ 'slug' => 'internet', 'name' => '🌐 OnLine' ],
+                            [ 'slug' => 'evropa', 'name' => 'Европа' ],
+                            [ 'slug' => 'russia', 'name' => 'Россия' ],
+                            [ 'slug' => 'ukraine', 'name' => 'Украина' ],
+                        ];
+                    } elseif ( strpos( $q_host, '-at' ) !== false || strpos( $q_host, '.at' ) !== false ) {
+                        $quick_pills = [
+                            [ 'slug' => 'wien', 'name' => '📍 Вена' ],
+                            [ 'slug' => 'austria', 'name' => 'Вся Австрия' ],
+                            [ 'slug' => 'internet', 'name' => '🌐 OnLine' ],
+                            [ 'slug' => 'evropa', 'name' => 'Европа' ],
+                            [ 'slug' => 'russia', 'name' => 'Россия' ],
+                            [ 'slug' => 'ukraine', 'name' => 'Украина' ],
+                        ];
+                    } else {
+                        $quick_pills = [
+                            [ 'slug' => 'internet', 'name' => '🌐 OnLine' ],
+                            [ 'slug' => 'evropa', 'name' => 'Европа' ],
+                            [ 'slug' => 'russia', 'name' => 'Россия' ],
+                            [ 'slug' => 'ukraine', 'name' => 'Украина' ],
+                        ];
+                    }
+                    ?>
+                    <div class="vb-quick-locations" id="vb-quick-locations">
+                        <span class="vb-quick-loc-label">Быстрый выбор:</span>
+                        <?php foreach ( $quick_pills as $qp ) : ?>
+                            <button type="button" class="vb-loc-pill" data-slug="<?php echo esc_attr( $qp['slug'] ); ?>"><?php echo esc_html( $qp['name'] ); ?></button>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
 
                 <div class="vb-form-group">
@@ -380,5 +426,83 @@ document.addEventListener('DOMContentLoaded', function() {
         tInp.addEventListener('input', updateTitleCount);
         updateTitleCount();
     }
+
+    // Quick Location Pills Interactive Synchronization
+    var locSelect = document.getElementById('vb-location-select');
+    var locPills  = document.querySelectorAll('.vb-loc-pill');
+    if (locSelect && locPills.length) {
+        function syncActiveLocPill() {
+            var curVal = (locSelect.value || '').toLowerCase();
+            var curText = (locSelect.options[locSelect.selectedIndex] ? locSelect.options[locSelect.selectedIndex].text : '').toLowerCase();
+            locPills.forEach(function(pill) {
+                var pSlug = (pill.getAttribute('data-slug') || '').toLowerCase();
+                if (pSlug && (curVal.indexOf(pSlug) !== -1 || curText.indexOf(pSlug) !== -1)) {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            });
+        }
+
+        locPills.forEach(function(pill) {
+            pill.addEventListener('click', function(e) {
+                e.preventDefault();
+                var pSlug = (this.getAttribute('data-slug') || '').toLowerCase();
+                for (var i = 0; i < locSelect.options.length; i++) {
+                    var oVal  = locSelect.options[i].value.toLowerCase();
+                    var oText = locSelect.options[i].text.toLowerCase();
+                    if (oVal === pSlug || (pSlug && oVal.indexOf(pSlug) !== -1) || (pSlug && oText.indexOf(pSlug) !== -1)) {
+                        locSelect.selectedIndex = i;
+                        locSelect.dispatchEvent(new Event('change'));
+                        break;
+                    }
+                }
+                syncActiveLocPill();
+            });
+        });
+
+        locSelect.addEventListener('change', syncActiveLocPill);
+        syncActiveLocPill();
+    }
 });
 </script>
+
+<style>
+.vb-quick-locations {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+.vb-quick-loc-label {
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 600;
+}
+.vb-loc-pill {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+}
+.vb-loc-pill:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #0f172a;
+    transform: translateY(-1px);
+}
+.vb-loc-pill.active {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+}
+</style>

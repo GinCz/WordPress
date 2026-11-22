@@ -1,5 +1,13 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.32] - 2026-11-23
+### Fixed & Improved
+- **Clean Location Dropdown & Purged Broken 2-Letter Windows Flag Codes**:
+  - Completely purged broken Unicode regional indicator flag codes (`DE`, `EU`, `RU`, `UA`) from `<optgroup>` labels in `VB_CPT::render_location_options()`. Windows font `Segoe UI Emoji` does not render flag glyphs in native HTML dropdowns, causing ugly dangling Latin letters. Optgroup headers now render with 100% clean, elegant typography: `Германия`, `Европа`, `Россия`, `Украина`.
+- **Interactive Quick-Select Location Buttons («Кнопочки»)**:
+  - Added dedicated quick-select pills (`.vb-quick-locations`) directly beneath the location dropdown in `templates/submit-form.php`: `[📍 Берлин]`, `[Вся Германия]`, `[🌐 OnLine]`, `[Европа]`, `[Россия]`, `[Украина]`.
+  - Implemented real-time two-way synchronization: clicking any quick pill instantly selects the corresponding option in the native `<select>`, and choosing any item in the dropdown highlights the matching pill.
+
 ## [2026-11__1.31] - 2026-11-23
 ### Added & Improved
 - **Automated Company Submission Flow**:
