@@ -23,7 +23,19 @@ class VB_Shortcodes {
 
         add_shortcode( 'vb_dashboard', [ __CLASS__, 'render_dashboard' ] );
         add_shortcode( 'acadp_user_dashboard', [ __CLASS__, 'render_dashboard' ] );
+        add_shortcode( 'acadp_user_account', [ __CLASS__, 'render_dashboard' ] );
         add_shortcode( 'directorist_user_dashboard', [ __CLASS__, 'render_dashboard' ] );
+
+        // Manage & User Listings shortcodes (legacy ACADP compatibility)
+        add_shortcode( 'acadp_manage_listings', [ __CLASS__, 'render_manage_listings' ] );
+        add_shortcode( 'acadp_user_listings', [ __CLASS__, 'render_manage_listings' ] );
+
+        // Login & Register shortcodes (legacy ACADP & Directorist compatibility)
+        add_shortcode( 'acadp_login', [ __CLASS__, 'render_login' ] );
+        add_shortcode( 'directorist_user_login', [ __CLASS__, 'render_login' ] );
+        add_shortcode( 'directorist_signin_signup', [ __CLASS__, 'render_login' ] );
+        add_shortcode( 'acadp_register', [ __CLASS__, 'render_register' ] );
+        add_shortcode( 'directorist_custom_registration', [ __CLASS__, 'render_register' ] );
 
         add_shortcode( 'vb_submit', [ __CLASS__, 'render_submit_form' ] );
         add_shortcode( 'acadp_listing_form', [ __CLASS__, 'render_submit_form' ] );
@@ -1293,28 +1305,94 @@ class VB_Shortcodes {
     }
 
     /**
-     * Turnkey Unified User Personal Dashboard & Profile
+     * Legacy Shortcode: [acadp_manage_listings] / [acadp_user_listings]
      */
-    public static function render_dashboard() {
-        if ( ! is_user_logged_in() ) {
+    public static function render_manage_listings( $atts = [] ) {
+        return self::render_dashboard( array_merge( [ 'default_tab' => 'ads' ], (array) $atts ) );
+    }
+
+    /**
+     * Auth & Login Shortcode: [acadp_login] / [directorist_user_login] / [directorist_signin_signup]
+     */
+    public static function render_login( $atts = [] ) {
+        if ( is_user_logged_in() ) {
+            $user = wp_get_current_user();
             return '
-            <div class="vb-auth-box">
-                <div class="vb-auth-icon">🔒</div>
-                <h3>Вход в личный кабинет</h3>
-                <p>Для управления вашими объявлениями, компаниями и профилем, пожалуйста, войдите в систему.</p>
-                <div class="vb-auth-buttons">
-                    <a href="' . esc_url( wp_login_url( get_permalink() ) ) . '" class="vb-btn-auth-login">Войти</a>
-                    <a href="' . esc_url( wp_registration_url() ) . '" class="vb-btn-auth-reg">Регистрация</a>
+            <div class="vb-submit-wrapper">
+                <div class="vb-auth-required-box" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 36px 24px; text-align: center; max-width: 600px; margin: 30px auto; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+                    <div style="font-size: 48px; margin-bottom: 12px;">✅</div>
+                    <h3 style="font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Вы уже вошли в систему</h3>
+                    <p style="font-size: 15px; color: #64748b; margin-bottom: 20px;">Авторизован как <strong>' . esc_html( $user->display_name ?: $user->user_login ) . '</strong> (' . esc_html( $user->user_email ) . ')</p>
+                    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                        <a href="' . esc_url( home_url( '/my-ads/' ) ) . '" class="vb-btn-auth-login" style="background: #16a34a !important; color: #ffffff !important; padding: 10px 22px !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 600;">📢 Мои объявления</a>
+                        <a href="' . esc_url( home_url( '/dashboard/' ) ) . '" class="vb-btn-auth-login" style="background: #2563eb !important; color: #ffffff !important; padding: 10px 22px !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 600;">🏢 Мои компании</a>
+                        <a href="' . esc_url( wp_logout_url( home_url() ) ) . '" class="vb-btn-auth-reg" style="background: #f1f5f9 !important; color: #475569 !important; padding: 10px 22px !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 600;">Выйти</a>
+                    </div>
                 </div>
             </div>';
+        }
+
+        return self::render_auth_box( get_permalink() );
+    }
+
+    /**
+     * Register Shortcode: [acadp_register] / [directorist_custom_registration]
+     */
+    public static function render_register( $atts = [] ) {
+        if ( is_user_logged_in() ) {
+            return self::render_login( $atts );
+        }
+        return self::render_auth_box( get_permalink(), true );
+    }
+
+    /**
+     * Unified Turnkey Auth Box with Social Login
+     */
+    public static function render_auth_box( $redirect_to = '', $is_register = false ) {
+        $redirect_to = $redirect_to ?: home_url( '/my-ads/' );
+        $title       = $is_register ? 'Регистрация и вход в личный кабинет' : 'Вход в личный кабинет';
+        $desc        = 'Для управления вашими объявлениями, компаниями и профилем, пожалуйста, войдите в систему или зарегистрируйтесь.';
+
+        $social_block = '';
+        if ( shortcode_exists( 'miniorange_social_login' ) ) {
+            $social_block = '
+            <div class="vb-social-login-block" style="background: #f8fafc; border-radius: 10px; padding: 20px 15px; margin: 20px 0;">
+                <p style="font-weight: 600; color: #334155; margin-bottom: 12px; font-size: 15px;">Быстрый вход через соцсети в 1 клик:</p>
+                ' . do_shortcode( '[miniorange_social_login]' ) . '
+            </div>';
+        }
+
+        return '
+        <div class="vb-submit-wrapper">
+            <div class="vb-auth-required-box" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 36px 24px; text-align: center; max-width: 600px; margin: 30px auto; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+                <div style="font-size: 48px; margin-bottom: 12px;">🔒</div>
+                <h3 style="font-size: 22px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">' . esc_html( $title ) . '</h3>
+                <p style="font-size: 15px; color: #64748b; line-height: 1.6; margin-bottom: 20px;">' . esc_html( $desc ) . '</p>
+                ' . $social_block . '
+                <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 18px; font-size: 14px; color: #64748b;">
+                    <a href="' . esc_url( wp_login_url( $redirect_to ) ) . '" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Войти по логину и паролю</a>
+                    &nbsp;•&nbsp;
+                    <a href="' . esc_url( wp_registration_url() ) . '" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Регистрация нового аккаунта</a>
+                </div>
+            </div>
+        </div>';
+    }
+
+    /**
+     * Turnkey Unified User Personal Dashboard & Profile
+     */
+    public static function render_dashboard( $atts = [] ) {
+        if ( ! is_user_logged_in() ) {
+            return self::render_auth_box( get_permalink() );
         }
 
         $user_id = get_current_user_id();
         $user    = wp_get_current_user();
 
-        $active_tab = sanitize_key( $_GET['tab'] ?? 'profile' );
+        $default_tab = ! empty( $atts['default_tab'] ) ? sanitize_key( $atts['default_tab'] ) : ( ! empty( $atts['tab'] ) ? sanitize_key( $atts['tab'] ) : 'ads' );
+        $active_tab  = sanitize_key( $_GET['tab'] ?? $default_tab );
         if ( ! in_array( $active_tab, [ 'profile', 'ads', 'companies' ] ) ) {
-            $active_tab = 'profile';
+            $active_tab = $default_tab;
         }
 
         $phone   = get_user_meta( $user_id, 'phone', true ) ?: get_user_meta( $user_id, 'acadp_phone', true ) ?: get_user_meta( $user_id, 'atbdp_phone', true );

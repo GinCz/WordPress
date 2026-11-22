@@ -1,5 +1,14 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.25] - 2026-11-22
+### Fixed & Improved
+- **Turnkey Legacy Shortcode Resolution (`[acadp_manage_listings]`, etc.)**:
+  - Registered full compatibility shortcode handlers for `[acadp_manage_listings]`, `[acadp_user_listings]`, and `[acadp_user_account]`, completely eliminating raw unprocessed shortcode text previously shown on `/my-ads/`.
+  - Added legacy auth shortcode aliases: `[acadp_login]`, `[directorist_user_login]`, `[directorist_signin_signup]`, `[acadp_register]`, `[directorist_custom_registration]`.
+- **Unified Modern Auth Box with Social Login**:
+  - Implemented `render_auth_box()` displaying an elegant card with lock badge, descriptive text, 1-click social login (`miniorange_social_login`) for Google & VK, and direct login/registration action buttons.
+  - When accessing `/my-ads/` while authenticated, the dashboard automatically defaults to the «📢 Мои объявления» tab (`default_tab => ads`).
+
 ## [2026-11__1.24] - 2026-11-21
 ### Security & Anti-Spam Hardening
 - **Mandatory User Authentication**: Anonymous and guest ad submissions are completely disabled. The submission form now displays a clean, inviting authorization block with 1-click social login via Google, Facebook, VK, OK (`miniorange_social_login`) and account registration.
