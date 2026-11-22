@@ -1,5 +1,18 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.29] - 2026-11-22
+### Added & Improved
+- **Universal Multi-Country Location Architecture (`render_location_options()`)**:
+  - Replaced hardcoded Czech Republic (`chehiya`) and generic `<optgroup label="Другие регионы">` logic with a dynamic, country-aware location generator supporting all 11 international boards.
+  - Standardized location ordering:
+    1. Top-level `🌐 Internet / OnLine` for remote and digital listings.
+    2. Primary country optgroup with flag (e.g. `🇩🇪 Германия` on `doska-de.ru`, `🇨🇿 Чехия` on `doska.cz`), featuring the capital city (e.g. `📍 Берлин (Berlin)` or `📍 Прага`) at the very top and pre-selected by default, followed by `Вся Германия` and alphabetical listing of all federal states/regions (`📍 Бавария`, `📍 Гамбург`, etc.).
+    3. Dedicated optgroups for secondary countries with national flags (`🇪🇺 Европа`, `🇷🇺 Россия`, `🇺🇦 Украина`) displaying whole-country options and their child cities (e.g. `📍 Москва`, `📍 Киев`), completely eliminating confusing "Другие регионы" groupings.
+  - Applied universal location dropdown across listing submission form (`templates/submit-form.php`), category archive filters (`templates/taxonomy-category.php`), and company directory filters (`includes/class-shortcodes.php`).
+- **Database Term Sanitation on `doska-de.ru`**:
+  - Reassigned listings from bogus raw-ID terms `341` and `364` to canonical terms (`Internet / OnLine` and `Берлин (Berlin)`).
+  - Purged numeric artifact terms (`341`, `364`) and empty duplicate terms from `vb_location`.
+
 ## [2026-11__1.28] - 2026-11-22
 ### Fixed & Improved
 - **Social OAuth Re-Registration & Orphan User Sync**:

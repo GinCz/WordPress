@@ -142,53 +142,10 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
                 <div class="vb-form-group">
                     <label class="vb-label">Город / Регион <span class="vb-req">*</span></label>
                     <select name="location_id" class="vb-form-select">
-                        <option value="">-- Выберите город / край --</option>
+                        <option value="">-- Выберите город / регион --</option>
                         <?php
-                        $czech_parent = get_term_by( 'slug', 'chehiya', 'vb_location' );
-                        if ( $czech_parent ) {
-                            echo '<optgroup label="🇨🇿 Чехия">';
-                            echo '<option value="' . esc_attr( $czech_parent->slug ) . '">Вся Чехия</option>';
-                            $cz_regions = get_terms( [
-                                'taxonomy'   => 'vb_location',
-                                'hide_empty' => false,
-                                'parent'     => $czech_parent->term_id,
-                                'orderby'    => 'name',
-                                'order'      => 'ASC',
-                            ] );
-                            if ( ! empty( $cz_regions ) && ! is_wp_error( $cz_regions ) ) {
-                                foreach ( $cz_regions as $r ) {
-                                    $selected = ( $r->slug === 'praga' ) ? 'selected' : '';
-                                    echo '<option value="' . esc_attr( $r->slug ) . '" ' . $selected . '>📍 ' . esc_html( $r->name ) . '</option>';
-                                }
-                            }
-                            echo '</optgroup>';
-                        }
-                        $other_locs = get_terms( [
-                            'taxonomy'   => 'vb_location',
-                            'hide_empty' => false,
-                            'parent'     => 0,
-                            'exclude'    => $czech_parent ? [ $czech_parent->term_id ] : [],
-                            'orderby'    => 'name',
-                            'order'      => 'ASC',
-                        ] );
-                        if ( ! empty( $other_locs ) && ! is_wp_error( $other_locs ) ) {
-                            echo '<optgroup label="Другие регионы">';
-                            foreach ( $other_locs as $ol ) {
-                                echo '<option value="' . esc_attr( $ol->slug ) . '">' . esc_html( $ol->name ) . '</option>';
-                                $sub_locs = get_terms( [
-                                    'taxonomy'   => 'vb_location',
-                                    'hide_empty' => false,
-                                    'parent'     => $ol->term_id,
-                                    'orderby'    => 'name',
-                                    'order'      => 'ASC',
-                                ] );
-                                if ( ! empty( $sub_locs ) && ! is_wp_error( $sub_locs ) ) {
-                                    foreach ( $sub_locs as $sl ) {
-                                        echo '<option value="' . esc_attr( $sl->slug ) . '">&nbsp;&nbsp;&nbsp;— ' . esc_html( $sl->name ) . '</option>';
-                                    }
-                                }
-                            }
-                            echo '</optgroup>';
+                        if ( class_exists( 'VB_CPT' ) && method_exists( 'VB_CPT', 'render_location_options' ) ) {
+                            VB_CPT::render_location_options( $default_city );
                         }
                         ?>
                     </select>

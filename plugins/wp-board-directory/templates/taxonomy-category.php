@@ -75,25 +75,6 @@ if ( $term && $term->term_id ) {
                 $curr_city = sanitize_text_field( $_GET['city'] ?? $_GET['mesto'] ?? '' );
                 $curr_sq   = sanitize_text_field( $_GET['s_q'] ?? '' );
                 $curr_sort = sanitize_key( $_GET['sort'] ?? '' );
-                $czech_term = get_term_by( 'slug', 'chehiya', 'vb_location' );
-                $cz_locations = [];
-                if ( $czech_term ) {
-                    $cz_locations = get_terms( [
-                        'taxonomy'   => 'vb_location',
-                        'hide_empty' => false,
-                        'parent'     => $czech_term->term_id,
-                        'orderby'    => 'name',
-                        'order'      => 'ASC',
-                    ] );
-                }
-                $other_locations = get_terms( [
-                    'taxonomy'   => 'vb_location',
-                    'hide_empty' => false,
-                    'parent'     => 0,
-                    'exclude'    => $czech_term ? [ $czech_term->term_id ] : [],
-                    'orderby'    => 'name',
-                    'order'      => 'ASC',
-                ] );
                 ?>
                 <div class="vb-cat-filter-wrap">
                     <form method="GET" action="" class="vb-cat-filter-form">
@@ -101,27 +82,11 @@ if ( $term && $term->term_id ) {
                             <span class="vb-filter-icon">📍</span>
                             <select name="city" class="vb-filter-select" onchange="this.form.submit();">
                                 <option value="">— Все города и регионы —</option>
-                                <?php if ( $czech_term ) : ?>
-                                    <optgroup label="🇨🇿 Чехия">
-                                        <option value="<?php echo esc_attr( $czech_term->slug ); ?>" <?php selected( $curr_city, $czech_term->slug ); ?>>
-                                            Вся Чехия (<?php echo (int) $czech_term->count; ?>)
-                                        </option>
-                                        <?php foreach ( $cz_locations as $loc ) : ?>
-                                            <option value="<?php echo esc_attr( $loc->slug ); ?>" <?php selected( $curr_city, $loc->slug ); ?>>
-                                                📍 <?php echo esc_html( $loc->name ); ?> (<?php echo (int) $loc->count; ?>)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </optgroup>
-                                <?php endif; ?>
-                                <?php if ( ! empty( $other_locations ) ) : ?>
-                                    <optgroup label="Другие регионы">
-                                        <?php foreach ( $other_locations as $ol ) : ?>
-                                            <option value="<?php echo esc_attr( $ol->slug ); ?>" <?php selected( $curr_city, $ol->slug ); ?>>
-                                                <?php echo esc_html( $ol->name ); ?> (<?php echo (int) $ol->count; ?>)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </optgroup>
-                                <?php endif; ?>
+                                <?php
+                                if ( class_exists( 'VB_CPT' ) && method_exists( 'VB_CPT', 'render_location_options' ) ) {
+                                    VB_CPT::render_location_options( $curr_city, true );
+                                }
+                                ?>
                             </select>
                         </div>
 

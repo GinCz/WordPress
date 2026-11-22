@@ -777,14 +777,16 @@ class VB_Shortcodes {
                     <div class="vb-filter-cell">
                         <span class="vb-f-icon">📍</span>
                         <select name="vb_loc" class="vb-f-select">
-                            <option value="">Все регионы Чехии</option>
-                            <?php if ( ! empty( $locations ) && ! is_wp_error( $locations ) ) : ?>
-                                <?php foreach ( $locations as $loc ) : ?>
-                                    <option value="<?php echo esc_attr( $loc->slug ); ?>" <?php selected( $loc_slug, $loc->slug ); ?>>
-                                        <?php echo esc_html( $loc->name ); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <option value="">Все регионы</option>
+                            <?php
+                            if ( class_exists( 'VB_CPT' ) && method_exists( 'VB_CPT', 'render_location_options' ) ) {
+                                VB_CPT::render_location_options( $loc_slug, false );
+                            } elseif ( ! empty( $locations ) && ! is_wp_error( $locations ) ) {
+                                foreach ( $locations as $loc ) {
+                                    echo '<option value="' . esc_attr( $loc->slug ) . '" ' . selected( $loc_slug, $loc->slug, false ) . '>' . esc_html( $loc->name ) . '</option>';
+                                }
+                            }
+                            ?>
                         </select>
                     </div>
 

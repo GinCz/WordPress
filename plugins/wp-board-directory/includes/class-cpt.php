@@ -1253,4 +1253,247 @@ class VB_CPT {
         </script>
         <?php
     }
+
+    /**
+     * Get flag emoji for a country slug or name.
+     */
+    public static function get_country_flag( $slug, $name = '' ) {
+        $s = mb_strtolower( $slug . ' ' . $name, 'UTF-8' );
+        if ( strpos( $s, 'ukrain' ) !== false || strpos( $s, 'украин' ) !== false ) return '🇺🇦';
+        if ( strpos( $s, 'russi' ) !== false || strpos( $s, 'rossi' ) !== false || strpos( $s, 'росси' ) !== false ) return '🇷🇺';
+        if ( strpos( $s, 'europ' ) !== false || strpos( $s, 'evrop' ) !== false || strpos( $s, 'европ' ) !== false ) return '🇪🇺';
+        if ( strpos( $s, 'germany' ) !== false || strpos( $s, 'герман' ) !== false || strpos( $s, 'deutsch' ) !== false ) return '🇩🇪';
+        if ( strpos( $s, 'czech' ) !== false || strpos( $s, 'cheh' ) !== false || strpos( $s, 'чех' ) !== false ) return '🇨🇿';
+        if ( strpos( $s, 'austria' ) !== false || strpos( $s, 'avstri' ) !== false || strpos( $s, 'австри' ) !== false ) return '🇦🇹';
+        if ( strpos( $s, 'poland' ) !== false || strpos( $s, 'polsh' ) !== false || strpos( $s, 'польш' ) !== false ) return '🇵🇱';
+        if ( strpos( $s, 'spain' ) !== false || strpos( $s, 'ispan' ) !== false || strpos( $s, 'испан' ) !== false ) return '🇪🇸';
+        if ( strpos( $s, 'ital' ) !== false || strpos( $s, 'итал' ) !== false ) return '🇮🇹';
+        if ( strpos( $s, 'franc' ) !== false || strpos( $s, 'франц' ) !== false ) return '🇫🇷';
+        if ( strpos( $s, 'switz' ) !== false || strpos( $s, 'shvej' ) !== false || strpos( $s, 'швейц' ) !== false ) return '🇨🇭';
+        if ( strpos( $s, 'brit' ) !== false || strpos( $s, 'veliko' ) !== false || preg_match( '/\b(uk)\b/', $s ) ) return '🇬🇧';
+        if ( strpos( $s, 'usa' ) !== false || strpos( $s, 'ssha' ) !== false || strpos( $s, 'сша' ) !== false || preg_match( '/\b(us)\b/', $s ) ) return '🇺🇸';
+        if ( strpos( $s, 'uae' ) !== false || strpos( $s, 'oae' ) !== false || strpos( $s, 'оаэ' ) !== false ) return '🇦🇪';
+        return '🌍';
+    }
+
+    /**
+     * Universal location dropdown options renderer for submit form and category filters.
+     * Orders: 1. Internet / OnLine -> 2. Primary country (Capital first, then whole country, then states) -> 3. Secondary countries.
+     */
+    public static function render_location_options( $selected_slug = '', $include_counts = false ) {
+        $tax = taxonomy_exists( 'vb_location' ) ? 'vb_location' : 'acadp_locations';
+        $host = isset( $_SERVER['HTTP_HOST'] ) ? strtolower( $_SERVER['HTTP_HOST'] ) : '';
+
+        // Validate selected_slug against taxonomy terms: if non-matching string (e.g. street address), reset so capital can default-select
+        if ( ! empty( $selected_slug ) ) {
+            $has_term = get_term_by( 'slug', $selected_slug, $tax ) ?: get_term_by( 'name', $selected_slug, $tax );
+            if ( ! $has_term ) {
+                $selected_slug = '';
+            }
+        }
+
+        // Domain to country mapping
+        $domain_map = [
+            'doska-de' => [ 'germany', 'germaniya' ],
+            'doska.cz' => [ 'czechia', 'chehiya' ],
+            'doska-at' => [ 'austria', 'avstriya' ],
+            'doska-pl' => [ 'poland', 'polsha' ],
+            'doska-es' => [ 'spain', 'ispaniya' ],
+            'doska-it' => [ 'italy', 'italiya' ],
+            'doska-fr' => [ 'france', 'franciya' ],
+            'doska-ch' => [ 'switzerland', 'shvejcariya' ],
+            'doska-uk' => [ 'uk', 'velikobritaniya' ],
+            'doska-us' => [ 'usa', 'ssha' ],
+            'doska-ae' => [ 'uae', 'oae' ],
+        ];
+
+        $primary_term = null;
+        foreach ( $domain_map as $key => $slugs ) {
+            if ( strpos( $host, $key ) !== false ) {
+                foreach ( $slugs as $s ) {
+                    $t = get_term_by( 'slug', $s, $tax );
+                    if ( $t && ! is_wp_error( $t ) ) {
+                        $primary_term = $t;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // Fallback: detect parent=0 term with most children (excluding online, europe, russia, ukraine)
+        if ( ! $primary_term ) {
+            $parents = get_terms([
+                'taxonomy'   => $tax,
+                'hide_empty' => false,
+                'parent'     => 0,
+            ]);
+            $best_count = -1;
+            if ( ! empty( $parents ) && ! is_wp_error( $parents ) ) {
+                foreach ( $parents as $pt ) {
+                    if ( strpos( $pt->slug, 'internet' ) !== false || strpos( $pt->slug, 'online' ) !== false ) continue;
+                    if ( in_array( $pt->slug, [ 'europe', 'evropa', 'russia', 'rossiya', 'ukraine', 'ukraina' ], true ) ) continue;
+                    $children = get_terms([
+                        'taxonomy'   => $tax,
+                        'hide_empty' => false,
+                        'parent'     => $pt->term_id,
+                    ]);
+                    $c_count = is_array( $children ) ? count( $children ) : 0;
+                    if ( $c_count > $best_count ) {
+                        $best_count = $c_count;
+                        $primary_term = $pt;
+                    }
+                }
+            }
+        }
+
+        // 1. Internet / OnLine option
+        $online_terms = get_terms([
+            'taxonomy'   => $tax,
+            'hide_empty' => false,
+            'parent'     => 0,
+            'slug'       => [ 'internet-online', 'internet', 'online' ],
+        ]);
+        $online_term = null;
+        if ( ! empty( $online_terms ) && ! is_wp_error( $online_terms ) ) {
+            $online_term = $online_terms[0];
+        } else {
+            $all_p0 = get_terms([ 'taxonomy' => $tax, 'hide_empty' => false, 'parent' => 0 ]);
+            if ( ! empty( $all_p0 ) && ! is_wp_error( $all_p0 ) ) {
+                foreach ( $all_p0 as $p ) {
+                    if ( mb_stripos( $p->name, 'online', 0, 'UTF-8' ) !== false || mb_stripos( $p->name, 'интернет', 0, 'UTF-8' ) !== false ) {
+                        $online_term = $p;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ( $online_term ) {
+            $sel = ( $selected_slug === $online_term->slug || $selected_slug === $online_term->name ) ? ' selected' : '';
+            $lbl = '🌐 ' . esc_html( $online_term->name );
+            if ( $include_counts ) {
+                $lbl .= ' (' . (int) $online_term->count . ')';
+            }
+            echo '<option value="' . esc_attr( $online_term->slug ) . '"' . $sel . '>' . $lbl . '</option>';
+        }
+
+        // 2. Primary country optgroup
+        $capital_keywords = [ 'berlin', 'prag', 'wien', 'warsz', 'madrid', 'rom', 'paris', 'bern', 'london', 'washington', 'dubai' ];
+
+        if ( $primary_term ) {
+            $flag = self::get_country_flag( $primary_term->slug, $primary_term->name );
+            echo '<optgroup label="' . esc_attr( $flag . ' ' . $primary_term->name ) . '">';
+
+            $primary_children = get_terms([
+                'taxonomy'   => $tax,
+                'hide_empty' => false,
+                'parent'     => $primary_term->term_id,
+                'orderby'    => 'name',
+                'order'      => 'ASC',
+            ]);
+
+            $capitals = [];
+            $other_children = [];
+            if ( ! empty( $primary_children ) && ! is_wp_error( $primary_children ) ) {
+                foreach ( $primary_children as $child ) {
+                    $is_cap = false;
+                    $c_slug = strtolower( $child->slug );
+                    foreach ( $capital_keywords as $kw ) {
+                        if ( strpos( $c_slug, $kw ) !== false ) {
+                            $is_cap = true;
+                            break;
+                        }
+                    }
+                    if ( $is_cap ) {
+                        $capitals[] = $child;
+                    } else {
+                        $other_children[] = $child;
+                    }
+                }
+            }
+
+            // Capital cities first (e.g. Berlin or Prague)
+            $default_cap_slug = ( ! empty( $capitals ) && empty( $selected_slug ) && ! $include_counts ) ? $capitals[0]->slug : '';
+
+            foreach ( $capitals as $cap ) {
+                $sel = ( $selected_slug === $cap->slug || $selected_slug === $cap->name || $default_cap_slug === $cap->slug ) ? ' selected' : '';
+                $lbl = '📍 ' . esc_html( $cap->name );
+                if ( $include_counts ) {
+                    $lbl .= ' (' . (int) $cap->count . ')';
+                }
+                echo '<option value="' . esc_attr( $cap->slug ) . '"' . $sel . '>' . $lbl . '</option>';
+            }
+
+            // Whole Country option
+            $sel_pc = ( $selected_slug === $primary_term->slug || $selected_slug === $primary_term->name ) ? ' selected' : '';
+            $lbl_pc = 'Вся ' . esc_html( $primary_term->name );
+            if ( $include_counts ) {
+                $lbl_pc .= ' (' . (int) $primary_term->count . ')';
+            }
+            echo '<option value="' . esc_attr( $primary_term->slug ) . '"' . $sel_pc . '>' . $lbl_pc . '</option>';
+
+            // Other regions / states
+            foreach ( $other_children as $child ) {
+                $sel = ( $selected_slug === $child->slug || $selected_slug === $child->name ) ? ' selected' : '';
+                $lbl = '📍 ' . esc_html( $child->name );
+                if ( $include_counts ) {
+                    $lbl .= ' (' . (int) $child->count . ')';
+                }
+                echo '<option value="' . esc_attr( $child->slug ) . '"' . $sel . '>' . $lbl . '</option>';
+            }
+
+            echo '</optgroup>';
+        }
+
+        // 3. Secondary countries
+        $exclude_ids = array_filter([
+            $primary_term ? $primary_term->term_id : 0,
+            $online_term ? $online_term->term_id : 0,
+        ]);
+
+        $secondary_countries = get_terms([
+            'taxonomy'   => $tax,
+            'hide_empty' => false,
+            'parent'     => 0,
+            'exclude'    => $exclude_ids,
+            'orderby'    => 'name',
+            'order'      => 'ASC',
+        ]);
+
+        if ( ! empty( $secondary_countries ) && ! is_wp_error( $secondary_countries ) ) {
+            foreach ( $secondary_countries as $sc ) {
+                $flag = self::get_country_flag( $sc->slug, $sc->name );
+                echo '<optgroup label="' . esc_attr( $flag . ' ' . $sc->name ) . '">';
+
+                // Whole country option
+                $sel_sc = ( $selected_slug === $sc->slug || $selected_slug === $sc->name ) ? ' selected' : '';
+                $lbl_sc = 'Вся ' . esc_html( $sc->name );
+                if ( $include_counts ) {
+                    $lbl_sc .= ' (' . (int) $sc->count . ')';
+                }
+                echo '<option value="' . esc_attr( $sc->slug ) . '"' . $sel_sc . '>' . $lbl_sc . '</option>';
+
+                // Sub-locations
+                $sub_locs = get_terms([
+                    'taxonomy'   => $tax,
+                    'hide_empty' => false,
+                    'parent'     => $sc->term_id,
+                    'orderby'    => 'name',
+                    'order'      => 'ASC',
+                ]);
+                if ( ! empty( $sub_locs ) && ! is_wp_error( $sub_locs ) ) {
+                    foreach ( $sub_locs as $sl ) {
+                        $sel = ( $selected_slug === $sl->slug || $selected_slug === $sl->name ) ? ' selected' : '';
+                        $lbl = '📍 ' . esc_html( $sl->name );
+                        if ( $include_counts ) {
+                            $lbl .= ' (' . (int) $sl->count . ')';
+                        }
+                        echo '<option value="' . esc_attr( $sl->slug ) . '"' . $sel . '>' . $lbl . '</option>';
+                    }
+                }
+
+                echo '</optgroup>';
+            }
+        }
+    }
 }
