@@ -1,5 +1,12 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.27] - 2026-11-22
+### Fixed & Improved
+- **Cloudflare Turnstile Verification & Rendering**:
+  - Fixed Turnstile widget rendering by passing button selector (`#vb-submit-btn`), action name (`new-listing`), and unique ID (`-vb-listing`) to `cfturnstile_field_show()`, resolving issue where Turnstile explicit rendering was not queued or displayed.
+  - Implemented automatic whitelist bypass for logged-in administrators and users whitelisted in `simple-cloudflare-turnstile` (`cfturnstile_whitelisted() || current_user_can('manage_options')`), preventing legitimate users from getting blocked.
+  - Added duplicate error alert box directly above the submit button in the listing submission form, ensuring errors are immediately visible without scrolling.
+
 ## [2026-11__1.26] - 2026-11-22
 ### Added & Improved
 - **User Dashboard Logout Action («Выход»)**:

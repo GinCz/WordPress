@@ -263,7 +263,13 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
         <div class="vb-form-submit-section">
             <?php if ( function_exists( 'cfturnstile_field_show' ) ) : ?>
                 <div class="vb-turnstile-wrap">
-                    <?php cfturnstile_field_show(); ?>
+                    <?php cfturnstile_field_show( '#vb-submit-btn', '', 'new-listing', '-vb-listing' ); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ( ! empty( $_GET['error'] ) ) : ?>
+                <div class="vb-alert-danger" style="margin-bottom: 18px; text-align: center; font-weight: 600;">
+                    ⚠️ Ошибка: <?php echo esc_html( sanitize_text_field( $_GET['error'] ) ); ?>
                 </div>
             <?php endif; ?>
 

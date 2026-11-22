@@ -294,13 +294,16 @@ class VB_Shortcodes {
             exit;
         }
 
-        // 2. Strict Cloudflare Turnstile verification
+        // 2. Cloudflare Turnstile verification
         if ( function_exists( 'cfturnstile_check' ) ) {
-            $ts_res = cfturnstile_check();
-            if ( empty( $ts_res['success'] ) ) {
-                $referer = wp_get_referer() ?: home_url( '/new/' );
-                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Пожалуйста, подтвердите проверку Turnstile (проверка безопасности не пройдена).' ) ], $referer ) );
-                exit;
+            $is_whitelisted = ( function_exists( 'cfturnstile_whitelisted' ) && cfturnstile_whitelisted() ) || current_user_can( 'manage_options' );
+            if ( ! $is_whitelisted ) {
+                $ts_res = cfturnstile_check();
+                if ( empty( $ts_res['success'] ) ) {
+                    $referer = wp_get_referer() ?: home_url( '/new/' );
+                    wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Пожалуйста, подтвердите проверку Turnstile (проверка безопасности не пройдена).' ) ], $referer ) );
+                    exit;
+                }
             }
         }
 
