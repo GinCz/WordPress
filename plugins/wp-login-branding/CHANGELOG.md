@@ -1,5 +1,11 @@
 # Changelog — WP Login & Admin Branding
 
+## [2026-11__1.04] - 2026-11-23
+### Default Dimensions & Deep Ocean Preset
+- **Deep Ocean as Default**: Switched default authorization page canvas to the atmospheric «Deep Ocean» (Глубокий океан) gradient preset featuring midnight sapphire and neon cyan tones.
+- **Enlarged Logo Default Boundaries**: Increased default max width to `400px` (was 260px) and max height to `150px` (was 65px), providing generous HD room for horizontal emblems and prominent brand marks.
+- **Sanitization & Settings Form Sync**: Synchronized input fallback clamps and helper notes across admin settings.
+
 ## [2026-11__1.03] - 2026-11-23
 ### Turnkey Admin Settings Panel, Default Site Logo Auto-Detection & Visual FX Customizer
 - **Default Site Logo Engine**:

@@ -3,7 +3,7 @@
  * Plugin Name: WP Login & Admin Branding (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-login-branding
  * Description: Ultra-modern turnkey customizer for WordPress authentication pages. Replaces standard WP logo with dynamic site brand or custom upload, adds gradient presets, custom background images, glassmorphism cards, entrance animations, ambient effects, and admin branding.
- * Version:     2026-11__1.03
+ * Version:     2026-11__1.04
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_LOGIN_BRANDING_VERSION', '2026-11__1.03' );
+define( 'VB_LOGIN_BRANDING_VERSION', '2026-11__1.04' );
 
 final class VB_Login_Branding {
 
@@ -60,8 +60,8 @@ final class VB_Login_Branding {
             // 1. Logo
             'logo_mode'          => 'default', // 'default' (site logo from theme/customizer), 'custom' (uploaded image), 'text' (site name), 'none' (hidden)
             'custom_logo_url'    => '',
-            'logo_width'         => 260,
-            'logo_height'        => 65,
+            'logo_width'         => 400,
+            'logo_height'        => 150,
             'logo_link_url'      => '',
             'show_site_title'    => '1',
             'custom_site_title'  => '',
@@ -70,7 +70,7 @@ final class VB_Login_Branding {
 
             // 2. Background
             'bg_type'            => 'preset',  // 'preset', 'custom_gradient', 'image'
-            'bg_preset'          => 'cosmic_purple', // cosmic_purple | deep_ocean | dark_graphite | cyber_emerald | sunset_aurora | modern_light
+            'bg_preset'          => 'deep_ocean', // cosmic_purple | deep_ocean | dark_graphite | cyber_emerald | sunset_aurora | modern_light
             'custom_gradient'    => 'radial-gradient(circle at 50% 50%, #1e112a 0%, #0d0614 100%)',
             'bg_image_url'       => '',
             'bg_image_size'      => 'cover',
@@ -887,11 +887,11 @@ final class VB_Login_Branding {
         }
         if ( isset( $input['logo_width'] ) ) {
             $w = absint( $input['logo_width'] );
-            $output['logo_width'] = ( $w >= 40 && $w <= 600 ) ? $w : 260;
+            $output['logo_width'] = ( $w >= 40 && $w <= 600 ) ? $w : 400;
         }
         if ( isset( $input['logo_height'] ) ) {
             $h = absint( $input['logo_height'] );
-            $output['logo_height'] = ( $h >= 20 && $h <= 300 ) ? $h : 65;
+            $output['logo_height'] = ( $h >= 20 && $h <= 300 ) ? $h : 150;
         }
         if ( isset( $input['logo_link_url'] ) ) {
             $output['logo_link_url'] = esc_url_raw( trim( $input['logo_link_url'] ) );
@@ -1079,12 +1079,12 @@ final class VB_Login_Branding {
                             <div>
                                 <label class="vb-label" for="vb_logo_width">Максимальная ширина логотипа (px):</label>
                                 <input type="number" id="vb_logo_width" name="vb_login_branding_options[logo_width]" value="<?php echo esc_attr( $options['logo_width'] ); ?>" min="40" max="600" class="small-text">
-                                <span class="vb-help">По умолчанию: 260px.</span>
+                                <span class="vb-help">По умолчанию: 400px.</span>
                             </div>
                             <div>
                                 <label class="vb-label" for="vb_logo_height">Максимальная высота логотипа (px):</label>
                                 <input type="number" id="vb_logo_height" name="vb_login_branding_options[logo_height]" value="<?php echo esc_attr( $options['logo_height'] ); ?>" min="20" max="300" class="small-text">
-                                <span class="vb-help">По умолчанию: 65px.</span>
+                                <span class="vb-help">По умолчанию: 150px.</span>
                             </div>
                         </div>
 
