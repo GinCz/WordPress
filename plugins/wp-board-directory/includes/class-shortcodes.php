@@ -1426,7 +1426,7 @@ class VB_Shortcodes {
 
         // Fetch user classified ads
         $user_ads = get_posts( [
-            'post_type'      => [ 'acadp_listings', 'vb_listing' ],
+            'post_type'      => 'vb_listing',
             'post_status'    => [ 'publish', 'draft', 'pending' ],
             'author'         => $user_id,
             'posts_per_page' => -1,
@@ -1446,7 +1446,7 @@ class VB_Shortcodes {
 
         // Fetch user companies
         $user_companies = get_posts( [
-            'post_type'      => [ 'at_biz_dir', 'vb_listing' ],
+            'post_type'      => 'vb_listing',
             'post_status'    => [ 'publish', 'draft', 'pending', 'expired' ],
             'author'         => $user_id,
             'posts_per_page' => -1,

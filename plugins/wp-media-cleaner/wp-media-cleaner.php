@@ -3,7 +3,7 @@
  * Plugin Name: WP Media Cleaner (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-media-cleaner
  * Description: Universal high-performance media cleaner for WordPress & WooCommerce. Safely scans, detects, and purges orphan images, unused WooCommerce product galleries, variation photos, and auto-deletes media on item removal.
- * Version:     2026-11__1.00
+ * Version:     2026-11__1.02
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -253,6 +253,50 @@ final class WP_Media_Cleaner_App {
     }
 
     /**
+     * Protected media: non-images (CSV/PDF/docs), logos, site icon (and the original
+     * of a cropped icon), manual list (option vb_cleaner_protected_ids), anything
+     * referenced by file name in options (theme mods, widgets) or content.
+     */
+    public static function is_protected_media( $id ) {
+        global $wpdb;
+        $id = (int) $id;
+        $mime = (string) get_post_mime_type( $id );
+        if ( 0 !== strpos( $mime, 'image/' ) ) {
+            return true;
+        }
+        if ( in_array( $id, array_map( 'intval', (array) get_option( 'vb_cleaner_protected_ids', [] ) ), true ) ) {
+            return true;
+        }
+        $logo_ids = array_filter( [ (int) get_option( 'site_icon' ), (int) get_theme_mod( 'custom_logo' ), (int) get_theme_mod( 'site_logo' ), (int) get_theme_mod( 'site_logo_dark' ), (int) get_theme_mod( 'site_logo_sticky' ) ] );
+        if ( in_array( $id, $logo_ids, true ) ) {
+            return true;
+        }
+
+        $rel = get_post_meta( $id, '_wp_attached_file', true );
+        if ( ! $rel ) {
+            return false;
+        }
+        $info = pathinfo( $rel );
+        if ( preg_match( '/(logo|favicon|site[-_]?icon|brand)/i', $info['filename'] ) ) {
+            return true;
+        }
+        $rel = get_post_meta( $id, '_wp_attached_file', true );
+        if ( ! $rel ) {
+            return false;
+        }
+        $info = pathinfo( $rel );
+        $base = preg_replace( '/-scaled$/', '', $info['filename'] );
+        if ( $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='_wp_attached_file' AND meta_value LIKE %s LIMIT 1", '%' . $wpdb->esc_like( 'cropped-' . $base . '.' ) . '%' ) ) ) {
+            return true;
+        }
+        $like = '%' . $wpdb->esc_like( $info['dirname'] . '/' . $base ) . '%';
+        if ( $wpdb->get_var( $wpdb->prepare( "SELECT option_id FROM {$wpdb->options} WHERE option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_value LIKE %s LIMIT 1", '%transient%', 'vb_cleaner_protected_ids', $like ) ) ) {
+            return true;
+        }
+        return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type NOT IN ('attachment','revision') AND post_status != 'trash' AND post_content LIKE %s LIMIT 1", $like ) );
+    }
+
+    /**
      * Comprehensive scan to identify all orphan media (WordPress + WooCommerce + Themes)
      */
     public static function scan_orphans() {
@@ -380,6 +424,9 @@ final class WP_Media_Cleaner_App {
         foreach ( $all_attachments as $att ) {
             $id = (int) $att['ID'];
             if ( ! isset( $used_lookup[ $id ] ) ) {
+                if ( self::is_protected_media( $id ) ) {
+                    continue;
+                }
                 $file = get_attached_file( $id );
                 $file_size = 0;
                 if ( $file && file_exists( $file ) ) {
@@ -438,7 +485,7 @@ final class WP_Media_Cleaner_App {
 
         foreach ( $ids as $id ) {
             $id = absint( $id );
-            if ( ! $id ) {
+            if ( ! $id || self::is_protected_media( $id ) ) {
                 continue;
             }
 
