@@ -3,7 +3,7 @@
  * Plugin Name: WP Media Cleaner (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-media-cleaner
  * Description: Universal high-performance media cleaner for WordPress & WooCommerce. Safely scans, detects, and purges orphan images, unused WooCommerce product galleries, variation photos, and auto-deletes media on item removal.
- * Version:     2026-11__1.02
+ * Version:     2026-11__1.03
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -215,9 +215,14 @@ final class WP_Media_Cleaner_App {
             return false;
         }
 
-        // Check if referenced as _thumbnail_id in any other post
+        // 0. Protected media safeguard (logos, favicons, brand, documents, options, etc.)
+        if ( self::is_protected_media( $att_id ) ) {
+            return false;
+        }
+
+        // 1. Check if referenced as _thumbnail_id or _company_logo in any other post
         $other_thumb = $wpdb->get_var( $wpdb->prepare(
-            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value = %s AND post_id != %d LIMIT 1",
+            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_thumbnail_id', '_company_logo') AND meta_value = %s AND post_id != %d LIMIT 1",
             $att_id,
             $excluding_post_id
         ) );
@@ -225,7 +230,7 @@ final class WP_Media_Cleaner_App {
             return false;
         }
 
-        // Check if referenced in WooCommerce product galleries of another product
+        // 2. Check if referenced in WooCommerce product galleries of another product
         $wc_galleries = $wpdb->get_results( $wpdb->prepare(
             "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_product_image_gallery' AND post_id != %d AND meta_value != ''",
             $excluding_post_id
@@ -237,7 +242,32 @@ final class WP_Media_Cleaner_App {
             }
         }
 
-        // Check if site icon, custom logo, or Flatsome logo
+        // 3. Check if referenced in Classifieds / Directory galleries (_vb_images, images, etc.)
+        $gallery_meta = $wpdb->get_col( $wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND post_id != %d AND meta_value != ''",
+            $excluding_post_id
+        ) );
+        foreach ( $gallery_meta as $val ) {
+            if ( strpos( (string) $val, (string) $att_id ) === false ) {
+                continue;
+            }
+            $decoded = json_decode( $val, true );
+            if ( is_array( $decoded ) && in_array( $att_id, array_map( 'intval', $decoded ), true ) ) {
+                return false;
+            }
+            $arr = maybe_unserialize( $val );
+            if ( is_array( $arr ) && in_array( $att_id, array_map( 'intval', $arr ), true ) ) {
+                return false;
+            }
+            if ( is_string( $arr ) && in_array( $att_id, array_map( 'intval', explode( ',', $arr ) ), true ) ) {
+                return false;
+            }
+            if ( is_numeric( $arr ) && (int) $arr === $att_id ) {
+                return false;
+            }
+        }
+
+        // 4. Check if site icon, custom logo, or Flatsome logo
         $theme_logo_ids = array_filter( [
             (int) get_option( 'site_icon' ),
             (int) get_theme_mod( 'custom_logo' ),
@@ -331,22 +361,39 @@ final class WP_Media_Cleaner_App {
             $term_thumb_ids = array_merge( $term_thumb_ids, $wc_legacy_terms );
         }
 
-        // 4. Classifieds, Directory & Custom Galleries (_vb_images, images, _gallery_images, etc.)
-        $custom_gallery_meta = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND meta_value != ''" );
+        // 4. Classifieds, Directory & Custom Galleries (_vb_images, _company_logo, images, etc.)
+        $custom_gallery_meta = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', '_company_logo', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND meta_value != ''" );
         $custom_gallery_ids = [];
         foreach ( $custom_gallery_meta as $val ) {
+            $decoded = json_decode( $val, true );
+            if ( is_array( $decoded ) ) {
+                foreach ( $decoded as $id ) {
+                    if ( is_numeric( $id ) && (int) $id > 0 ) {
+                        $custom_gallery_ids[] = (int) $id;
+                    }
+                }
+                continue;
+            }
             $arr = maybe_unserialize( $val );
             if ( is_string( $arr ) && strpos( $arr, ',' ) !== false ) {
                 $arr = explode( ',', $arr );
             }
             if ( is_array( $arr ) ) {
                 foreach ( $arr as $id ) {
-                    if ( is_numeric( $id ) && $id > 0 ) {
+                    if ( is_numeric( $id ) && (int) $id > 0 ) {
                         $custom_gallery_ids[] = (int) $id;
                     }
                 }
-            } elseif ( is_numeric( $arr ) && $arr > 0 ) {
+            } elseif ( is_numeric( $arr ) && (int) $arr > 0 ) {
                 $custom_gallery_ids[] = (int) $arr;
+            }
+        }
+
+        // 4b. Explicit check for all directory companies (_company_logo)
+        $company_logos = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_company_logo' AND meta_value > 0" );
+        foreach ( $company_logos as $cl ) {
+            if ( is_numeric( $cl ) && (int) $cl > 0 ) {
+                $custom_gallery_ids[] = (int) $cl;
             }
         }
 

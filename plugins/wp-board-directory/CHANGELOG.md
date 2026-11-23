@@ -1,5 +1,13 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.34] - 2026-11-23
+### Fixed
+- **Immunity for Migrated & Reused Media in `VB_Media_Cleaner`**:
+  - `cleanup_post_media()` restricted strictly to active `vb_listing`, never touching legacy migrated post types (`acadp_listings`, `at_biz_dir`).
+  - Added strict `is_attachment_safe_to_delete()` validation preventing deletion of any attachment referenced in other listings, company profiles (`_company_logo`), or galleries (`_vb_images`).
+  - Added brand/logo filename regex protection in `is_referenced_elsewhere()`.
+  - Reconciled and restored all attachments and thumbnails across all 11 classified network sites.
+
 ## [2026-11__1.33] - 2026-11-23
 ### Changed
 - Removed 1-Click Migration menu page (CLI `wp vb migrate` kept).

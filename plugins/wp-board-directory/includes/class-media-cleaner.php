@@ -32,43 +32,49 @@ class VB_Media_Cleaner {
      */
     public static function cleanup_post_media( $post_id ) {
         $post_type = get_post_type( $post_id );
-        if ( 'vb_listing' !== $post_type && 'acadp_listings' !== $post_type && 'at_biz_dir' !== $post_type ) {
+        if ( 'vb_listing' !== $post_type ) {
             return;
         }
+
+        $att_ids_to_check = [];
 
         // 1. Featured Image
         $thumb_id = get_post_thumbnail_id( $post_id );
         if ( $thumb_id ) {
-            wp_delete_attachment( $thumb_id, true );
+            $att_ids_to_check[] = (int) $thumb_id;
         }
 
         // 2. Gallery images and custom media keys
-        $meta_keys = [ '_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image', '_company_logo', 'logo', '_thumbnail_id' ];
+        $meta_keys = [ '_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image', '_company_logo', 'logo' ];
         foreach ( $meta_keys as $mk ) {
             $raw_val = get_post_meta( $post_id, $mk, true );
             if ( ! empty( $raw_val ) ) {
-                $items = maybe_unserialize( $raw_val );
-                if ( is_string( $items ) ) {
-                    $decoded = json_decode( $items, true );
-                    if ( is_array( $decoded ) ) {
-                        $items = $decoded;
-                    } else {
-                        $items = explode( ',', $items );
+                $decoded = json_decode( $raw_val, true );
+                if ( is_array( $decoded ) ) {
+                    foreach ( $decoded as $did ) {
+                        if ( is_numeric( $did ) && (int) $did > 0 ) {
+                            $att_ids_to_check[] = (int) $did;
+                        }
                     }
+                    continue;
+                }
+                $items = maybe_unserialize( $raw_val );
+                if ( is_string( $items ) && strpos( $items, ',' ) !== false ) {
+                    $items = explode( ',', $items );
                 }
                 if ( is_array( $items ) ) {
                     foreach ( $items as $img_id ) {
-                        if ( is_numeric( $img_id ) && $img_id > 0 ) {
-                            wp_delete_attachment( absint( $img_id ), true );
+                        if ( is_numeric( $img_id ) && (int) $img_id > 0 ) {
+                            $att_ids_to_check[] = (int) $img_id;
                         }
                     }
-                } elseif ( is_numeric( $items ) && $items > 0 ) {
-                    wp_delete_attachment( absint( $items ), true );
+                } elseif ( is_numeric( $items ) && (int) $items > 0 ) {
+                    $att_ids_to_check[] = (int) $items;
                 }
             }
         }
 
-        // 3. Any attachments with post_parent = $post_id
+        // 3. Any direct children attachments (post_parent = $post_id)
         $children = get_posts( [
             'post_type'      => 'attachment',
             'post_parent'    => $post_id,
@@ -78,9 +84,81 @@ class VB_Media_Cleaner {
         ] );
         if ( ! empty( $children ) ) {
             foreach ( $children as $child_id ) {
-                wp_delete_attachment( $child_id, true );
+                $att_ids_to_check[] = (int) $child_id;
             }
         }
+
+        $att_ids_to_check = array_unique( array_filter( $att_ids_to_check ) );
+        foreach ( $att_ids_to_check as $att_id ) {
+            if ( self::is_attachment_safe_to_delete( $att_id, $post_id ) ) {
+                wp_delete_attachment( $att_id, true );
+            }
+        }
+    }
+
+    /**
+     * Check if an attachment is NOT used by any other active listing, company, or site setting
+     */
+    public static function is_attachment_safe_to_delete( $att_id, $excluding_post_id = 0 ) {
+        global $wpdb;
+
+        $att_id = (int) $att_id;
+        if ( $att_id <= 0 ) {
+            return false;
+        }
+
+        if ( self::is_referenced_elsewhere( $att_id ) ) {
+            return false;
+        }
+
+        // Check if referenced as _thumbnail_id or _company_logo in any other post
+        $other_thumb = $wpdb->get_var( $wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_thumbnail_id', '_company_logo') AND meta_value = %s AND post_id != %d LIMIT 1",
+            $att_id,
+            $excluding_post_id
+        ) );
+        if ( $other_thumb ) {
+            return false;
+        }
+
+        // Check if referenced in Classifieds / Directory galleries
+        $gallery_meta = $wpdb->get_col( $wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND post_id != %d AND meta_value != ''",
+            $excluding_post_id
+        ) );
+        foreach ( $gallery_meta as $val ) {
+            if ( strpos( (string) $val, (string) $att_id ) === false ) {
+                continue;
+            }
+            $decoded = json_decode( $val, true );
+            if ( is_array( $decoded ) && in_array( $att_id, array_map( 'intval', $decoded ), true ) ) {
+                return false;
+            }
+            $arr = maybe_unserialize( $val );
+            if ( is_array( $arr ) && in_array( $att_id, array_map( 'intval', $arr ), true ) ) {
+                return false;
+            }
+            if ( is_string( $arr ) && in_array( $att_id, array_map( 'intval', explode( ',', $arr ) ), true ) ) {
+                return false;
+            }
+            if ( is_numeric( $arr ) && (int) $arr === $att_id ) {
+                return false;
+            }
+        }
+
+        // Check theme logos
+        $theme_logo_ids = array_filter( [
+            (int) get_option( 'site_icon' ),
+            (int) get_theme_mod( 'custom_logo' ),
+            (int) get_theme_mod( 'site_logo' ),
+            (int) get_theme_mod( 'site_logo_dark' ),
+            (int) get_theme_mod( 'site_logo_sticky' ),
+        ] );
+        if ( in_array( $att_id, $theme_logo_ids, true ) ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -106,10 +184,19 @@ class VB_Media_Cleaner {
         // 1. All thumbnail IDs
         $thumb_ids = $wpdb->get_col( "SELECT DISTINCT meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_thumbnail_id' AND meta_value > 0" );
 
-        // 2. All gallery images from _vb_images, images, _gallery_images, _listing_images, _atbdp_gallery, _atbdp_header_image
-        $gallery_meta = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image')" );
+        // 2. All gallery images from _vb_images, _company_logo, images, _gallery_images, etc.
+        $gallery_meta = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', '_company_logo', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND meta_value != ''" );
         $gallery_ids = [];
         foreach ( $gallery_meta as $val ) {
+            $decoded = json_decode( $val, true );
+            if ( is_array( $decoded ) ) {
+                foreach ( $decoded as $id ) {
+                    if ( is_numeric( $id ) && (int) $id > 0 ) {
+                        $gallery_ids[] = (int) $id;
+                    }
+                }
+                continue;
+            }
             $arr = maybe_unserialize( $val );
             if ( is_string( $arr ) && strpos( $arr, ',' ) !== false ) {
                 $arr = explode( ',', $arr );
@@ -202,6 +289,9 @@ class VB_Media_Cleaner {
             return false;
         }
         $info = pathinfo( $rel );
+        if ( preg_match( '/(logo|favicon|site[-_]?icon|brand)/i', $info['filename'] ) ) {
+            return true;
+        }
         $base = preg_replace( '/-scaled$/', '', $info['filename'] );
         // Cropped site icon / logo derived from this original
         $cropped = $wpdb->get_var( $wpdb->prepare(
