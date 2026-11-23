@@ -1,5 +1,10 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.33] - 2026-11-23
+### Changed
+- Removed 1-Click Migration menu page (CLI `wp vb migrate` kept).
+- Media Cleaner: only images are listed (CSV/docs excluded); logos, site icon and originals of cropped icons are protected; any file referenced by name in options/post content is protected; manual protect list option `vb_cleaner_protected_ids`.
+
 ## [2026-11__1.32] - 2026-11-23
 ### Fixed & Improved
 - **Clean Location Dropdown & Purged Broken 2-Letter Windows Flag Codes**:

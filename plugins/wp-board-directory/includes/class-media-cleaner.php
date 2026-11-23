@@ -160,10 +160,21 @@ class VB_Media_Cleaner {
         // All attachments
         $all_attachments = $wpdb->get_results( "SELECT ID, post_title, post_date, guid FROM {$wpdb->posts} WHERE post_type = 'attachment'", ARRAY_A );
 
+        // Manual protected list (option vb_cleaner_protected_ids) + logos/site icons
+        $protected = array_map( 'absint', (array) get_option( 'vb_cleaner_protected_ids', [] ) );
+        $protected_lookup = array_flip( $protected );
+
         $orphans = [];
         foreach ( $all_attachments as $att ) {
             $id = (int) $att['ID'];
             if ( ! isset( $used_lookup[ $id ] ) ) {
+                // Only real images are cleaned; never touch CSV/PDF/docs.
+                if ( 0 !== strpos( (string) get_post_mime_type( $id ), 'image/' ) ) {
+                    continue;
+                }
+                if ( isset( $protected_lookup[ $id ] ) || self::is_referenced_elsewhere( $id ) ) {
+                    continue;
+                }
                 $file = get_attached_file( $id );
                 $size = ( $file && file_exists( $file ) ) ? filesize( $file ) : 0;
                 $orphans[] = [
@@ -181,6 +192,35 @@ class VB_Media_Cleaner {
     }
 
     /**
+     * Safety net: attachment is referenced by file name in options (theme mods,
+     * widgets, logos, site icon) or in post content / meta -> never treat as junk.
+     */
+    public static function is_referenced_elsewhere( $id ) {
+        global $wpdb;
+        $rel = get_post_meta( $id, '_wp_attached_file', true );
+        if ( ! $rel ) {
+            return false;
+        }
+        $info = pathinfo( $rel );
+        $base = preg_replace( '/-scaled$/', '', $info['filename'] );
+        // Cropped site icon / logo derived from this original
+        $cropped = $wpdb->get_var( $wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='_wp_attached_file' AND meta_value LIKE %s LIMIT 1",
+            '%' . $wpdb->esc_like( 'cropped-' . $base . '.' ) . '%'
+        ) );
+        if ( $cropped ) {
+            return true;
+        }
+        $like = '%' . $wpdb->esc_like( dirname( $rel ) . '/' . $base ) . '%';
+        $hit = $wpdb->get_var( $wpdb->prepare( "SELECT option_id FROM {$wpdb->options} WHERE option_name NOT LIKE '\\_transient%%' AND option_name NOT LIKE '\\_site\\_transient%%' AND option_value LIKE %s LIMIT 1", $like ) );
+        if ( $hit ) {
+            return true;
+        }
+        $hit = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type != 'attachment' AND post_type != 'revision' AND post_content LIKE %s LIMIT 1", $like ) );
+        return (bool) $hit;
+    }
+
+    /**
      * Delete orphan attachments permanently
      */
     public static function delete_orphans( $ids = [] ) {
@@ -192,7 +232,12 @@ class VB_Media_Cleaner {
         $count = 0;
         $freed_bytes = 0;
 
+        $protected = array_map( 'absint', (array) get_option( 'vb_cleaner_protected_ids', [] ) );
         foreach ( $ids as $id ) {
+            $id = absint( $id );
+            if ( in_array( $id, $protected, true ) || (int) get_option( 'site_icon' ) === $id || (int) get_theme_mod( 'site_logo' ) === $id || (int) get_theme_mod( 'custom_logo' ) === $id ) {
+                continue;
+            }
             $file = get_attached_file( $id );
             if ( $file && file_exists( $file ) ) {
                 $freed_bytes += filesize( $file );

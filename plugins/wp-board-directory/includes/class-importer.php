@@ -15,7 +15,6 @@ class VB_Importer {
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             WP_CLI::add_command( 'vb migrate', [ __CLASS__, 'cli_migrate' ] );
         }
-        add_action( 'admin_menu', [ __CLASS__, 'register_admin_page' ] );
         add_action( 'wp_ajax_vb_run_migration', [ __CLASS__, 'ajax_run_migration' ] );
     }
 

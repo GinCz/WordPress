@@ -680,12 +680,6 @@ class VB_CPT {
                 'vb-media-cleaner',
                 'Очистка картинок',
             ],
-            [
-                '📦 Миграция (1-Click)',
-                'manage_options',
-                'vb-migration',
-                'Миграция (1-Click)',
-            ],
         ];
 
         $submenu[ $parent ] = $new_submenu;
