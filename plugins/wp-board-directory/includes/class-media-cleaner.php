@@ -49,27 +49,37 @@ class VB_Media_Cleaner {
         foreach ( $meta_keys as $mk ) {
             $raw_val = get_post_meta( $post_id, $mk, true );
             if ( ! empty( $raw_val ) ) {
-                $decoded = json_decode( $raw_val, true );
-                if ( is_array( $decoded ) ) {
-                    foreach ( $decoded as $did ) {
+                if ( is_array( $raw_val ) ) {
+                    foreach ( $raw_val as $did ) {
                         if ( is_numeric( $did ) && (int) $did > 0 ) {
                             $att_ids_to_check[] = (int) $did;
                         }
                     }
                     continue;
                 }
-                $items = maybe_unserialize( $raw_val );
-                if ( is_string( $items ) && strpos( $items, ',' ) !== false ) {
-                    $items = explode( ',', $items );
-                }
-                if ( is_array( $items ) ) {
-                    foreach ( $items as $img_id ) {
-                        if ( is_numeric( $img_id ) && (int) $img_id > 0 ) {
-                            $att_ids_to_check[] = (int) $img_id;
+                if ( is_string( $raw_val ) ) {
+                    $decoded = json_decode( $raw_val, true );
+                    if ( is_array( $decoded ) ) {
+                        foreach ( $decoded as $did ) {
+                            if ( is_numeric( $did ) && (int) $did > 0 ) {
+                                $att_ids_to_check[] = (int) $did;
+                            }
                         }
+                        continue;
                     }
-                } elseif ( is_numeric( $items ) && (int) $items > 0 ) {
-                    $att_ids_to_check[] = (int) $items;
+                    $items = maybe_unserialize( $raw_val );
+                    if ( is_string( $items ) && strpos( $items, ',' ) !== false ) {
+                        $items = explode( ',', $items );
+                    }
+                    if ( is_array( $items ) ) {
+                        foreach ( $items as $img_id ) {
+                            if ( is_numeric( $img_id ) && (int) $img_id > 0 ) {
+                                $att_ids_to_check[] = (int) $img_id;
+                            }
+                        }
+                    } elseif ( is_numeric( $items ) && (int) $items > 0 ) {
+                        $att_ids_to_check[] = (int) $items;
+                    }
                 }
             }
         }
@@ -188,14 +198,16 @@ class VB_Media_Cleaner {
         $gallery_meta = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', '_company_logo', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND meta_value != ''" );
         $gallery_ids = [];
         foreach ( $gallery_meta as $val ) {
-            $decoded = json_decode( $val, true );
-            if ( is_array( $decoded ) ) {
-                foreach ( $decoded as $id ) {
-                    if ( is_numeric( $id ) && (int) $id > 0 ) {
-                        $gallery_ids[] = (int) $id;
+            if ( is_string( $val ) ) {
+                $decoded = json_decode( $val, true );
+                if ( is_array( $decoded ) ) {
+                    foreach ( $decoded as $id ) {
+                        if ( is_numeric( $id ) && (int) $id > 0 ) {
+                            $gallery_ids[] = (int) $id;
+                        }
                     }
+                    continue;
                 }
-                continue;
             }
             $arr = maybe_unserialize( $val );
             if ( is_string( $arr ) && strpos( $arr, ',' ) !== false ) {

@@ -365,14 +365,16 @@ final class WP_Media_Cleaner_App {
         $custom_gallery_meta = $wpdb->get_col( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key IN ('_vb_images', '_company_logo', 'images', '_gallery_images', '_listing_images', '_atbdp_gallery', '_atbdp_header_image') AND meta_value != ''" );
         $custom_gallery_ids = [];
         foreach ( $custom_gallery_meta as $val ) {
-            $decoded = json_decode( $val, true );
-            if ( is_array( $decoded ) ) {
-                foreach ( $decoded as $id ) {
-                    if ( is_numeric( $id ) && (int) $id > 0 ) {
-                        $custom_gallery_ids[] = (int) $id;
+            if ( is_string( $val ) ) {
+                $decoded = json_decode( $val, true );
+                if ( is_array( $decoded ) ) {
+                    foreach ( $decoded as $id ) {
+                        if ( is_numeric( $id ) && (int) $id > 0 ) {
+                            $custom_gallery_ids[] = (int) $id;
+                        }
                     }
+                    continue;
                 }
-                continue;
             }
             $arr = maybe_unserialize( $val );
             if ( is_string( $arr ) && strpos( $arr, ',' ) !== false ) {
