@@ -180,6 +180,15 @@ function vladimir_ai_i18n_table() {
             'fr' => 'Nettoyage rapide universel des images inutilisées pour WordPress et WooCommerce : recherche de fichiers orphelins, galeries de produits, variations et suppression automatique des photos.',
             'pl' => 'Uniwersalne szybkie czyszczenie nieużywanych zdjęć dla WordPress i WooCommerce: wyszukiwanie osieroconych plików, galerii produktów, wariantów i automatyczne usuwanie zdjęć po usunięciu wpisów.',
         ),
+        'wp-login-branding' => array(
+            'ru' => 'Ультрасовременная кастомизация страниц входа и авторизации WordPress. Автоматическое отображение логотипа сайта по умолчанию, пресеты градиентов, выбор фоновых изображений, стили глассморфизма и эффекты входа.',
+            'cs' => 'Ultramoderní přizpůsobení přihlašovací stránky WordPress. Automatické zobrazení výchozího loga webu, předvolby gradientů, volba vlastních obrázků, styly glassmorphismu a vizuální efekty při přihlášení.',
+            'de' => 'Hochmoderne Anpassung der WordPress-Anmeldeseite. Automatische Anzeige des Standard-Websitelogos, voreingestellte Farbverläufe, eigene Hintergrundbilder, Glassmorphism-Stile und elegante Anmelde-Effekte.',
+            'it' => 'Personalizzazione ultra-moderna della pagina di login di WordPress. Visualizzazione automatica del logo predefinito del sito, preset di gradienti, immagini di sfondo personalizzate, stili glassmorphism ed effetti visivi.',
+            'es' => 'Personalización ultra moderna de la página de inicio de sesión de WordPress. Muestra automática del logotipo del sitio, ajustes preestablecidos de degradados, imágenes de fondo personalizadas, estilos glassmorphism y efectos visuales.',
+            'fr' => 'Personnalisation ultra-moderne de la page de connexion WordPress. Affichage automatique du logo par défaut du site, présets de dégradés, images d\'arrière-plan personnalisées, styles glassmorphism et effets d\'entrée.',
+            'pl' => 'Nowoczesna personalizacja strony logowania WordPress. Automatyczne wyświetlanie domyślnego logo witryny, presety gradientów, własne obrazy tła, style glassmorphism i efekty wizualne logowania.',
+        ),
     );
 }
 }
