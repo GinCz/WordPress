@@ -3,7 +3,7 @@
  * Plugin Name: WP Media Cleaner (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-media-cleaner
  * Description: Universal high-performance media cleaner for WordPress & WooCommerce. Safely scans, detects, and purges orphan images, unused WooCommerce product galleries, variation photos, and auto-deletes media on item removal.
- * Version:     2026-11__1.03
+ * Version:     2026-11__1.04
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_MEDIA_CLEANER_VERSION', '2026-11__1.00' );
+define( 'VB_MEDIA_CLEANER_VERSION', '2026-11__1.04' );
 define( 'VB_MEDIA_CLEANER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VB_MEDIA_CLEANER_URL', plugin_dir_url( __FILE__ ) );
 
@@ -427,24 +427,24 @@ final class WP_Media_Cleaner_App {
         }
         $special_ids = array_unique( array_filter( $theme_mod_ids ) );
 
-        // 7. Scan post_content for inline image IDs (Gutenberg <!-- wp:image {"id":123} --> or Flatsome [ux_image id="123"])
+        // 7. Scan post_content for inline image IDs (Gutenberg, Flatsome, Shortcodes, UX Blocks)
         $content_ids = [];
-        $posts_with_images = $wpdb->get_col( "SELECT post_content FROM {$wpdb->posts} WHERE post_type IN ('post', 'page', 'product') AND post_status = 'publish' AND post_content LIKE '%wp-image-%' OR post_content LIKE '%\"id\":%' OR post_content LIKE '%[ux_image%'" );
+        $posts_with_images = $wpdb->get_col( "SELECT post_content FROM {$wpdb->posts} WHERE post_type NOT IN ('attachment', 'revision') AND post_status NOT IN ('trash', 'auto-draft') AND (post_content LIKE '%wp-image-%' OR post_content LIKE '%\"id\":%' OR post_content LIKE '%[ux_%' OR post_content LIKE '%id=\"%' OR post_content LIKE '%bg=\"%' OR post_content LIKE '%img=\"%')" );
         foreach ( $posts_with_images as $cnt ) {
             // Match wp-image-123
-            if ( preg_match_all( '/wp-image-(\d+)/', $cnt, $m ) ) {
+            if ( preg_match_all( '/\bwp-image-(\d+)\b/', $cnt, $m ) ) {
                 foreach ( $m[1] as $cid ) {
                     $content_ids[] = (int) $cid;
                 }
             }
             // Match Gutenberg {"id":123}
-            if ( preg_match_all( '/"id":(\d+)/', $cnt, $m ) ) {
+            if ( preg_match_all( '/"id":\s*(\d+)/', $cnt, $m ) ) {
                 foreach ( $m[1] as $cid ) {
                     $content_ids[] = (int) $cid;
                 }
             }
-            // Match Flatsome [ux_image id="123"]
-            if ( preg_match_all( '/\[ux_image\s+id=[\'"](\d+)[\'"]/', $cnt, $m ) ) {
+            // Match Flatsome and standard shortcode attributes: id="123", bg="123", img="123", image="123"
+            if ( preg_match_all( '/\b(?:id|bg|img|image)=[\'"](\d+)[\'"]/i', $cnt, $m ) ) {
                 foreach ( $m[1] as $cid ) {
                     $content_ids[] = (int) $cid;
                 }

@@ -25,6 +25,15 @@
 
 ## 🛠️ Summary of Implementations & Upgrades
 
+### 0. `wp-media-cleaner` (v1.04) — Universal Media Cleaner & Auto-Purge Engine
+- **v1.04 Flatsome UX Builder & Multi-Node Rollout**:
+  - Enhanced inline content scanner with deep shortcode support (`bg="..."`, `img="..."`, `image="..."`, `id="..."`, `[ux_image]`, `[ux_banner]`, `[section]`).
+  - Strict SQL parenthesis precedence and full coverage of non-standard post types (Flatsome `blocks`, `ux_template`, Gutenberg `wp_block`).
+  - Synchronized `VB_MEDIA_CLEANER_VERSION` runtime constant.
+  - Successfully deployed, verified, and activated on `detailing-alex.eu` (Flatsome 3.18.1).
+  - Multi-node propagation completed across all 12 existing sites on `DE-222` (`ru-tv.eu` and 11 `doska-*` portals).
+  - Audited orphan images via WP-CLI scan: detected 2 legacy orphan images (0.25 MB) on `detailing-alex.eu` with zero impact on live content.
+
 ### 1. `wp-login-branding` (v1.01 & v1.02) — Authentication & Login Visual Architecture
 - **v1.02 Dual-Line Header Branding & Auto-Update Engine**:
   - Added two clean, non-wrapping single lines directly under the national flag/logo:

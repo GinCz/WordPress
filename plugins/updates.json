@@ -137,7 +137,7 @@
             "tested": "6.8"
         },
         "wp-media-cleaner": {
-            "version": "2026-11__1.00",
+            "version": "2026-11__1.04",
             "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-media-cleaner.zip",
             "url": "https://github.com/GinCz/plugins/tree/main/wp-media-cleaner",
             "name": "WP Media Cleaner (VladiMIR+AI✅)",

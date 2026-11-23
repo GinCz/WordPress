@@ -3,7 +3,7 @@
 **Universal high-performance media cleaner and auto-purge engine for WordPress & WooCommerce.**
 
 Author: **VladiMIR (GinCz) + AI**  
-Version: **2026-11__1.00**  
+Version: **2026-11__1.04**  
 License: **GPL-2.0-or-later**  
 Repository: [GinCz/WordPress](https://github.com/GinCz/WordPress/tree/main/plugins/wp-media-cleaner)
 
