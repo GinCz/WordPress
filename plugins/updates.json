@@ -146,7 +146,7 @@
             "tested": "6.8"
         },
         "wp-login-branding": {
-            "version": "2026-11__1.00",
+            "version": "2026-11__1.02",
             "package": "https://raw.githubusercontent.com/GinCz/plugins/main/zips/wp-login-branding.zip",
             "url": "https://github.com/GinCz/plugins/tree/main/wp-login-branding",
             "name": "WP Login & Admin Branding (VladiMIR+AI✅)",

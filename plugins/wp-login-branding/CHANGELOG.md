@@ -1,5 +1,15 @@
 # Changelog — WP Login & Admin Branding
 
+## [2026-11__1.02] - 2026-11-23
+### Dynamic Header Brand Title & Subtitle + Background Auto-Update Engine
+- **Two Clean Single Lines under Flag**:
+  - Line 1: Site Title (`get_bloginfo('name')`, e.g. "ДоСкА объявлений в Германии") formatted in bold white 15px with ellipsis overflow, strictly fitting in a single line.
+  - Line 2: Administration Subtitle («Вход в администрирование сайта») formatted in soft violet 12.5px, single line.
+  - Preserved ultra-compact vertical footprint (<35px) preventing viewport scrolling.
+- **Built-in Turnkey Auto-Update Engine**:
+  - Integrated `auto_update_plugin` filter into `VB_Login_Branding` and shared `vladimir-ai-updater.php`.
+  - Enables native WordPress background auto-updater without manual intervention.
+
 ## [2026-11__1.01] - 2026-11-23
 ### UI Polish & Compact Viewport
 - **Compact Vertical Dimensions**: Reduced padding, input sizes, and margins so the entire login card comfortably fits on screen without vertical scrolling or cropping the header flag.

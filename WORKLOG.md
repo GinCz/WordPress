@@ -25,8 +25,14 @@
 
 ## 🛠️ Summary of Implementations & Upgrades
 
-### 1. `wp-login-branding` (v1.01) — Authentication & Login Visual Architecture
-- **Compact Viewport Polish**:
+### 1. `wp-login-branding` (v1.01 & v1.02) — Authentication & Login Visual Architecture
+- **v1.02 Dual-Line Header Branding & Auto-Update Engine**:
+  - Added two clean, non-wrapping single lines directly under the national flag/logo:
+    - Line 1: Site Title (`get_bloginfo('name')`, e.g. "ДоСкА объявлений в Германии") in bold white 15px with drop shadow.
+    - Line 2: Administration Subtitle («Вход в администрирование сайта») in soft violet 12.5px.
+  - Kept total vertical footprint under 35px so login card remains fully within the viewport without vertical scroll.
+  - Integrated `auto_update_plugin` filter into `VB_Login_Branding` and `vladimir-ai-updater.php` to enable seamless WordPress background auto-updates.
+- **v1.01 Compact Viewport Polish**:
   - Reduced container, card, and input vertical margins/paddings so the entire authentication form (inputs, social buttons, Turnstile, submit button, single-line navigation, and copyright footer) fits cleanly within standard screen heights without vertical scrolling.
   - Eliminated header logo cropping on 768px/800px displays.
 - **Removed Subtitle Badge**:

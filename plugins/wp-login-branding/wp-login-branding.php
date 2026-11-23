@@ -3,7 +3,7 @@
  * Plugin Name: WP Login & Admin Branding (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/WordPress/tree/main/plugins/wp-login-branding
  * Description: Ultra-modern turnkey customizer for WordPress authentication pages. Replaces standard WP logo with dynamic site brand and country flag, adds sleek glassmorphism card styling, responsive ambient glow background, custom favicon, social login styling, and custom brand footer.
- * Version:     2026-11__1.01
+ * Version:     2026-11__1.02
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -27,7 +27,7 @@ if ( file_exists( __DIR__ . '/vladimir-ai-i18n.php' ) ) {
     require_once __DIR__ . '/vladimir-ai-i18n.php';
 }
 
-define( 'VB_LOGIN_BRANDING_VERSION', '2026-11__1.01' );
+define( 'VB_LOGIN_BRANDING_VERSION', '2026-11__1.02' );
 
 final class VB_Login_Branding {
 
@@ -36,10 +36,14 @@ final class VB_Login_Branding {
         add_action( 'login_head', [ __CLASS__, 'render_login_styles' ] );
         add_filter( 'login_headerurl', [ __CLASS__, 'filter_login_headerurl' ] );
         add_filter( 'login_headertext', [ __CLASS__, 'filter_login_headertext' ] );
+        add_filter( 'login_message', [ __CLASS__, 'render_login_header_text' ] );
         add_action( 'login_footer', [ __CLASS__, 'render_login_footer' ] );
 
         // Admin head branding
         add_action( 'admin_head', [ __CLASS__, 'render_admin_brand_styles' ] );
+
+        // Guarantee background auto-updates for this plugin via WP core
+        add_filter( 'auto_update_plugin', [ __CLASS__, 'filter_auto_update_plugin' ], 20, 2 );
     }
 
     /**
@@ -124,6 +128,45 @@ final class VB_Login_Branding {
      */
     public static function filter_login_headertext( $text ) {
         return get_bloginfo( 'name' );
+    }
+
+    /**
+     * Render site title and administration subtitle in two clean single lines directly under the flag.
+     *
+     * @param string $message Existing login messages.
+     * @return string
+     */
+    public static function render_login_header_text( $message ) {
+        $site_name = get_bloginfo( 'name' );
+        $action    = isset( $_GET['action'] ) ? sanitize_key( $_GET['action'] ) : 'login';
+
+        $subtitle = 'Вход в администрирование сайта';
+        if ( 'register' === $action ) {
+            $subtitle = 'Регистрация на сайте';
+        } elseif ( 'lostpassword' === $action || 'retrievepassword' === $action ) {
+            $subtitle = 'Восстановление пароля';
+        }
+
+        $header_html = '<div class="vb-login-header-text">'
+            . '<div class="vb-login-site-title" title="' . esc_attr( $site_name ) . '">' . esc_html( $site_name ) . '</div>'
+            . '<div class="vb-login-site-subtitle">' . esc_html( $subtitle ) . '</div>'
+            . '</div>';
+
+        return $header_html . $message;
+    }
+
+    /**
+     * Guarantee background auto-updates for this plugin via WP core auto-updater.
+     *
+     * @param bool|null $update Current auto-update verdict.
+     * @param object    $item   Plugin item being considered for auto-update.
+     * @return bool
+     */
+    public static function filter_auto_update_plugin( $update, $item ) {
+        if ( ! empty( $item->slug ) && 'wp-login-branding' === $item->slug ) {
+            return true;
+        }
+        return $update;
     }
 
     /**
@@ -218,7 +261,7 @@ final class VB_Login_Branding {
 
         /* Logo Branding */
         .login h1 {
-            margin: 0 0 10px 0 !important;
+            margin: 0 0 8px 0 !important;
             text-align: center !important;
         }
 
@@ -230,7 +273,7 @@ final class VB_Login_Branding {
             background-repeat: no-repeat !important;
             width: 100% !important;
             max-width: 220px !important;
-            height: 62px !important;
+            height: 56px !important;
             margin: 0 auto !important;
             display: block !important;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease !important;
@@ -246,7 +289,39 @@ final class VB_Login_Branding {
         }
         <?php endif; ?>
 
-        /* Remove badge/button under flag completely */
+        /* Header Title & Subtitle under Flag */
+        .vb-login-header-text {
+            text-align: center !important;
+            margin: 0 auto 12px auto !important;
+            padding: 0 4px !important;
+            max-width: 390px !important;
+            box-sizing: border-box !important;
+        }
+        .vb-login-site-title {
+            color: #ffffff !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            letter-spacing: 0.25px !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+        }
+        .vb-login-site-subtitle {
+            color: #c4b5fd !important;
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
+            line-height: 1.25 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            letter-spacing: 0.2px !important;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Suppress obsolete badges */
         .vb-login-badge-wrap,
         .vb-login-page-badge {
             display: none !important;

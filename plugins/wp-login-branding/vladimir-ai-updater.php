@@ -283,3 +283,24 @@ function vladimir_ai_update_info( $result, $action, $args ) {
 }
 
 add_filter( 'plugins_api', 'vladimir_ai_update_info', 20, 3 );
+
+/**
+ * Enable automatic background updates for all VladiMIR+AI suite plugins.
+ *
+ * @param bool|null $update Current auto-update verdict.
+ * @param object    $item   Plugin item being considered for auto-update.
+ * @return bool
+ */
+if ( ! function_exists( 'vladimir_ai_auto_update_filter' ) ) {
+function vladimir_ai_auto_update_filter( $update, $item ) {
+    if ( ! empty( $item->slug ) ) {
+        $manifest = vladimir_ai_update_manifest();
+        if ( ! empty( $manifest['plugins'][ $item->slug ] ) ) {
+            return true;
+        }
+    }
+    return $update;
+}
+}
+
+add_filter( 'auto_update_plugin', 'vladimir_ai_auto_update_filter', 20, 2 );
