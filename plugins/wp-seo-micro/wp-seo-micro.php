@@ -3,7 +3,7 @@
  * Plugin Name: WP SEO Micro (VladiMIR+AI✅)
  * Plugin URI:  https://github.com/GinCz/Linux_Server_Public/tree/main/WordPress/Plugins/wp-seo-micro
  * Description: Ultra-lightweight SEO engine: Smart Title, Meta Description & Keywords, Open Graph social tags, canonical URLs, full robots indexation control, native XML sitemap (/sitemap.xml & /sitemaps.xml), instant Google Indexing API & IndexNow push, and seamless backward compatibility with SEOPress metadata. Zero database bloat.
- * Version:     2026-11__1.39
+ * Version:     2026-11__1.40
  * Author:      VladiMIR (GinCz) + AI
  * Author URI:  https://github.com/GinCz
  * License:     GPL-2.0-or-later
@@ -630,6 +630,25 @@ add_filter( 'pre_get_document_title', function( $title ) {
     $site_name = get_bloginfo( 'name' );
 
     if ( is_front_page() || is_home() ) {
+        $front_obj = get_queried_object();
+        if ( ! ( $front_obj instanceof WP_Post ) && is_front_page() ) {
+            $front_id = get_option( 'page_on_front' );
+            if ( $front_id ) {
+                $front_obj = get_post( $front_id );
+            }
+        }
+        if ( $front_obj instanceof WP_Post ) {
+            $custom_title = get_post_meta( $front_obj->ID, '_wsm_title', true )
+                         ?: get_post_meta( $front_obj->ID, '_seopress_titles_title', true )
+                         ?: get_post_meta( $front_obj->ID, '_yoast_wpseo_title', true );
+            if ( ! empty( $custom_title ) ) {
+                return esc_html( str_replace(
+                    array( '%%sitename%%', '%%sep%%', '%%sitedesc%%', '%%post_title%%' ),
+                    array( $site_name, $sep, get_bloginfo( 'description' ), get_the_title( $front_obj->ID ) ),
+                    $custom_title
+                ) );
+            }
+        }
         $desc = ! empty( $settings['home_description'] ) ? $settings['home_description'] : get_bloginfo( 'description' );
         return $desc ? ( $site_name . $sep . $desc ) : $site_name;
     }
@@ -836,14 +855,42 @@ add_action( 'wp_head', function() {
     $og_type   = 'website';
 
     if ( is_front_page() || is_home() ) {
-        $desc = ! empty( $settings['home_description'] ) ? $settings['home_description'] : '';
-        if ( empty( $desc ) ) {
-            $desc = sprintf( 'Доска бесплатных объявлений в %s: работа, аренда и покупка недвижимости, авто, услуги специалистов и каталог проверенных компаний. Подайте объявление бесплатно!', $country_name );
+        $front_obj = get_queried_object();
+        if ( ! ( $front_obj instanceof WP_Post ) && is_front_page() ) {
+            $front_id = get_option( 'page_on_front' );
+            if ( $front_id ) {
+                $front_obj = get_post( $front_id );
+            }
         }
-        $keywords  = ! empty( $settings['home_keywords'] ) ? $settings['home_keywords'] : '';
-        $title     = get_bloginfo( 'name' );
-        $permalink = home_url( '/' );
-        $og_img    = vladimir_seo_get_post_image( 0 );
+        if ( $front_obj instanceof WP_Post ) {
+            $custom_desc = get_post_meta( $front_obj->ID, '_wsm_desc', true )
+                        ?: get_post_meta( $front_obj->ID, '_seopress_titles_desc', true )
+                        ?: get_post_meta( $front_obj->ID, '_yoast_wpseo_metadesc', true );
+            if ( ! empty( $custom_desc ) ) {
+                $desc = $custom_desc;
+            }
+            $custom_kw = get_post_meta( $front_obj->ID, '_wsm_keywords', true );
+            if ( ! empty( $custom_kw ) ) {
+                $keywords = $custom_kw;
+            }
+        }
+
+        if ( empty( $desc ) ) {
+            $desc = ! empty( $settings['home_description'] ) ? $settings['home_description'] : '';
+        }
+        if ( empty( $desc ) ) {
+            if ( post_type_exists( 'vb_listing' ) ) {
+                $desc = sprintf( 'Доска бесплатных объявлений в %s: работа, аренда и покупка недвижимости, авто, услуги специалистов и каталог проверенных компаний. Подайте объявление бесплатно!', $country_name );
+            } else {
+                $desc = get_bloginfo( 'description' );
+            }
+        }
+        if ( empty( $keywords ) ) {
+            $keywords = ! empty( $settings['home_keywords'] ) ? $settings['home_keywords'] : '';
+        }
+        $title     = wp_get_document_title();
+        $permalink = ( $front_obj instanceof WP_Post ) ? get_permalink( $front_obj->ID ) : home_url( '/' );
+        $og_img    = vladimir_seo_get_post_image( ( $front_obj instanceof WP_Post ) ? $front_obj->ID : 0 );
 
     } elseif ( is_post_type_archive( 'vb_listing' ) ) {
         $title     = 'Все объявления — ' . get_bloginfo( 'name' );
