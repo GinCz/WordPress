@@ -349,20 +349,24 @@ class VB_Shortcodes {
         $description  = wp_kses_post( $_POST['description'] ?? '' );
         $type         = ( isset( $_POST['listing_type'] ) && 'company' === $_POST['listing_type'] ) ? 'company' : 'classified';
 
-        // 4. Anti-Spam: Prohibit illegal, casino, gambling, darknet, narcotics and forgery keywords
-        $spam_keywords_pattern = '/(казино|casino|vulkan|вулкан|онлайн-казино|слоты|slots|игровые автоматы|рулетка|ставка на спорт|1xbet|betwinner|pin-up|dragon money|mostbet|kraken|кракен|мефедрон|закладк|амфетамин|гашиш|гидра|hydra|rutor|рутор|darknet|даркнет|alpha-pvp|альфа-пвп|купить соль|купить права|купить диплом|купить паспорт|купить водительские|пробив по базам|деанон|обнал|залив на карту)/iu';
-        if ( preg_match( $spam_keywords_pattern, $title ) || preg_match( $spam_keywords_pattern, $description ) ) {
-            $referer = wp_get_referer() ?: home_url( '/new/' );
-            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Объявление отклонено: обнаружены запрещенные ключевые слова (казино, азартные игры, нелегальные сервисы).' ) ], $referer ) );
-            exit;
-        }
+        $is_admin_vladimir = ( 1 === (int) $author_id || current_user_can( 'manage_options' ) );
 
-        // 5. Anti-Spam: Prohibit disposable / temporary email domains
-        $disposable_email_pattern = '/@(glorzomail|tempmail|10minutemail|mailinator|guerrillamail|sharklasers|yopmail|dispostable|trashmail|fakemail|nada\.ltd|getairmail|mohmal|crazymailing|throwawaymail|burnermail|mytemp\.email|inboxbear|generator\.email)/i';
-        if ( ! empty( $email ) && preg_match( $disposable_email_pattern, $email ) ) {
-            $referer = wp_get_referer() ?: home_url( '/new/' );
-            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Указание временных (одноразовых) почтовых адресов запрещено. Пожалуйста, укажите постоянный email.' ) ], $referer ) );
-            exit;
+        // 4. Anti-Spam: Prohibit illegal, casino, gambling, darknet, narcotics, exchanges, and adult/erotic keywords (Bypassed for Vladimir/Admin)
+        if ( ! $is_admin_vladimir ) {
+            $spam_keywords_pattern = '/(казино|casino|vulkan|вулкан|онлайн-казино|слоты|slots|игровые автоматы|рулетка|ставка на спорт|1xbet|betwinner|pin-up|dragon money|mostbet|kraken|кракен|мефедрон|закладк|амфетамин|гашиш|гидра|hydra|rutor|рутор|darknet|даркнет|alpha-pvp|альфа-пвп|купить соль|купить права|купить диплом|купить паспорт|купить водительские|пробив по базам|деанон|обнал|залив на карту|биржа|криптобиржа|криптовалютн.*биржа|forex|форекс|бинарн.*опцион|трейдинг.*сигнал|инвестиции под процент|доходность от \d+|хайп|hyip|crypto exchange|порно|porn|эротик|erotic|секс|sex|эскорт|escort|интим|проститутки|шлюхи|массаж для мужчин|боди-массаж|bdsm|бдсм|onlyfans|онлифанс|вписка|знакомства на одну ночь)/iu';
+            if ( preg_match( $spam_keywords_pattern, $title ) || preg_match( $spam_keywords_pattern, $description ) ) {
+                $referer = wp_get_referer() ?: home_url( '/new/' );
+                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Объявление отклонено: обнаружены запрещенные тематики (азартные игры, биржи/форекс, эротика/порнография, нелегальные сервисы).' ) ], $referer ) );
+                exit;
+            }
+
+            // 5. Anti-Spam: Prohibit disposable / temporary email domains
+            $disposable_email_pattern = '/@(glorzomail|tempmail|10minutemail|mailinator|guerrillamail|sharklasers|yopmail|dispostable|trashmail|fakemail|nada\.ltd|getairmail|mohmal|crazymailing|throwawaymail|burnermail|mytemp\.email|inboxbear|generator\.email)/i';
+            if ( ! empty( $email ) && preg_match( $disposable_email_pattern, $email ) ) {
+                $referer = wp_get_referer() ?: home_url( '/new/' );
+                wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Указание временных (одноразовых) почтовых адресов запрещено. Пожалуйста, укажите постоянный email.' ) ], $referer ) );
+                exit;
+            }
         }
 
         if ( empty( $title ) || empty( $description ) ) {

@@ -1,5 +1,10 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.36] - 2026-11-26
+### Security
+- **Adult / Erotic & Crypto Exchange Blacklist**: Expanded anti-spam regex filters to unconditionally block adult/erotic content, escorts, intimate services, binary options, forex, and cryptocurrency exchange scams.
+- **Administrator Immunity Bypass**: Implemented explicit authorization bypass (`$is_admin_vladimir = 1 === (int) $author_id || current_user_can('manage_options')`) ensuring Vladimir is never restricted by blacklists when publishing legitimate currency exchange or financial posts.
+
 ## [2026-11__1.35] - 2026-11-26
 ### Security & Anti-Bot Hardening
 - **Invisible Honeypot Protection**: Added `vb_honey_check` hidden honeypot trap to `templates/submit-form.php`. Submissions with populated honeypot are instantly aborted.
