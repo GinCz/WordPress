@@ -116,6 +116,10 @@ $action_url = esc_url( admin_url( 'admin-post.php' ) );
     <form method="POST" action="<?php echo $action_url; ?>" class="vb-submit-form" id="vb-submit-form" enctype="multipart/form-data">
         <?php wp_nonce_field( 'vb_submit_listing_action', 'vb_submit_nonce' ); ?>
         <input type="hidden" name="action" value="vb_handle_submit_listing">
+        <!-- Anti-Spam Honeypot Trap (invisible to humans) -->
+        <div style="position:absolute; left:-9999px; top:-9999px; opacity:0; pointer-events:none;" aria-hidden="true">
+            <input type="text" name="vb_honey_check" value="" tabindex="-1" autocomplete="off">
+        </div>
         <?php if ( $is_edit ) : ?>
             <input type="hidden" name="listing_id" value="<?php echo esc_attr( $edit_id ); ?>">
         <?php endif; ?>

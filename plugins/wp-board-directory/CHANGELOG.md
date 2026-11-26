@@ -1,5 +1,13 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.35] - 2026-11-26
+### Security & Anti-Bot Hardening
+- **Invisible Honeypot Protection**: Added `vb_honey_check` hidden honeypot trap to `templates/submit-form.php`. Submissions with populated honeypot are instantly aborted.
+- **Strict Authentication Enforcement**: Enforced hard validation `$author_id = get_current_user_id() > 0`, completely preventing any anonymous/guest submissions from ever defaulting to admin (User 1).
+- **Spam Keyword Blacklist Filter**: Implemented automatic keyword rejection in titles and descriptions against online casinos, gambling, darknet marketplaces, narcotics, and illegal document forgery.
+- **Disposable Email Blacklist Filter**: Integrated disposable/temporary mail detection (`@glorzomail`, `@tempmail`, `@10minutemail`, etc.) across listing submissions and user registration (`registration_errors` hook).
+- **Turnstile Verification Enforcement**: Verified and reinforced Cloudflare Turnstile integration across login, registration, lost-password, and ad submissions.
+
 ## [2026-11__1.34] - 2026-11-23
 ### Fixed
 - **Immunity for Migrated & Reused Media in `VB_Media_Cleaner`**:

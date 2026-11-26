@@ -56,6 +56,9 @@ class VB_Shortcodes {
         add_action( 'admin_post_vb_handle_submit_listing', [ __CLASS__, 'handle_listing_submission' ] );
         add_action( 'admin_post_nopriv_vb_handle_submit_listing', [ __CLASS__, 'handle_listing_submission' ] );
 
+        // Filter registration errors to block disposable/temp email domains
+        add_filter( 'registration_errors', [ __CLASS__, 'filter_disposable_emails' ], 10, 3 );
+
         // Template routing (Single ad, single company, category archive)
         add_filter( 'template_include', [ __CLASS__, 'route_templates' ] );
 
@@ -279,6 +282,17 @@ class VB_Shortcodes {
     }
 
     /**
+     * Block registration with disposable / temporary email domains
+     */
+    public static function filter_disposable_emails( $errors, $sanitized_user_login, $user_email ) {
+        $disposable_email_pattern = '/@(glorzomail|tempmail|10minutemail|mailinator|guerrillamail|sharklasers|yopmail|dispostable|trashmail|fakemail|nada\.ltd|getairmail|mohmal|crazymailing|throwawaymail|burnermail|mytemp\.email|inboxbear|generator\.email)/i';
+        if ( preg_match( $disposable_email_pattern, $user_email ) ) {
+            $errors->add( 'disposable_email', '<strong>ОШИБКА</strong>: Регистрация с временных (одноразовых) почтовых сервисов запрещена. Пожалуйста, используйте постоянный email.' );
+        }
+        return $errors;
+    }
+
+    /**
      * Handle Frontend Ad / Company Submission POST
      */
     public static function handle_listing_submission() {
@@ -286,8 +300,14 @@ class VB_Shortcodes {
             wp_die( 'Ошибка безопасности (неверный nonce).' );
         }
 
+        // 0. Anti-Bot Honeypot Trap
+        if ( ! empty( $_POST['vb_honey_check'] ) ) {
+            wp_die( 'Подозрительная активность (робот обнаружен).' );
+        }
+
         // 1. Mandatory User Authentication: No anonymous/guest submissions
-        if ( ! is_user_logged_in() ) {
+        $author_id = get_current_user_id();
+        if ( empty( $author_id ) || $author_id <= 0 ) {
             $referer = wp_get_referer() ?: home_url( '/new/' );
             wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Публикация доступна только авторизованным пользователям. Пожалуйста, войдите через соцсети или зарегистрируйтесь.' ) ], $referer ) );
             exit;
@@ -329,13 +349,28 @@ class VB_Shortcodes {
         $description  = wp_kses_post( $_POST['description'] ?? '' );
         $type         = ( isset( $_POST['listing_type'] ) && 'company' === $_POST['listing_type'] ) ? 'company' : 'classified';
 
+        // 4. Anti-Spam: Prohibit illegal, casino, gambling, darknet, narcotics and forgery keywords
+        $spam_keywords_pattern = '/(казино|casino|vulkan|вулкан|онлайн-казино|слоты|slots|игровые автоматы|рулетка|ставка на спорт|1xbet|betwinner|pin-up|dragon money|mostbet|kraken|кракен|мефедрон|закладк|амфетамин|гашиш|гидра|hydra|rutor|рутор|darknet|даркнет|alpha-pvp|альфа-пвп|купить соль|купить права|купить диплом|купить паспорт|купить водительские|пробив по базам|деанон|обнал|залив на карту)/iu';
+        if ( preg_match( $spam_keywords_pattern, $title ) || preg_match( $spam_keywords_pattern, $description ) ) {
+            $referer = wp_get_referer() ?: home_url( '/new/' );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Объявление отклонено: обнаружены запрещенные ключевые слова (казино, азартные игры, нелегальные сервисы).' ) ], $referer ) );
+            exit;
+        }
+
+        // 5. Anti-Spam: Prohibit disposable / temporary email domains
+        $disposable_email_pattern = '/@(glorzomail|tempmail|10minutemail|mailinator|guerrillamail|sharklasers|yopmail|dispostable|trashmail|fakemail|nada\.ltd|getairmail|mohmal|crazymailing|throwawaymail|burnermail|mytemp\.email|inboxbear|generator\.email)/i';
+        if ( ! empty( $email ) && preg_match( $disposable_email_pattern, $email ) ) {
+            $referer = wp_get_referer() ?: home_url( '/new/' );
+            wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Указание временных (одноразовых) почтовых адресов запрещено. Пожалуйста, укажите постоянный email.' ) ], $referer ) );
+            exit;
+        }
+
         if ( empty( $title ) || empty( $description ) ) {
             $referer = wp_get_referer() ?: home_url( '/new/' );
             wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Заполните обязательные поля.' ) ], $referer ) );
             exit;
         }
 
-        $author_id = get_current_user_id();
         $edit_id   = absint( $_POST['listing_id'] ?? 0 );
         $is_edit   = false;
 
@@ -353,14 +388,14 @@ class VB_Shortcodes {
                 'post_content' => $description,
             ] );
         } else {
-            // Enforce limit: maximum 10 listings per account/email in one category
+            // Enforce limit: maximum 10 listings per account in one category
             if ( $category_id > 0 && ! current_user_can( 'manage_options' ) ) {
-                $author_filter = ( $author_id > 1 ) ? [ 'author' => $author_id ] : [];
-                $existing_user_listings = get_posts( array_merge( [
+                $existing_user_listings = get_posts( [
                     'post_type'      => 'vb_listing',
                     'post_status'    => [ 'publish', 'draft', 'pending' ],
                     'posts_per_page' => -1,
                     'fields'         => 'ids',
+                    'author'         => $author_id,
                     'tax_query'      => [
                         [
                             'taxonomy' => 'vb_category',
@@ -368,34 +403,9 @@ class VB_Shortcodes {
                             'terms'    => $category_id,
                         ],
                     ],
-                ], $author_filter ) );
+                ] );
 
-                $existing_count = count( $existing_user_listings );
-                if ( $author_id === 1 && ! empty( $email ) ) {
-                    $email_listings = get_posts( [
-                        'post_type'      => 'vb_listing',
-                        'post_status'    => [ 'publish', 'draft', 'pending' ],
-                        'posts_per_page' => -1,
-                        'fields'         => 'ids',
-                        'meta_query'     => [
-                            [
-                                'key'     => '_vb_email',
-                                'value'   => $email,
-                                'compare' => '=',
-                            ],
-                        ],
-                        'tax_query'      => [
-                            [
-                                'taxonomy' => 'vb_category',
-                                'field'    => 'term_id',
-                                'terms'    => $category_id,
-                            ],
-                        ],
-                    ] );
-                    $existing_count = max( $existing_count, count( $email_listings ) );
-                }
-
-                if ( $existing_count >= 10 ) {
+                if ( count( $existing_user_listings ) >= 10 ) {
                     $referer = wp_get_referer() ?: home_url( '/new/' );
                     wp_safe_redirect( add_query_arg( [ 'error' => rawurlencode( 'Превышен лимит: разрешено максимум 10 объявлений от одного аккаунта в одну рубрику.' ) ], $referer ) );
                     exit;
