@@ -79,11 +79,35 @@
 - Set `mo_openid_vkontakte_enable` and `mo_openid_enable_custom_app_vkontakte` to `0`.
 - Purged all stale/orphan VK linkages from `wp_mo_openid_linked_user`.
 
+### 4. `wp-board-directory` (v1.37) — Multi-Phone Contact Buttons, Author Archive & Clickable Category Links
+- **Multi-Phone Parsing & Dynamic Contact Actions**:
+  - Implemented regex parser (`preg_split('/[,;\/|\n]+/', ...)`): safely parses multiple phone numbers from `_vb_phone` (and user profile meta fallbacks), sanitizing each number into valid E.164-compatible dial string.
+  - Generates dedicated individual click-to-call buttons (`tel:<digits>`) for each phone number.
+  - Generates dedicated WhatsApp click-to-chat buttons (`https://wa.me/<digits>`) for each valid phone number when dedicated `_vb_whatsapp` field is empty.
+- **Author All Ads Button & Profile Links**:
+  - Added «📋 Посмотреть все объявления (N)» button inside `.vb-contact-actions` linking directly to the author's public profile/ad archive.
+  - Made author avatar and author display name clickable links pointing to the author archive.
+- **Dedicated Author Archive Template (`templates/author.php`)**:
+  - Routed `is_author()` via `route_templates` in `includes/class-shortcodes.php` to `templates/author.php`.
+  - Renders a clean author profile card with large avatar (80px), author display name, pill badges (total published ads count, registration date, city), and bio description.
+  - Renders a responsive grid of published `vb_listing` cards with pagination (`paginate_links`).
+  - Added empty state handler when author has no published listings.
+- **Clickable Taxonomy Links in Sidebar**:
+  - Converted static category text in `.vb-sidebar-info-row` to a clickable link pointing to `get_term_link($primary_cat)`.
+  - Converted static location text to a clickable link pointing to `get_term_link($primary_loc)`.
+- **Author Filtering in Shortcodes & Search**:
+  - Added `author` parameter support to `render_listings` (`[vb_listings]`) and `render_search` (`[vb_search]`), enabling filtered query by `author` parameter.
+- **Packaging, Manifest & Multi-Node Rollout**:
+  - Rebuilt package `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.37.zip` and `plugins/zips/wp-board-directory.zip`.
+  - Updated manifest in `GinCz/WordPress` and `GinCz/plugins` `updates.json` to version `2026-11__1.37`.
+  - Manually deployed and verified live on `doska-cz.ru` (`https://doska-cz.ru/ad/proverennyy-tarolog-onlayn-rasklad-na-mysli-i-chuvstva-muzhchiny/` and `https://doska-cz.ru/author/gadanienatalia55/`).
+  - Propagated to all 10 remaining portals on `DE-222` (`doska-de.ru`, `doska-esp.ru`, `doska-fr.ru`, `doska-gr.ru`, `doska-hun.ru`, `doska-isl.ru`, `doska-it.ru`, `doska-mld.ru`, `doska-pl.ru`, `doska-ua.ru`) with zero hanging tasks and cache flushed.
+
 ---
 
 ## 📦 Deployment Packages
+- `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.37.zip`
 - `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.32.zip`
-- `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.31.zip`
 - `plugins/zips/wp-board-directory.zip`
 - `plugins/zips/WP_Login-Branding_(VladiMIR+AI)_1.01.zip`
 - `plugins/zips/WP_Login-Branding_(VladiMIR+AI)_1.00.zip`
