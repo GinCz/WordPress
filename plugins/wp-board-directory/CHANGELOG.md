@@ -1,5 +1,10 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.38] - 2026-11-27
+### Changed
+- **Differentiated Author vs Administrator Role Badges**: Fixed misleading badge `👤 Ваша публикация` appearing when an administrator views another client's ad. Introduced `$is_real_author` vs `$is_admin_mode`.
+- When viewed by an Administrator who is not the author, the top bar now displays `🛡️ Управление (Администратор)` in indigo styling (`.vb-admin-badge`), and the sidebar block displays `🛡️ Режим администратора:`, clearly separating author ownership from site administration permissions while retaining full edit/delete capabilities.
+
 ## [2026-11__1.37] - 2026-11-27
 ### Added
 - **Multi-Phone Parser & Action Buttons**: Robust parsing of multiple phone numbers separated by comma, slash, or semicolons. Individual clean click-to-call (`tel:`) buttons and individual WhatsApp click-to-chat (`https://wa.me/`) buttons for each phone number.

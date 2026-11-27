@@ -54,8 +54,10 @@ $author_id          = (int) get_post_field( 'post_author', $post_id );
 $author_name        = get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь';
 $author_url         = $author_id ? get_author_posts_url( $author_id ) : '';
 $author_ads_count   = $author_id ? (int) count_user_posts( $author_id, 'vb_listing', true ) : 0;
-$current_uid        = get_current_user_id();
-$is_author_or_admin = is_user_logged_in() && ( $author_id === $current_uid || current_user_can( 'edit_post', $post_id ) );
+$current_uid    = get_current_user_id();
+$is_real_author = is_user_logged_in() && ( $author_id === $current_uid );
+$is_admin_mode  = is_user_logged_in() && ! $is_real_author && current_user_can( 'edit_post', $post_id );
+$can_manage     = $is_real_author || $is_admin_mode;
 $edit_url           = home_url( '/new/?listing_id=' . $post_id );
 $delete_url         = wp_nonce_url( add_query_arg( [ 'vb_action' => 'delete_item', 'item_id' => $post_id, 'tab' => ( $vb_type === 'company' ? 'companies' : 'ads' ) ], home_url( '/my-ads/' ) ), 'vb_delete_item_' . $post_id );
 
@@ -143,10 +145,14 @@ if ( ! empty( $wa ) ) {
                 <div class="vb-single-layout">
                     <!-- Left / Main Column -->
                     <div class="vb-single-main">
-                        <?php if ( $is_author_or_admin ) : ?>
-                            <div class="vb-author-manage-bar">
+                        <?php if ( $can_manage ) : ?>
+                            <div class="vb-author-manage-bar <?php echo $is_admin_mode ? 'vb-admin-mode-bar' : ''; ?>">
                                 <div class="vb-author-manage-left">
-                                    <span class="vb-author-badge">👤 Ваша публикация</span>
+                                    <?php if ( $is_real_author ) : ?>
+                                        <span class="vb-author-badge">👤 Ваша публикация</span>
+                                    <?php else : ?>
+                                        <span class="vb-author-badge vb-admin-badge">🛡️ Управление (Администратор)</span>
+                                    <?php endif; ?>
                                     <span class="vb-author-meta-status">Статус: <strong><?php echo 'publish' === get_post_status( $post_id ) ? 'Опубликовано' : esc_html( get_post_status( $post_id ) ); ?></strong></span>
                                 </div>
                                 <div class="vb-author-manage-actions">
@@ -224,9 +230,15 @@ if ( ! empty( $wa ) ) {
                     <!-- Right Column: Sidebar / Contact Card -->
                     <div class="vb-single-sidebar">
                         <div class="vb-contact-card">
-                            <?php if ( $is_author_or_admin ) : ?>
-                                <div class="vb-sidebar-author-box">
-                                    <div class="vb-sidebar-author-title">⚙️ Управление объявлением:</div>
+                            <?php if ( $can_manage ) : ?>
+                                <div class="vb-sidebar-author-box <?php echo $is_admin_mode ? 'vb-sidebar-admin-box' : ''; ?>">
+                                    <div class="vb-sidebar-author-title">
+                                        <?php if ( $is_real_author ) : ?>
+                                            ⚙️ Управление объявлением:
+                                        <?php else : ?>
+                                            🛡️ Режим администратора:
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="vb-sidebar-author-buttons">
                                         <a href="<?php echo esc_url( $edit_url ); ?>" class="vb-btn-contact vb-btn-sidebar-edit">
                                             ✏️ Редактировать объявление

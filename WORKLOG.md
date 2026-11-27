@@ -103,11 +103,23 @@
   - Manually deployed and verified live on `doska-cz.ru` (`https://doska-cz.ru/ad/proverennyy-tarolog-onlayn-rasklad-na-mysli-i-chuvstva-muzhchiny/` and `https://doska-cz.ru/author/gadanienatalia55/`).
   - Propagated to all 10 remaining portals on `DE-222` (`doska-de.ru`, `doska-esp.ru`, `doska-fr.ru`, `doska-gr.ru`, `doska-hun.ru`, `doska-isl.ru`, `doska-it.ru`, `doska-mld.ru`, `doska-pl.ru`, `doska-ua.ru`) with zero hanging tasks and cache flushed.
 
+### 5. `wp-board-directory` (v1.38) — Differentiated Author vs Administrator Role Badges
+- **Context Separation for Ownership vs Moderation Privileges**:
+  - Identified logic defect where `current_user_can('edit_post')` triggered `👤 Ваша публикация` when an administrator viewed another client's listing.
+  - Implemented explicit role segregation: `$is_real_author = ($author_id === $current_uid)` vs `$is_admin_mode = (!$is_real_author && current_user_can('edit_post'))`.
+  - Top management bar: real author sees `👤 Ваша публикация`, while administrator/moderator sees `🛡️ Управление (Администратор)` in indigo `.vb-admin-badge`.
+  - Sidebar block: real author sees `⚙️ Управление объявлением:`, while administrator sees `🛡️ Режим администратора:`.
+  - Retained turnkey full edit/delete privileges for administrators without falsely claiming authorship of third-party ads.
+- **Packaging, Manifest & Multi-Node Rollout**:
+  - Rebuilt package `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.38.zip` and `plugins/zips/wp-board-directory.zip`.
+  - Updated manifest in `GinCz/WordPress` and `GinCz/plugins` `updates.json` to version `2026-11__1.38`.
+  - Deployed to `doska-cz.ru` and propagated to all 10 remaining portals on `DE-222`.
+
 ---
 
 ## 📦 Deployment Packages
+- `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.38.zip`
 - `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.37.zip`
-- `plugins/zips/WP_Board-Directory_(VladiMIR+AI)_1.32.zip`
 - `plugins/zips/wp-board-directory.zip`
 - `plugins/zips/WP_Login-Branding_(VladiMIR+AI)_1.01.zip`
 - `plugins/zips/WP_Login-Branding_(VladiMIR+AI)_1.00.zip`

@@ -2509,3 +2509,18 @@
         justify-content: center;
     }
 }
+
+
+/* Admin Mode Styling (v2026-11__1.38) */
+.vb-author-badge.vb-admin-badge {
+    background: #4f46e5 !important;
+    color: #ffffff !important;
+}
+.vb-admin-mode-bar {
+    border-color: #c7d2fe !important;
+    background: #f5f3ff !important;
+}
+.vb-sidebar-admin-box {
+    border-color: #c7d2fe !important;
+    background: #f5f3ff !important;
+}
