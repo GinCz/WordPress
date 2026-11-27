@@ -8,6 +8,35 @@
 
 ---
 
+### [2026-11-27 21:50] Полный аудит экосистемы WordPress (58 сайтов): Cloudflare Turnstile и устаревшие плагины
+- **Контекст задачи:** Проведена комплексная ревизия всех WordPress-сайтов на серверах DE-222 (40 сайтов) и RU-109 (18 сайтов) на предмет наличия и активности плагина Cloudflare Turnstile CAPTCHA, а также выявления устаревших, неактивных и потенциально небезопасных плагинов.
+- **Результаты проверки Cloudflare Turnstile (58 сайтов суммарно):**
+  - **Активен Cloudflare Turnstile:** 50 сайтов (33 на DE-222, 17 на RU-109).
+  - **Отсутствует Turnstile (7 сайтов):**
+    - DE-222: `car-bus-autoservice.cz`, `megan-consult.cz`, `kadernik-olga.eu`, `eurasia-translog.cz`, `car-chip.eu`, `stopservis-vestec.cz`.
+    - RU-109: `novorr-art.ru`.
+  - **Установлен, но деактивирован (1 сайт):** `lybawa.com` (DE-222) — `simple-cloudflare-turnstile` v1.44.7 [INACTIVE].
+  - **Сторонняя капча вместо Turnstile:** `car-chip.eu` — использует `hCaptcha for WP` v5.5.0 вместо единого Cloudflare Turnstile.
+- **Аудит устаревших и рискованных плагинов:**
+  - **Уязвимости / Бэкап-инструменты на боевых сайтах:**
+    - `lybawa.com`: активен `duplicator` v5.2.0.
+    - `alejandrofashion.cz`: активен `duplicator-pro` v4.5.19.1.
+  - **Устаревшие версии плагинов:**
+    - `kadernik-olga.eu`: старый `wpforms` v1.5.9.3 (на остальных сайтах унифицирован `wpforms-lite` v2.0.5.2).
+    - `novorr-art.ru`: устаревший визуальный редактор `wpueditors` v1.3.46 и `nextgen-gallery` v4.6.1.
+  - **Сайты с балластом неактивных плагинов:**
+    - `car-bus-autoservice.cz` (18 выключенных плагинов).
+    - `ekaterinburg-sro.eu` (10 выключенных плагинов).
+    - `detailing-alex.eu` (2 выключенных: `wp-reviews-plugin-for-google`, `wptelegram`).
+    - `timan-kuchyne.cz` (3 выключенных).
+    - `4ton-96.ru` (1 выключенный: `instagram-feed`).
+- **Сформированы 3 уровня системных решений:**
+  - *Уровень 1 (Тактический патч):* Активация Turnstile на `lybawa.com`, удаление Duplicator на `lybawa.com` и `alejandrofashion.cz`.
+  - *Уровень 2 (Комплексная стандартизация — Рекомендуемый):* Инсталляция и активация `simple-cloudflare-turnstile` на оставшихся 7 сайтах, замена `hCaptcha` на `car-chip.eu`, удаление `duplicator` и чистка балласта.
+  - *Уровень 3 (Автоматизация мониторинга):* Регулярный cron-скрипт целостности плагинов безопасности на DE-222 и RU-109.
+
+---
+
 ## 🌐 Network of 11 Portals
 1. `doska-de.ru` (Germany - Primary pilot node)
 2. `doska-cz.ru` (Czech Republic)
