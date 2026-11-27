@@ -2416,3 +2416,96 @@
     box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
 }
 
+
+
+/* ==========================================================================
+   Author Profile & Author All Ads Actions (v2026-11__1.37)
+   ========================================================================== */
+.vb-btn-author-all {
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+}
+.vb-btn-author-all:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+}
+.vb-seller-link {
+    color: #0f172a !important;
+    text-decoration: none !important;
+}
+.vb-seller-link:hover {
+    color: #2563eb !important;
+    text-decoration: underline !important;
+}
+.vb-sidebar-cat-link,
+.vb-sidebar-loc-link {
+    color: #2563eb !important;
+    font-weight: 600;
+    text-decoration: none !important;
+}
+.vb-sidebar-cat-link:hover,
+.vb-sidebar-loc-link:hover {
+    text-decoration: underline !important;
+}
+.vb-author-profile-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.vb-author-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.vb-author-avatar-big img {
+    border-radius: 50%;
+    border: 3px solid #e2e8f0;
+    display: block;
+}
+.vb-author-profile-name {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+}
+.vb-author-profile-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.vb-author-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.vb-author-badge-pill.vb-badge-count {
+    background: #dbeafe;
+    color: #1e40af;
+}
+.vb-author-bio {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 8px 0 0 0;
+}
+@media (max-width: 640px) {
+    .vb-author-profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    .vb-author-profile-badges {
+        justify-content: center;
+    }
+}

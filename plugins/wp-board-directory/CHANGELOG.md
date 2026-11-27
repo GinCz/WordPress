@@ -1,5 +1,13 @@
 # Changelog — WP Board & Directory
 
+## [2026-11__1.37] - 2026-11-27
+### Added
+- **Multi-Phone Parser & Action Buttons**: Robust parsing of multiple phone numbers separated by comma, slash, or semicolons. Individual clean click-to-call (`tel:`) buttons and individual WhatsApp click-to-chat (`https://wa.me/`) buttons for each phone number.
+- **Author All Ads Button & Profile Link**: Added "📋 Посмотреть все объявления" button under listing contacts linking directly to the author's public profile and ads archive, including ad count badge. Made author avatar and name clickable.
+- **Dedicated Author Ads Archive Template (`templates/author.php`)**: Custom responsive author archive template rendering author profile header, badges (total active ads count, registration date, city), and a responsive grid of published listings with pagination.
+- **Clickable Category & Location Links in Sidebar**: Transformed static text category and location labels into direct clickable links pointing to category/location archives.
+- **Author Filtering in Search & Shortcodes**: Supported `author` query parameter in `render_search()` and `render_listings()` shortcodes.
+
 ## [2026-11__1.36] - 2026-11-26
 ### Security
 - **Adult / Erotic & Crypto Exchange Blacklist**: Expanded anti-spam regex filters to unconditionally block adult/erotic content, escorts, intimate services, binary options, forex, and cryptocurrency exchange scams.

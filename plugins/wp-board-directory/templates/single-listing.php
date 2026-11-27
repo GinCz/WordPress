@@ -52,13 +52,64 @@ $stats = VB_Ratings::get_vote_stats( $vb_type === 'company' ? 'company' : 'listi
 // Author info
 $author_id          = (int) get_post_field( 'post_author', $post_id );
 $author_name        = get_the_author_meta( 'display_name', $author_id ) ?: 'Пользователь';
+$author_url         = $author_id ? get_author_posts_url( $author_id ) : '';
+$author_ads_count   = $author_id ? (int) count_user_posts( $author_id, 'vb_listing', true ) : 0;
 $current_uid        = get_current_user_id();
 $is_author_or_admin = is_user_logged_in() && ( $author_id === $current_uid || current_user_can( 'edit_post', $post_id ) );
 $edit_url           = home_url( '/new/?listing_id=' . $post_id );
 $delete_url         = wp_nonce_url( add_query_arg( [ 'vb_action' => 'delete_item', 'item_id' => $post_id, 'tab' => ( $vb_type === 'company' ? 'companies' : 'ads' ) ], home_url( '/my-ads/' ) ), 'vb_delete_item_' . $post_id );
 
-// Clean phone for tel:
-$clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
+// Fallback contact details from user meta if not specified in post
+if ( empty( $phone ) && $author_id ) {
+    $phone = get_user_meta( $author_id, 'phone', true ) ?: get_user_meta( $author_id, 'acadp_phone', true ) ?: get_user_meta( $author_id, 'billing_phone', true );
+}
+if ( empty( $wa ) && $author_id ) {
+    $wa = get_user_meta( $author_id, 'whatsapp', true ) ?: get_user_meta( $author_id, 'vb_whatsapp', true );
+}
+if ( empty( $tg ) && $author_id ) {
+    $tg = get_user_meta( $author_id, 'telegram', true ) ?: get_user_meta( $author_id, 'vb_telegram', true );
+}
+
+// Robust multi-phone parser
+$phones_list = [];
+if ( ! empty( $phone ) ) {
+    $raw_phones = preg_split( '/[,;\/|\n]+/', (string) $phone );
+    foreach ( $raw_phones as $p_item ) {
+        $p_trimmed = trim( $p_item );
+        $p_clean   = preg_replace( '/[^\+0-9]/', '', $p_trimmed );
+        if ( strlen( preg_replace( '/[^0-9]/', '', $p_clean ) ) >= 7 ) {
+            $phones_list[] = [
+                'display' => $p_trimmed,
+                'clean'   => $p_clean,
+            ];
+        }
+    }
+}
+
+// Robust WhatsApp buttons parser
+$wa_buttons = [];
+if ( ! empty( $wa ) ) {
+    $raw_wa = preg_split( '/[,;\/|\n]+/', (string) $wa );
+    foreach ( $raw_wa as $w_item ) {
+        $w_digits = preg_replace( '/[^0-9]/', '', (string) $w_item );
+        if ( strlen( $w_digits ) >= 7 ) {
+            $wa_buttons[] = [
+                'digits'  => $w_digits,
+                'display' => trim( $w_item ),
+            ];
+        }
+    }
+} elseif ( ! empty( $phones_list ) ) {
+    foreach ( $phones_list as $p_item ) {
+        $w_digits = preg_replace( '/[^0-9]/', '', $p_item['clean'] );
+        if ( strlen( $w_digits ) >= 7 ) {
+            $wa_buttons[] = [
+                'digits'  => $w_digits,
+                'display' => $p_item['display'],
+            ];
+        }
+    }
+}
 ?>
 
 <div id="content" class="content-area page-wrapper" role="main">
@@ -206,28 +257,44 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                             <!-- Seller Info -->
                             <div class="vb-seller-block">
                                 <div class="vb-seller-avatar">
-                                    <?php echo get_avatar( $author_id, 56 ); ?>
+                                    <?php if ( $author_url ) : ?>
+                                        <a href="<?php echo esc_url( $author_url ); ?>" title="Посмотреть все объявления автора">
+                                            <?php echo get_avatar( $author_id, 56 ); ?>
+                                        </a>
+                                    <?php else : ?>
+                                        <?php echo get_avatar( $author_id, 56 ); ?>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="vb-seller-meta">
-                                    <div class="vb-seller-name"><?php echo esc_html( $author_name ); ?></div>
+                                    <div class="vb-seller-name">
+                                        <?php if ( $author_url ) : ?>
+                                            <a href="<?php echo esc_url( $author_url ); ?>" class="vb-seller-link">
+                                                <?php echo esc_html( $author_name ); ?>
+                                            </a>
+                                        <?php else : ?>
+                                            <?php echo esc_html( $author_name ); ?>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="vb-seller-sub">Автор публикации</div>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
                             <div class="vb-contact-actions">
-                                <?php if ( $clean_phone ) : ?>
-                                    <a href="tel:<?php echo esc_attr( $clean_phone ); ?>" class="vb-btn-contact vb-btn-phone">
-                                        📞 Позвонить: <?php echo esc_html( $phone ); ?>
-                                    </a>
+                                <?php if ( ! empty( $phones_list ) ) : ?>
+                                    <?php foreach ( $phones_list as $ph ) : ?>
+                                        <a href="tel:<?php echo esc_attr( $ph['clean'] ); ?>" class="vb-btn-contact vb-btn-phone">
+                                            📞 Позвонить: <?php echo esc_html( $ph['display'] ); ?>
+                                        </a>
+                                    <?php endforeach; ?>
                                 <?php endif; ?>
 
-                                <?php if ( $wa || $clean_phone ) : 
-                                    $wa_num = preg_replace( '/[^\+0-9]/', '', $wa ?: $clean_phone );
-                                ?>
-                                    <a href="https://wa.me/<?php echo esc_attr( ltrim( $wa_num, '+' ) ); ?>" target="_blank" rel="noopener" class="vb-btn-contact vb-btn-whatsapp">
-                                        💬 Написать в WhatsApp
-                                    </a>
+                                <?php if ( ! empty( $wa_buttons ) ) : ?>
+                                    <?php foreach ( $wa_buttons as $wb ) : ?>
+                                        <a href="https://wa.me/<?php echo esc_attr( $wb['digits'] ); ?>" target="_blank" rel="noopener" class="vb-btn-contact vb-btn-whatsapp">
+                                            💬 WhatsApp<?php echo count( $wa_buttons ) > 1 ? ': ' . esc_html( $wb['display'] ) : ' — написать'; ?>
+                                        </a>
+                                    <?php endforeach; ?>
                                 <?php endif; ?>
 
                                 <?php if ( $tg ) : 
@@ -243,18 +310,40 @@ $clean_phone = preg_replace( '/[^\+0-9]/', '', (string) $phone );
                                         🌐 Перейти на сайт компании
                                     </a>
                                 <?php endif; ?>
+
+                                <?php if ( $author_url ) : ?>
+                                    <a href="<?php echo esc_url( $author_url ); ?>" class="vb-btn-contact vb-btn-author-all">
+                                        📋 Посмотреть все объявления<?php echo $author_ads_count > 0 ? ' (' . $author_ads_count . ')' : ''; ?>
+                                    </a>
+                                <?php endif; ?>
                             </div>
 
                             <?php if ( $addr || $primary_loc ) : ?>
                                 <div class="vb-sidebar-info-row">
                                     <strong>Локация:</strong>
-                                    <span>📍 <?php echo esc_html( $addr ?: $primary_loc->name ); ?></span>
+                                    <span>
+                                        📍 <?php if ( $primary_loc ) : ?>
+                                            <a href="<?php echo esc_url( get_term_link( $primary_loc ) ); ?>" class="vb-sidebar-loc-link">
+                                                <?php echo esc_html( $primary_loc->name ); ?>
+                                            </a>
+                                        <?php else : ?>
+                                            <?php echo esc_html( $addr ); ?>
+                                        <?php endif; ?>
+                                    </span>
                                 </div>
                             <?php endif; ?>
 
                             <div class="vb-sidebar-info-row">
                                 <strong>Категория:</strong>
-                                <span><?php echo esc_html( $primary_cat ? trim( preg_replace( '/^[◉\s\-\•\·]+/u', '', $primary_cat->name ) ) : 'Общие' ); ?></span>
+                                <span>
+                                    <?php if ( $primary_cat ) : ?>
+                                        <a href="<?php echo esc_url( get_term_link( $primary_cat ) ); ?>" class="vb-sidebar-cat-link">
+                                            <?php echo esc_html( trim( preg_replace( '/^[◉\s\-\•\·]+/u', '', $primary_cat->name ) ) ); ?>
+                                        </a>
+                                    <?php else : ?>
+                                        Общие
+                                    <?php endif; ?>
+                                </span>
                             </div>
 
                             <div class="vb-sidebar-post-ad-banner">

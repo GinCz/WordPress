@@ -269,6 +269,13 @@ class VB_Shortcodes {
             }
         }
 
+        if ( is_author() ) {
+            $custom = VB_BOARD_PATH . 'templates/author.php';
+            if ( file_exists( $custom ) ) {
+                return $custom;
+            }
+        }
+
         return $template;
     }
 
@@ -959,6 +966,11 @@ class VB_Shortcodes {
             ];
         }
 
+        $author_filter = ! empty( $_GET['author'] ) ? absint( $_GET['author'] ) : ( ! empty( $atts['author'] ) ? absint( $atts['author'] ) : 0 );
+        if ( $author_filter > 0 ) {
+            $query_args['author'] = $author_filter;
+        }
+
         $query = new WP_Query( $query_args );
 
         if ( ! $query->have_posts() ) {
@@ -1056,6 +1068,10 @@ class VB_Shortcodes {
 
         if ( ! empty( $search_term ) ) {
             $args['s'] = $search_term;
+        }
+
+        if ( ! empty( $_GET['author'] ) ) {
+            $args['author'] = absint( $_GET['author'] );
         }
 
         if ( in_array( $type_filter, [ 'classified', 'company' ], true ) ) {
