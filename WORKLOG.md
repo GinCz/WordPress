@@ -37,6 +37,39 @@
 
 ---
 
+### [2026-11-27 22:04] 100% Развёртывание Cloudflare Turnstile на всех сайтах и глубокая чистка ekaterinburg-sro.eu
+- **Контекст задачи:** По указанию Владимира выполнено 100% покрытие всех площадок официальной капчей Cloudflare Turnstile (`simple-cloudflare-turnstile` v1.44.7) с автономной привязкой ключей Cloudflare, удалением старых/сторонних капч и опасных плагинов миграции, а также полная замена устаревших тяжелых плагинов на сайте `ekaterinburg-sro.eu` на фирменный стек микроплагинов `(VladiMIR+AI✅)`.
+- **Выполненные работы:**
+  1. **car-bus-autoservice.cz:**
+     - Подтверждена активность всех 18 рабочих плагинов ядра.
+     - Установлен, активирован и настроен плагин `simple-cloudflare-turnstile` v1.44.7 с ключами кластера автосервисов (`0x4AAAAAABctSBTWHvacBrvg`).
+  2. **Унификация Cloudflare Turnstile на всех оставшихся площадках:**
+     - `car-chip.eu`: полностью удалён устаревший `hcaptcha-for-forms-and-more`, установлен, активирован и настроен `simple-cloudflare-turnstile` v1.44.7.
+     - `kadernik-olga.eu`: развернут, активирован и сконфигурирован `simple-cloudflare-turnstile` v1.44.7 (`0x4AAAAAABdIZ-flr4OcAjkU`).
+     - `megan-consult.cz`: развернут, активирован и сконфигурирован `simple-cloudflare-turnstile` v1.44.7 (`0x4AAAAAABdS6C6NtVMmb6tC`).
+     - `eurasia-translog.cz`: развернут, активирован и сконфигурирован `simple-cloudflare-turnstile` v1.44.7 (`0x4AAAAAABdS6C6NtVMmb6tC`).
+     - `stopservis-vestec.cz`: развернут, активирован и сконфигурирован `simple-cloudflare-turnstile` v1.44.7 (`0x4AAAAAABdq0Ftpl2Ud-P2p`).
+     - `lybawa.com`: удален `duplicator`, активирован и настроен `simple-cloudflare-turnstile` v1.44.7.
+     - `alejandrofashion.cz`: удален `duplicator-pro` (закрыта потенциальная уязвимость экспорта БД).
+     - `novorr-art.ru` (RU-109): развернут, активирован и сконфигурирован `simple-cloudflare-turnstile` v1.44.7 (`0x4AAAAAABY6bSX_kaw6b-K-`).
+     - **Итог:** 100% сайтов (58 из 58) теперь находятся под защитой Cloudflare Turnstile с единым набором правил (login, register, comments, reset, wpforms).
+  3. **Глубокая модернизация ekaterinburg-sro.eu:**
+     - Деактивированы и физически удалены 8 тяжелых сторонних плагинов: `404-to-301`, `classic-editor`, `tinymce-advanced`, `cyr2lat`, `head-meta-data`, `imsanity`, `manage-notification-emails`, `wp-seopress`.
+     - Развернуты и активированы 10 легковесных микроплагинов `(VladiMIR+AI✅)`:
+       - `404-410-301` (v2026-10__1.33)
+       - `wp-allow-html-cats` (v2026-09__1.31)
+       - `classic-editor-tinymce` (v2026-09__1.31)
+       - `clean-head-meta` (v2026-09__1.31)
+       - `translit-cyr-lat` (v2026-09__1.31)
+       - `disable-update-emails` (v2026-09__1.31)
+       - `image-resizer` (v2026-10__1.41)
+       - `wp-online-counter` (v2026-09__1.31)
+       - `wp-seo-micro` (v2026-11__1.33)
+       - `wp-simple-post-order` (v2026-09__1.38)
+     - Количество неактивных плагинов сведено к 0. Нагрузка на базу данных и процессор минимизирована.
+
+---
+
 ## 🌐 Network of 11 Portals
 1. `doska-de.ru` (Germany - Primary pilot node)
 2. `doska-cz.ru` (Czech Republic)
